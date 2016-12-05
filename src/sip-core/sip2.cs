@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
+using System.Diagnostics;
 
 namespace Clc.Sip
 {
@@ -263,8 +264,10 @@ namespace Clc.Sip
         {
             var msg = BuildMessage();
             socket.WriteToStream(msg);
-
-            return new SipTransaction { Message = msg, Response = socket.ReadFromStream() };
+            var watch = Stopwatch.StartNew();
+            var response = socket.ReadFromStream();
+            watch.Stop();
+            return new SipTransaction { Message = msg, Response = response, ResponseTime = watch.ElapsedMilliseconds };
         }
 
         public string BuildMessage()
