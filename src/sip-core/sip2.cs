@@ -268,7 +268,30 @@ namespace Clc.Sip
             var watch = Stopwatch.StartNew();
             var response = socket.ReadFromStream();
             watch.Stop();
-            return new SipTransaction { Message = msg, Response = response, ResponseTime = watch.ElapsedMilliseconds };
+
+            bool checkChecksum;
+            Boolean.TryParse(ConfigurationManager.AppSettings["check_checksum"], out checkChecksum);
+
+            var txn = new SipTransaction { Message = msg, Response = response, ResponseTime = watch.ElapsedMilliseconds };
+
+            if (checkChecksum)
+            {
+                txn.ChecksumValid = CheckChecksum(response);                
+            }
+
+            return txn;
+        }
+
+        public bool CheckChecksum(string response)
+        {
+            response = response.Trim('\r', '\n');
+            var checksum = response.Substring(response.Length - 6);
+
+            if (!checksum.StartsWith("AZ")) return true;
+
+            var msg = response.Substring(0, response.Length - 4);
+
+            return checksum.Substring(2, 4) == CalculateChecksum(msg);
         }
 
         public string BuildMessage()

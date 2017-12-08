@@ -10,6 +10,7 @@ namespace Clc.Sip
 	{
 		public string Message { get; set; }
 		public string Response { get; set; }
+        public bool ChecksumValid { get; set; } = true;
         public long ResponseTime { get; set; }
 		public override string ToString()
 		{

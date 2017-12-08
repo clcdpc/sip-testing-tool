@@ -5,6 +5,7 @@ using System.Text;
 using System.Net.Sockets;
 using System.Drawing;
 using System.IO;
+using System.Configuration;
 
 namespace Clc.Sip
 {
@@ -13,7 +14,7 @@ namespace Clc.Sip
 		public static void WriteToStream(this TcpClient clientSocket, string message)
 		{
 			NetworkStream serverStream = clientSocket.GetStream();
-			byte[] outStream = Encoding.UTF8.GetBytes(message);
+			byte[] outStream = Encoding.GetEncoding(ConfigurationManager.AppSettings["encoding"]).GetBytes(message);
 			serverStream.Write(outStream, 0, outStream.Length);
 			serverStream.Flush();
 		}
@@ -37,7 +38,7 @@ namespace Clc.Sip
 						}
 						writer.Write(readBuffer, 0, numberOfBytesRead);
 					} while (networkStream.DataAvailable);
-					fullServerReply = Encoding.UTF8.GetString(writer.ToArray());
+					fullServerReply = Encoding.GetEncoding(ConfigurationManager.AppSettings["encoding"]).GetString(writer.ToArray());
 					return fullServerReply;
 				}
 			}

@@ -35,6 +35,16 @@ namespace Clc.Sip
 
 		private void button1_Click(object sender, EventArgs e)
 		{
+            try
+            {
+                Encoding.GetEncoding(encodingComboBox.Text);
+            }
+            catch
+            {
+                MessageBox.Show($"{encodingComboBox.Text} is not a valid encoding, please try another value");
+                return;
+            }
+
 			RefreshSettingValue("default_server_hostname", hostnameTextBox.Text);
 			RefreshSettingValue("default_port", portTextBox.Text);
 			RefreshSettingValue("default_ao", aoTextBox.Text);
@@ -47,8 +57,10 @@ namespace Clc.Sip
 			RefreshSettingValue("default_item_barcode", itemBarcodeTextBox.Text);
 			RefreshSettingValue("connect_on_start", connectOnStartupCheckBox.Checked.ToString());
 			RefreshSettingValue("dark_theme_enabled", darkThemeCheckBox.Checked.ToString());
+            RefreshSettingValue("encoding", encodingComboBox.Text);
+            RefreshSettingValue("check_checksum", checkChecksumCheckbox.Checked.ToString());
 
-			this.Close();
+            this.Close();
 		}
 
 		private void SettingsForm_Load(object sender, EventArgs e)
@@ -63,12 +75,19 @@ namespace Clc.Sip
 			patronBarcodeTextBox.Text = ConfigurationManager.AppSettings["default_patron_barcode"];
 			patronPinTextBox.Text = ConfigurationManager.AppSettings["default_patron_pin"];
 			itemBarcodeTextBox.Text = ConfigurationManager.AppSettings["default_item_barcode"];
-
-			bool connectOnStartup, darkTheme;
+            encodingComboBox.Text = ConfigurationManager.AppSettings["encoding"];
+			bool connectOnStartup, darkTheme, checkChecksum;
 			bool.TryParse(ConfigurationManager.AppSettings["connect_on_start"], out connectOnStartup);
 			bool.TryParse(ConfigurationManager.AppSettings["dark_theme_enabled"], out darkTheme);
-			connectOnStartupCheckBox.Checked = connectOnStartup;
+			bool.TryParse(ConfigurationManager.AppSettings["check_checksum"], out checkChecksum);
+            connectOnStartupCheckBox.Checked = connectOnStartup;
 			darkThemeCheckBox.Checked = darkTheme;
+            checkChecksumCheckbox.Checked = checkChecksum;
 		}
-	}
+
+        private void encodingComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
+        }
+    }
 }
