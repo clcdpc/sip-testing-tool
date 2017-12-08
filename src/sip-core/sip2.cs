@@ -36,7 +36,6 @@ namespace Clc.Sip
 
         public sip2()
         {
-
         }
 
         public sip2(string hostname, int port, string AO, string AP)
@@ -75,7 +74,7 @@ namespace Clc.Sip
         {
             socket.Connect(hostname, port);
         }
-
+        
         public SipTransaction Login(string sipUsername, string sipPassword, string locationCode = "", string vendorProfile = "")
         {
             this.VP = vendorProfile;
@@ -300,9 +299,8 @@ namespace Clc.Sip
             messageBuilder.Append("AZ");
             messageBuilder.Append(CalculateChecksum(messageBuilder.ToString()));
             messageBuilder.Append(MessageTerminator);
-            var check = messageBuilder.ToString();
-            var test = messageBuilder.ToString();
-            return messageBuilder.ToString();
+            var msg = messageBuilder.ToString();
+            return msg;
         }
 
         static string CalculateChecksum(string msg)

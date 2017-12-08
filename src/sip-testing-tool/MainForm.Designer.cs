@@ -947,6 +947,6 @@
 		private System.Windows.Forms.TextBox locationCodeTextBox;
 		private System.Windows.Forms.Label label20;
         private System.Windows.Forms.Button noticeUpdateButton;
-	}
+    }
 }
 
