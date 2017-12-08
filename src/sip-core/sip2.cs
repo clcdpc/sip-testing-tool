@@ -5,6 +5,7 @@ using System.Text;
 using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
+using System.Configuration;
 
 namespace Clc.Sip
 {

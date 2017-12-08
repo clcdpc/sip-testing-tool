@@ -148,6 +148,11 @@ namespace Clc.Sip
 
         public void LogOutput(SipTransaction txn)
         {
+            if (!txn.ChecksumValid)
+            {
+                MessageBox.Show("Invalid response checksum");
+            }
+
             if (logRichTextBox.Text.Length > 0)
             {
                 logRichTextBox.AppendText("\n\n");
@@ -219,6 +224,7 @@ namespace Clc.Sip
         private void patronStatusButton_Click(object sender, EventArgs e)
         {
             if (!allowCmd) return;
+            if (!CheckSocket()) return;
             LogOutput(sipclient.PatronStatus(patronBarcodeTextBox.Text, patronPinTextBox.Text));
         }
 
@@ -341,6 +347,16 @@ namespace Clc.Sip
             settingsForm.Location = this.Location;
             settingsForm.Visible = true;
             settingsForm.Focus();
+        }
+
+        private bool CheckSocket()
+        {
+            if (!sipclient.IsConnected())
+            {
+                MessageBox.Show("disconnected");
+            }
+
+            return sipclient.IsConnected();
         }
 
         private void reloadDefaultSettingsButton_Click(object sender, EventArgs e)
@@ -477,8 +493,7 @@ namespace Clc.Sip
         public string PatronBarcode { get { return patronBarcodeTextBox.Text; } }
         public string ItemBarcode { get { return itemBarcodeTextBox.Text; } }
         public sip2 SipClient { get { return sipclient; } }
-
-
+        
     }
 
     public class SipSettings
