@@ -1,21 +1,22 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Net.Sockets;
-using System.Text.RegularExpressions;
 using System.Diagnostics;
-using System.Configuration;
+using System.Linq;
+using System.Net.Sockets;
+using System.Text;
 
 namespace Clc.Sip
 {
-    public class sip2
+    public class sip2 : IDisposable
     {
+        public Encoding TextEncoding { get; set; } = Encoding.UTF8;
+        public bool ValidateResponseChecksum { get; set; } = true;
+
         public string hostname = "";
         public int port = 5002;
 
-        public string language = "001";
-        
+        public string language = "000";
+
         public string AP = "";
         public string AO = "";
         public string VP = "";
@@ -27,6 +28,7 @@ namespace Clc.Sip
         StringBuilder messageBuilder = new StringBuilder();
         bool _noFixed = false;
 
+        // inject socket from gui
         TcpClient socket = new TcpClient();
 
         private const char FieldTerminator = '|';
@@ -35,6 +37,10 @@ namespace Clc.Sip
         int _seq = -1;
 
         public sip2()
+        {
+        }
+
+        public sip2(string hostname, int port) : this(hostname, port, "", "")
         {
         }
 
@@ -74,7 +80,7 @@ namespace Clc.Sip
         {
             socket.Connect(hostname, port);
         }
-        
+
         public SipTransaction Login(string sipUsername, string sipPassword, string locationCode = "", string vendorProfile = "")
         {
             this.VP = vendorProfile;
@@ -108,7 +114,7 @@ namespace Clc.Sip
             AddFixedField(DateTime.Now.ToSipString(), 18);
             AddVariableField("AO", AO);
             AddVariableField("AA", patronBarcode);
-            AddVariableField("AC", AC, true);
+            AddVariableField("AC", AC);
             AddVariableField("AD", patronPIN, true);
 
             return SendMessage();
@@ -124,8 +130,6 @@ namespace Clc.Sip
             summary["fine"] = "   Y  ";
             summary["recall"] = "    Y ";
             summary["unavail"] = "     Y";
-
-            var test = summary[type];
 
             NewMessage("63");
             AddFixedField(language, 3);
@@ -253,6 +257,25 @@ namespace Clc.Sip
             return SendMessage();
         }
 
+        public SipTransaction AcsStatus()
+        {
+            NewMessage("99");
+            AddFixedField("0", 1);
+            AddFixedField("100", 3);
+            AddFixedField("2.00", 4);
+            return SendMessage();
+        }
+
+        public void Dispose()
+        {
+            socket.Dispose();
+        }
+
+        public bool IsConnected()
+        {
+            return socket.Connected;
+        }
+
         public SipTransaction Custom(string sipMessage)
         {
             messageBuilder.Clear();
@@ -263,58 +286,68 @@ namespace Clc.Sip
         public SipTransaction SendMessage()
         {
             var msg = BuildMessage();
-            socket.WriteToStream(msg);
             var watch = Stopwatch.StartNew();
-            var response = socket.ReadFromStream();
-            watch.Stop();
-
-            bool checkChecksum;
-            Boolean.TryParse(ConfigurationManager.AppSettings["check_checksum"], out checkChecksum);
-
-            var txn = new SipTransaction { Message = msg, Response = response, ResponseTime = watch.ElapsedMilliseconds };
-
-            if (checkChecksum)
+            try
             {
-                txn.ChecksumValid = CheckChecksum(response);                
+                socket.WriteToStream(msg, TextEncoding);
+                var response = socket.ReadFromStream(TextEncoding);
+                return new SipTransaction
+                {
+                    Message = msg,
+                    Response = response,
+                    ResponseTime = watch.ElapsedMilliseconds,
+                    ConnectionReset = string.IsNullOrEmpty(response),
+                    ChecksumValid = !ValidateResponseChecksum || CheckChecksum(response)
+                };
             }
-
-            return txn;
+            catch (Exception ex) when (ex is System.IO.IOException || ex is SocketException)
+            {
+                socket.Close();
+                return new SipTransaction
+                {
+                    Message = msg,
+                    Response = string.Empty,
+                    ResponseTime = watch.ElapsedMilliseconds,
+                    ConnectionReset = true,
+                    ChecksumValid = false
+                };
+            }
         }
 
         public bool CheckChecksum(string response)
         {
+            if (string.IsNullOrWhiteSpace(response)) return false;
             response = response.Trim('\r', '\n');
+            if (response.Length < 8) return false;
             var checksum = response.Substring(response.Length - 6);
-
-            if (!checksum.StartsWith("AZ")) return true;
-
+            if (!checksum.StartsWith("AZ", StringComparison.Ordinal)) return true;
             var msg = response.Substring(0, response.Length - 4);
-
-            return checksum.Substring(2, 4) == CalculateChecksum(msg);
+            return string.Equals(checksum.Substring(2, 4), CalculateChecksum(msg, TextEncoding), StringComparison.OrdinalIgnoreCase);
         }
 
         public string BuildMessage()
         {
             messageBuilder.Append("AY" + GetSeqNumber());
             messageBuilder.Append("AZ");
-            messageBuilder.Append(CalculateChecksum(messageBuilder.ToString()));
+            messageBuilder.Append(CalculateChecksum(messageBuilder.ToString(), TextEncoding));
             messageBuilder.Append(MessageTerminator);
             var msg = messageBuilder.ToString();
             return msg;
         }
 
-        static string CalculateChecksum(string msg)
+        public static string CalculateChecksum(string msg)
+        {
+            return CalculateChecksum(msg, Encoding.UTF8);
+        }
+
+        public static string CalculateChecksum(string msg, Encoding encoding)
         {
             int checksum = 0;
-
-            foreach (char c in msg)
+            foreach (byte value in encoding.GetBytes(msg))
             {
-                checksum += (int)c;
+                checksum = (checksum + value) & 0xFFFF;
             }
-	
-            checksum *= -1;
-            var hex = String.Format("{0:X2}", Convert.ToUInt64(Convert.ToString(checksum, 2), 2));
-            return hex.Substring(hex.Length - 4);
+            return ((-checksum) & 0xFFFF).ToString("X4");
         }
 
         public int GetSeqNumber()
@@ -323,4 +356,6 @@ namespace Clc.Sip
             return _seq;
         }
     }
+
+    public class SocketDisconnectedException : Exception { }
 }

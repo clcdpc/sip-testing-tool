@@ -12,6 +12,7 @@ namespace Clc.Sip
     public partial class NoticeUpdateForm : Form
     {
         MainForm mainForm;
+
         public NoticeUpdateForm(MainForm _mainForm)
         {
             mainForm = _mainForm;

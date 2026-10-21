@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -12,10 +12,10 @@ using Clc;
 using System.Reflection;
 using System.IO;
 using System.Configuration;
-using System.Web.Script.Serialization;
 using System.Diagnostics;
 using System.Media;
 using Clc.Sip.Helpers;
+using Newtonsoft.Json;
 
 namespace Clc.Sip
 {
@@ -46,10 +46,16 @@ namespace Clc.Sip
             cmdButtons.Add(this.loginButton);
             cmdButtons.Add(this.feePaidButton);
             cmdButtons.Add(this.noticeUpdateButton);
+            cmdButtons.Add(this.btnAcsStatus);
 
             bool.TryParse(ConfigurationManager.AppSettings["dark_theme_enabled"], out darkTheme);
             if (darkTheme) SwitchTheme(darkTextColor, darkBackgroundColor);
 
+            var alwaysOnTop = new ToolStripMenuItem("Always On Top") { CheckOnClick = true };
+            alwaysOnTop.CheckedChanged += (sender, args) => TopMost = alwaysOnTop.Checked;
+            ContextMenuStrip = new ContextMenuStrip(components);
+            ContextMenuStrip.Items.Add(alwaysOnTop);
+            LoadTextboxDefaults();
             DisableButtons();
         }
 
@@ -135,7 +141,7 @@ namespace Clc.Sip
         void LoadTextboxDefaults()
         {
             serverTextBox.Text = ConfigurationManager.AppSettings["default_server_hostname"];
-            portTextBox.Text = ConfigurationManager.AppSettings["default_port"];
+            portTextBox.Text = ConfigurationManager.AppSettings["default_port"] ?? "5002";
             aoTextBox.Text = ConfigurationManager.AppSettings["default_ao"];
             apTextBox.Text = ConfigurationManager.AppSettings["default_ap"];
             usernameTextBox.Text = ConfigurationManager.AppSettings["default_sip_username"];
@@ -148,6 +154,15 @@ namespace Clc.Sip
 
         public void LogOutput(SipTransaction txn)
         {
+            if (txn.ConnectionReset)
+            {
+                DisableButtons();
+                allowCmd = false;
+                toolStripStatusLabel1.Text = "Connection reset";
+                MessageBox.Show("Connection reset");
+                return;
+            }
+
             if (!txn.ChecksumValid)
             {
                 MessageBox.Show("Invalid response checksum");
@@ -170,7 +185,9 @@ namespace Clc.Sip
         {
             try
             {
-                sipclient = new sip2(serverTextBox.Text, int.Parse(portTextBox.Text), AO, AP);
+                sipclient?.Dispose();
+                sipclient = new sip2(hostname, port, AO, AP);
+                ConfigureSipClient();
                 sipclient.Connect();
                 toolStripStatusLabel1.Text = string.Format("Connected to {0}:{1} | AO = {2} | AP = {3} | VP = {4} |", sipclient.hostname, sipclient.port, sipclient.AO, sipclient.AP, sipclient.VP);
                 EnableButtons();
@@ -184,15 +201,21 @@ namespace Clc.Sip
 
         private void connectButton_Click(object sender, EventArgs e)
         {
-            int port;
-            if (int.TryParse(portTextBox.Text, out port))
+            if (string.IsNullOrWhiteSpace(serverTextBox.Text))
             {
-                ConnectToSIPServer(serverTextBox.Text, port, aoTextBox.Text, apTextBox.Text);
+                MessageBox.Show("Server is required");
+                serverTextBox.Focus();
+                return;
             }
-            else
+
+            if (!int.TryParse(portTextBox.Text, out int port) || port < 1 || port > 65535)
             {
-                MessageBox.Show("Port must be numeric");
+                MessageBox.Show("Port must be a number between 1 and 65535");
+                portTextBox.Focus();
+                return;
             }
+
+            ConnectToSIPServer(serverTextBox.Text, port, aoTextBox.Text, apTextBox.Text);
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -202,7 +225,7 @@ namespace Clc.Sip
             bool.TryParse(ConfigurationManager.AppSettings["connect_on_start"], out start);
             if (start)
             {
-                ConnectToSIPServer(serverTextBox.Text, int.Parse(portTextBox.Text), aoTextBox.Text, apTextBox.Text);
+                connectButton_Click(sender, e);
             }
         }
 
@@ -217,14 +240,13 @@ namespace Clc.Sip
         {
             if (!allowCmd) return;
             var result = sipclient.Login(usernameTextBox.Text, passwordTextBox.Text, locationCodeTextBox.Text, vendorProfileComboBox.Text);
-            LogOutput(result);
             toolStripStatusLabel1.Text = string.Format("Connected to {0}:{1} | AO = {2} | AP = {3} | CP = {4} | VP = {5} |", sipclient.hostname, sipclient.port, sipclient.AO, sipclient.AP, sipclient.CP, sipclient.VP);
+            LogOutput(result);
         }
 
         private void patronStatusButton_Click(object sender, EventArgs e)
         {
             if (!allowCmd) return;
-            if (!CheckSocket()) return;
             LogOutput(sipclient.PatronStatus(patronBarcodeTextBox.Text, patronPinTextBox.Text));
         }
 
@@ -312,6 +334,12 @@ namespace Clc.Sip
             LogOutput(sipclient.RenewAll(patronBarcodeTextBox.Text, patronPinTextBox.Text));
         }
 
+        private void btnAcsStatus_Click(object sender, EventArgs e)
+        {
+            if (!allowCmd) return;
+            LogOutput(sipclient.AcsStatus());
+        }
+
         private void feePaidButton_Click(object sender, EventArgs e)
         {
             if (!allowCmd) return;
@@ -349,16 +377,6 @@ namespace Clc.Sip
             settingsForm.Focus();
         }
 
-        private bool CheckSocket()
-        {
-            if (!sipclient.IsConnected())
-            {
-                MessageBox.Show("disconnected");
-            }
-
-            return sipclient.IsConnected();
-        }
-
         private void reloadDefaultSettingsButton_Click(object sender, EventArgs e)
         {
             LoadTextboxDefaults();
@@ -373,6 +391,7 @@ namespace Clc.Sip
                 SwitchToDefaultTheme();
             }
 
+            ConfigureSipClient();
             if (!allowCmd) DisableButtons();
         }
 
@@ -415,9 +434,7 @@ namespace Clc.Sip
                 itemBarcode = itemBarcodeTextBox.Text
             };
 
-            var js = new JavaScriptSerializer();
-
-            var json = js.Serialize(settings);
+            var json = JsonConvert.SerializeObject(settings);
 
             var sfd = new SaveFileDialog();
             sfd.Filter = "Sip Testing Tool Configuration (*.sipc)|*.sipc";
@@ -444,8 +461,6 @@ namespace Clc.Sip
 
         private void importSettingsButton_Click(object sender, EventArgs e)
         {
-            var js = new JavaScriptSerializer();
-
             var ofd = new OpenFileDialog();
             ofd.Filter = "Sip Testing Tool Configuration (*.sipc)|*.sipc";
 
@@ -459,7 +474,7 @@ namespace Clc.Sip
                 {
                     try
                     {
-                        settings = js.Deserialize<SipSettings>(sr.ReadToEnd());
+                        settings = JsonConvert.DeserializeObject<SipSettings>(sr.ReadToEnd());
                     }
                     catch (Exception ex)
                     {
@@ -490,26 +505,25 @@ namespace Clc.Sip
             noticeUpdateForm.Focus();
         }
 
+        private void ConfigureSipClient()
+        {
+            if (sipclient == null) return;
+            var encoding = ConfigurationManager.AppSettings["encoding"];
+            sipclient.TextEncoding = Encoding.GetEncoding(string.IsNullOrWhiteSpace(encoding) ? "UTF-8" : encoding);
+            sipclient.ValidateResponseChecksum = !bool.TryParse(ConfigurationManager.AppSettings["check_checksum"], out var check) || check;
+        }
+
+        protected override void OnFormClosed(FormClosedEventArgs e)
+        {
+            sipclient?.Dispose();
+            settingsForm?.Dispose();
+            noticeUpdateForm?.Dispose();
+            base.OnFormClosed(e);
+        }
+
         public string PatronBarcode { get { return patronBarcodeTextBox.Text; } }
         public string ItemBarcode { get { return itemBarcodeTextBox.Text; } }
         public sip2 SipClient { get { return sipclient; } }
-        
-    }
-
-    public class SipSettings
-    {
-        public string server { get; set; }
-        public string port { get; set; }
-        public string ao { get; set; }
-        public string ap { get; set; }
-        public string username { get; set; }
-        public string password { get; set; }
-        public string vendorProfile { get; set; }
-        public string patronBarcode { get; set; }
-        public string patronPIN { get; set; }
-        public string bp { get; set; }
-        public string bq { get; set; }
-        public string itemBarcode { get; set; }
 
     }
 }

@@ -52,6 +52,7 @@
             this.button1.Size = new System.Drawing.Size(75, 23);
             this.button1.TabIndex = 0;
             this.button1.Text = "Update Notice";
+            this.button1.AccessibleName = "Update Notice";
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click);
             // 
@@ -60,6 +61,7 @@
             this.noticeMediumComboBox.FormattingEnabled = true;
             this.noticeMediumComboBox.Location = new System.Drawing.Point(101, 66);
             this.noticeMediumComboBox.Name = "noticeMediumComboBox";
+            this.noticeMediumComboBox.AccessibleName = "Notice Medium";
             this.noticeMediumComboBox.Size = new System.Drawing.Size(121, 21);
             this.noticeMediumComboBox.TabIndex = 1;
             // 
@@ -67,6 +69,7 @@
             // 
             this.deliveryDateTextBox.Location = new System.Drawing.Point(101, 40);
             this.deliveryDateTextBox.Name = "deliveryDateTextBox";
+            this.deliveryDateTextBox.AccessibleName = "Delivery Date";
             this.deliveryDateTextBox.Size = new System.Drawing.Size(121, 20);
             this.deliveryDateTextBox.TabIndex = 2;
             // 
@@ -74,6 +77,7 @@
             // 
             this.patronBarcodeTextBox.Location = new System.Drawing.Point(101, 120);
             this.patronBarcodeTextBox.Name = "patronBarcodeTextBox";
+            this.patronBarcodeTextBox.AccessibleName = "Patron Barcode";
             this.patronBarcodeTextBox.Size = new System.Drawing.Size(121, 20);
             this.patronBarcodeTextBox.TabIndex = 3;
             // 
@@ -81,6 +85,7 @@
             // 
             this.itemBarcodeTextBox.Location = new System.Drawing.Point(101, 146);
             this.itemBarcodeTextBox.Name = "itemBarcodeTextBox";
+            this.itemBarcodeTextBox.AccessibleName = "Item Barcode";
             this.itemBarcodeTextBox.Size = new System.Drawing.Size(121, 20);
             this.itemBarcodeTextBox.TabIndex = 4;
             // 
@@ -134,6 +139,7 @@
             this.noticeStatusComboBox.FormattingEnabled = true;
             this.noticeStatusComboBox.Location = new System.Drawing.Point(101, 13);
             this.noticeStatusComboBox.Name = "noticeStatusComboBox";
+            this.noticeStatusComboBox.AccessibleName = "Notice Status";
             this.noticeStatusComboBox.Size = new System.Drawing.Size(121, 21);
             this.noticeStatusComboBox.TabIndex = 10;
             // 
@@ -142,6 +148,7 @@
             this.notificationTypeComboBox.FormattingEnabled = true;
             this.notificationTypeComboBox.Location = new System.Drawing.Point(101, 93);
             this.notificationTypeComboBox.Name = "notificationTypeComboBox";
+            this.notificationTypeComboBox.AccessibleName = "Notification Type";
             this.notificationTypeComboBox.Size = new System.Drawing.Size(121, 21);
             this.notificationTypeComboBox.TabIndex = 11;
             // 
@@ -158,6 +165,7 @@
             // 
             this.commentTextBox.Location = new System.Drawing.Point(101, 172);
             this.commentTextBox.Name = "commentTextBox";
+            this.commentTextBox.AccessibleName = "Comment";
             this.commentTextBox.Size = new System.Drawing.Size(121, 20);
             this.commentTextBox.TabIndex = 4;
             // 

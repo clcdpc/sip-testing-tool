@@ -1,952 +1,1055 @@
-﻿namespace Clc.Sip
+namespace Clc.Sip
 {
-	partial class MainForm
-	{
-		/// <summary>
-		/// Required designer variable.
-		/// </summary>
-		private System.ComponentModel.IContainer components = null;
+    partial class MainForm
+    {
+        /// <summary>
+        /// Required designer variable.
+        /// </summary>
+        private System.ComponentModel.IContainer components = null;
 
-		/// <summary>
-		/// Clean up any resources being used.
-		/// </summary>
-		/// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
-		protected override void Dispose(bool disposing)
-		{
-			if (disposing && (components != null))
-			{
-				components.Dispose();
-			}
-			base.Dispose(disposing);
-		}
+        /// <summary>
+        /// Clean up any resources being used.
+        /// </summary>
+        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+            {
+                components.Dispose();
+            }
+            base.Dispose(disposing);
+        }
 
-		#region Windows Form Designer generated code
+        #region Windows Form Designer generated code
 
-		/// <summary>
-		/// Required method for Designer support - do not modify
-		/// the contents of this method with the code editor.
-		/// </summary>
-		private void InitializeComponent()
-		{
-            this.components = new System.ComponentModel.Container();
+        /// <summary>
+        /// Required method for Designer support - do not modify
+        /// the contents of this method with the code editor.
+        /// </summary>
+        private void InitializeComponent()
+        {
+            components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            this.usernameTextBox = new System.Windows.Forms.TextBox();
-            this.passwordTextBox = new System.Windows.Forms.TextBox();
-            this.label1 = new System.Windows.Forms.Label();
-            this.label2 = new System.Windows.Forms.Label();
-            this.loginButton = new System.Windows.Forms.Button();
-            this.serverTextBox = new System.Windows.Forms.TextBox();
-            this.portTextBox = new System.Windows.Forms.TextBox();
-            this.label3 = new System.Windows.Forms.Label();
-            this.label4 = new System.Windows.Forms.Label();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
-            this.aoTextBox = new System.Windows.Forms.TextBox();
-            this.label10 = new System.Windows.Forms.Label();
-            this.connectButton = new System.Windows.Forms.Button();
-            this.label11 = new System.Windows.Forms.Label();
-            this.apTextBox = new System.Windows.Forms.TextBox();
-            this.label7 = new System.Windows.Forms.Label();
-            this.patronInformationContextMenu = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.noneMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.holdItemsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.overdueItemsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.chargedItemsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.fineItemsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.recallItemsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.unavailableHoldsMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.groupBox5 = new System.Windows.Forms.GroupBox();
-            this.locationCodeTextBox = new System.Windows.Forms.TextBox();
-            this.label20 = new System.Windows.Forms.Label();
-            this.vendorProfileComboBox = new System.Windows.Forms.ComboBox();
-            this.renewAllButton = new System.Windows.Forms.Button();
-            this.renewButton = new System.Windows.Forms.Button();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
-            this.bpTextBox = new System.Windows.Forms.TextBox();
-            this.label13 = new System.Windows.Forms.Label();
-            this.patronBarcodeTextBox = new System.Windows.Forms.TextBox();
-            this.label12 = new System.Windows.Forms.Label();
-            this.label5 = new System.Windows.Forms.Label();
-            this.bqTextBox = new System.Windows.Forms.TextBox();
-            this.label6 = new System.Windows.Forms.Label();
-            this.patronPinTextBox = new System.Windows.Forms.TextBox();
-            this.checkoutButton = new System.Windows.Forms.Button();
-            this.patronStatusButton = new System.Windows.Forms.Button();
-            this.checkInButton = new System.Windows.Forms.Button();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
-            this.label8 = new System.Windows.Forms.Label();
-            this.itemBarcodeTextBox = new System.Windows.Forms.TextBox();
-            this.endSessionButton = new System.Windows.Forms.Button();
-            this.itemInformationButton = new System.Windows.Forms.Button();
-            this.patronInformationButton = new System.Windows.Forms.Button();
-            this.statusStrip1 = new System.Windows.Forms.StatusStrip();
-            this.toolStripStatusLabel1 = new System.Windows.Forms.ToolStripStatusLabel();
-            this.splitContainer1 = new System.Windows.Forms.SplitContainer();
-            this.noticeUpdateButton = new System.Windows.Forms.Button();
-            this.feePaidButton = new System.Windows.Forms.Button();
-            this.groupBox4 = new System.Windows.Forms.GroupBox();
-            this.amountTextBox = new System.Windows.Forms.TextBox();
-            this.transactionIdTextBox = new System.Windows.Forms.TextBox();
-            this.label17 = new System.Windows.Forms.Label();
-            this.feeIdentifierTextBox = new System.Windows.Forms.TextBox();
-            this.label19 = new System.Windows.Forms.Label();
-            this.paymentTypeTextBox = new System.Windows.Forms.TextBox();
-            this.label18 = new System.Windows.Forms.Label();
-            this.label16 = new System.Windows.Forms.Label();
-            this.feeTypeTextBox = new System.Windows.Forms.TextBox();
-            this.label15 = new System.Windows.Forms.Label();
-            this.label14 = new System.Windows.Forms.Label();
-            this.label9 = new System.Windows.Forms.Label();
-            this.importSettingsButton = new System.Windows.Forms.Button();
-            this.exportSettingsButton = new System.Windows.Forms.Button();
-            this.exportLogButton = new System.Windows.Forms.Button();
-            this.clearLogButton = new System.Windows.Forms.Button();
-            this.reloadDefaultSettingsButton = new System.Windows.Forms.Button();
-            this.changeDefaultSettingsButton = new System.Windows.Forms.Button();
-            this.logRichTextBox = new System.Windows.Forms.RichTextBox();
-            this.groupBox1.SuspendLayout();
-            this.patronInformationContextMenu.SuspendLayout();
-            this.groupBox5.SuspendLayout();
-            this.groupBox2.SuspendLayout();
-            this.groupBox3.SuspendLayout();
-            this.statusStrip1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
-            this.splitContainer1.Panel1.SuspendLayout();
-            this.splitContainer1.Panel2.SuspendLayout();
-            this.splitContainer1.SuspendLayout();
-            this.groupBox4.SuspendLayout();
-            this.SuspendLayout();
+            usernameTextBox = new TextBox();
+            passwordTextBox = new TextBox();
+            label1 = new Label();
+            label2 = new Label();
+            loginButton = new Button();
+            serverTextBox = new TextBox();
+            portTextBox = new TextBox();
+            label3 = new Label();
+            label4 = new Label();
+            groupBox1 = new GroupBox();
+            aoTextBox = new TextBox();
+            label10 = new Label();
+            connectButton = new Button();
+            label11 = new Label();
+            apTextBox = new TextBox();
+            label7 = new Label();
+            patronInformationContextMenu = new ContextMenuStrip(components);
+            noneMenuItem = new ToolStripMenuItem();
+            holdItemsMenuItem = new ToolStripMenuItem();
+            overdueItemsMenuItem = new ToolStripMenuItem();
+            chargedItemsMenuItem = new ToolStripMenuItem();
+            fineItemsMenuItem = new ToolStripMenuItem();
+            recallItemsMenuItem = new ToolStripMenuItem();
+            unavailableHoldsMenuItem = new ToolStripMenuItem();
+            groupBox5 = new GroupBox();
+            locationCodeTextBox = new TextBox();
+            label20 = new Label();
+            vendorProfileComboBox = new ComboBox();
+            renewAllButton = new Button();
+            renewButton = new Button();
+            groupBox2 = new GroupBox();
+            bpTextBox = new TextBox();
+            label13 = new Label();
+            patronBarcodeTextBox = new TextBox();
+            label12 = new Label();
+            label5 = new Label();
+            bqTextBox = new TextBox();
+            label6 = new Label();
+            patronPinTextBox = new TextBox();
+            checkoutButton = new Button();
+            patronStatusButton = new Button();
+            checkInButton = new Button();
+            groupBox3 = new GroupBox();
+            label8 = new Label();
+            itemBarcodeTextBox = new TextBox();
+            endSessionButton = new Button();
+            itemInformationButton = new Button();
+            patronInformationButton = new Button();
+            statusStrip1 = new StatusStrip();
+            toolStripStatusLabel1 = new ToolStripStatusLabel();
+            splitContainer1 = new SplitContainer();
+            noticeUpdateButton = new Button();
+            feePaidButton = new Button();
+            groupBox4 = new GroupBox();
+            amountTextBox = new TextBox();
+            transactionIdTextBox = new TextBox();
+            label17 = new Label();
+            feeIdentifierTextBox = new TextBox();
+            label19 = new Label();
+            paymentTypeTextBox = new TextBox();
+            label18 = new Label();
+            label16 = new Label();
+            feeTypeTextBox = new TextBox();
+            label15 = new Label();
+            label14 = new Label();
+            label9 = new Label();
+            importSettingsButton = new Button();
+            exportSettingsButton = new Button();
+            exportLogButton = new Button();
+            clearLogButton = new Button();
+            reloadDefaultSettingsButton = new Button();
+            changeDefaultSettingsButton = new Button();
+            logRichTextBox = new RichTextBox();
+            btnAcsStatus = new Button();
+            groupBox1.SuspendLayout();
+            patronInformationContextMenu.SuspendLayout();
+            groupBox5.SuspendLayout();
+            groupBox2.SuspendLayout();
+            groupBox3.SuspendLayout();
+            statusStrip1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
+            splitContainer1.Panel1.SuspendLayout();
+            splitContainer1.Panel2.SuspendLayout();
+            splitContainer1.SuspendLayout();
+            groupBox4.SuspendLayout();
+            SuspendLayout();
             // 
             // usernameTextBox
             // 
-            this.usernameTextBox.Location = new System.Drawing.Point(83, 15);
-            this.usernameTextBox.Name = "usernameTextBox";
-            this.usernameTextBox.Size = new System.Drawing.Size(125, 20);
-            this.usernameTextBox.TabIndex = 0;
+            usernameTextBox.AccessibleName = "SIP Username";
+            usernameTextBox.Location = new Point(97, 17);
+            usernameTextBox.Margin = new Padding(4, 3, 4, 3);
+            usernameTextBox.Name = "usernameTextBox";
+            usernameTextBox.Size = new Size(145, 23);
+            usernameTextBox.TabIndex = 0;
             // 
             // passwordTextBox
             // 
-            this.passwordTextBox.Location = new System.Drawing.Point(83, 40);
-            this.passwordTextBox.Name = "passwordTextBox";
-            this.passwordTextBox.PasswordChar = '*';
-            this.passwordTextBox.Size = new System.Drawing.Size(125, 20);
-            this.passwordTextBox.TabIndex = 1;
+            passwordTextBox.AccessibleName = "SIP Password";
+            passwordTextBox.Location = new Point(97, 46);
+            passwordTextBox.Margin = new Padding(4, 3, 4, 3);
+            passwordTextBox.Name = "passwordTextBox";
+            passwordTextBox.PasswordChar = '*';
+            passwordTextBox.Size = new Size(145, 23);
+            passwordTextBox.TabIndex = 1;
             // 
             // label1
             // 
-            this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(2, 19);
-            this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(75, 13);
-            this.label1.TabIndex = 3;
-            this.label1.Text = "SIP Username";
-            this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            label1.AutoSize = true;
+            label1.Location = new Point(2, 22);
+            label1.Margin = new Padding(4, 0, 4, 0);
+            label1.Name = "label1";
+            label1.Size = new Size(79, 15);
+            label1.TabIndex = 3;
+            label1.Text = "SIP Username";
+            label1.TextAlign = ContentAlignment.MiddleRight;
             // 
             // label2
             // 
-            this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(4, 44);
-            this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(73, 13);
-            this.label2.TabIndex = 3;
-            this.label2.Text = "SIP Password";
-            this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            label2.AutoSize = true;
+            label2.Location = new Point(5, 51);
+            label2.Margin = new Padding(4, 0, 4, 0);
+            label2.Name = "label2";
+            label2.Size = new Size(76, 15);
+            label2.TabIndex = 3;
+            label2.Text = "SIP Password";
+            label2.TextAlign = ContentAlignment.MiddleRight;
             // 
             // loginButton
             // 
-            this.loginButton.Location = new System.Drawing.Point(83, 116);
-            this.loginButton.Name = "loginButton";
-            this.loginButton.Size = new System.Drawing.Size(64, 23);
-            this.loginButton.TabIndex = 4;
-            this.loginButton.Text = "Login";
-            this.loginButton.UseVisualStyleBackColor = true;
-            this.loginButton.Click += new System.EventHandler(this.loginButton_Click);
+            loginButton.Location = new Point(97, 134);
+            loginButton.Margin = new Padding(4, 3, 4, 3);
+            loginButton.Name = "loginButton";
+            loginButton.Size = new Size(75, 27);
+            loginButton.TabIndex = 4;
+            loginButton.Text = "Login";
+            loginButton.UseVisualStyleBackColor = true;
+            loginButton.Click += loginButton_Click;
             // 
             // serverTextBox
             // 
-            this.serverTextBox.Location = new System.Drawing.Point(70, 19);
-            this.serverTextBox.Name = "serverTextBox";
-            this.serverTextBox.Size = new System.Drawing.Size(107, 20);
-            this.serverTextBox.TabIndex = 0;
+            serverTextBox.AccessibleName = "SIP Server";
+            serverTextBox.Location = new Point(82, 22);
+            serverTextBox.Margin = new Padding(4, 3, 4, 3);
+            serverTextBox.Name = "serverTextBox";
+            serverTextBox.Size = new Size(124, 23);
+            serverTextBox.TabIndex = 0;
             // 
             // portTextBox
             // 
-            this.portTextBox.Location = new System.Drawing.Point(70, 42);
-            this.portTextBox.Name = "portTextBox";
-            this.portTextBox.Size = new System.Drawing.Size(107, 20);
-            this.portTextBox.TabIndex = 1;
+            portTextBox.AccessibleName = "SIP Server Port";
+            portTextBox.Location = new Point(82, 48);
+            portTextBox.Margin = new Padding(4, 3, 4, 3);
+            portTextBox.Name = "portTextBox";
+            portTextBox.Size = new Size(124, 23);
+            portTextBox.TabIndex = 1;
             // 
             // label3
             // 
-            this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(4, 22);
-            this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(58, 13);
-            this.label3.TabIndex = 3;
-            this.label3.Text = "SIP Server";
+            label3.AutoSize = true;
+            label3.Location = new Point(14, 25);
+            label3.Margin = new Padding(4, 0, 4, 0);
+            label3.Name = "label3";
+            label3.Size = new Size(58, 15);
+            label3.TabIndex = 3;
+            label3.Text = "SIP Server";
             // 
             // label4
             // 
-            this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(16, 45);
-            this.label4.Name = "label4";
-            this.label4.Size = new System.Drawing.Size(46, 13);
-            this.label4.TabIndex = 3;
-            this.label4.Text = "SIP Port";
+            label4.AutoSize = true;
+            label4.Location = new Point(24, 52);
+            label4.Margin = new Padding(4, 0, 4, 0);
+            label4.Name = "label4";
+            label4.Size = new Size(48, 15);
+            label4.TabIndex = 3;
+            label4.Text = "SIP Port";
             // 
             // groupBox1
             // 
-            this.groupBox1.Controls.Add(this.aoTextBox);
-            this.groupBox1.Controls.Add(this.label10);
-            this.groupBox1.Controls.Add(this.connectButton);
-            this.groupBox1.Controls.Add(this.label11);
-            this.groupBox1.Controls.Add(this.label4);
-            this.groupBox1.Controls.Add(this.apTextBox);
-            this.groupBox1.Controls.Add(this.serverTextBox);
-            this.groupBox1.Controls.Add(this.label3);
-            this.groupBox1.Controls.Add(this.portTextBox);
-            this.groupBox1.Location = new System.Drawing.Point(12, 7);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(180, 147);
-            this.groupBox1.TabIndex = 0;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Connection Information";
+            groupBox1.Controls.Add(aoTextBox);
+            groupBox1.Controls.Add(label10);
+            groupBox1.Controls.Add(connectButton);
+            groupBox1.Controls.Add(label11);
+            groupBox1.Controls.Add(label4);
+            groupBox1.Controls.Add(apTextBox);
+            groupBox1.Controls.Add(serverTextBox);
+            groupBox1.Controls.Add(label3);
+            groupBox1.Controls.Add(portTextBox);
+            groupBox1.Location = new Point(14, 8);
+            groupBox1.Margin = new Padding(4, 3, 4, 3);
+            groupBox1.Name = "groupBox1";
+            groupBox1.Padding = new Padding(4, 3, 4, 3);
+            groupBox1.Size = new Size(210, 170);
+            groupBox1.TabIndex = 0;
+            groupBox1.TabStop = false;
+            groupBox1.Text = "Connection Information";
             // 
             // aoTextBox
             // 
-            this.aoTextBox.Location = new System.Drawing.Point(70, 66);
-            this.aoTextBox.Name = "aoTextBox";
-            this.aoTextBox.Size = new System.Drawing.Size(107, 20);
-            this.aoTextBox.TabIndex = 2;
+            aoTextBox.AccessibleName = "SIP AO Field";
+            aoTextBox.Location = new Point(82, 76);
+            aoTextBox.Margin = new Padding(4, 3, 4, 3);
+            aoTextBox.Name = "aoTextBox";
+            aoTextBox.Size = new Size(124, 23);
+            aoTextBox.TabIndex = 2;
             // 
             // label10
             // 
-            this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(42, 69);
-            this.label10.Name = "label10";
-            this.label10.Size = new System.Drawing.Size(22, 13);
-            this.label10.TabIndex = 9;
-            this.label10.Text = "AO";
+            label10.AutoSize = true;
+            label10.Location = new Point(48, 80);
+            label10.Margin = new Padding(4, 0, 4, 0);
+            label10.Name = "label10";
+            label10.Size = new Size(24, 15);
+            label10.TabIndex = 9;
+            label10.Text = "AO";
             // 
             // connectButton
             // 
-            this.connectButton.Location = new System.Drawing.Point(53, 116);
-            this.connectButton.Name = "connectButton";
-            this.connectButton.Size = new System.Drawing.Size(75, 23);
-            this.connectButton.TabIndex = 4;
-            this.connectButton.Text = "Connect";
-            this.connectButton.UseVisualStyleBackColor = true;
-            this.connectButton.Click += new System.EventHandler(this.connectButton_Click);
+            connectButton.Location = new Point(62, 134);
+            connectButton.Margin = new Padding(4, 3, 4, 3);
+            connectButton.Name = "connectButton";
+            connectButton.Size = new Size(88, 27);
+            connectButton.TabIndex = 4;
+            connectButton.Text = "Connect";
+            connectButton.UseVisualStyleBackColor = true;
+            connectButton.Click += connectButton_Click;
             // 
             // label11
             // 
-            this.label11.AutoSize = true;
-            this.label11.Location = new System.Drawing.Point(43, 93);
-            this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(21, 13);
-            this.label11.TabIndex = 10;
-            this.label11.Text = "AP";
+            label11.AutoSize = true;
+            label11.Location = new Point(50, 107);
+            label11.Margin = new Padding(4, 0, 4, 0);
+            label11.Name = "label11";
+            label11.Size = new Size(22, 15);
+            label11.TabIndex = 10;
+            label11.Text = "AP";
             // 
             // apTextBox
             // 
-            this.apTextBox.Location = new System.Drawing.Point(70, 90);
-            this.apTextBox.Name = "apTextBox";
-            this.apTextBox.Size = new System.Drawing.Size(107, 20);
-            this.apTextBox.TabIndex = 3;
+            apTextBox.AccessibleName = "SIP AP Field";
+            apTextBox.Location = new Point(82, 104);
+            apTextBox.Margin = new Padding(4, 3, 4, 3);
+            apTextBox.Name = "apTextBox";
+            apTextBox.Size = new Size(124, 23);
+            apTextBox.TabIndex = 3;
             // 
             // label7
             // 
-            this.label7.AutoSize = true;
-            this.label7.Location = new System.Drawing.Point(4, 69);
-            this.label7.Name = "label7";
-            this.label7.Size = new System.Drawing.Size(73, 13);
-            this.label7.TabIndex = 6;
-            this.label7.Text = "Vendor Profile";
-            this.label7.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            label7.AutoSize = true;
+            label7.Location = new Point(5, 80);
+            label7.Margin = new Padding(4, 0, 4, 0);
+            label7.Name = "label7";
+            label7.Size = new Size(81, 15);
+            label7.TabIndex = 6;
+            label7.Text = "Vendor Profile";
+            label7.TextAlign = ContentAlignment.MiddleRight;
             // 
             // patronInformationContextMenu
             // 
-            this.patronInformationContextMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.noneMenuItem,
-            this.holdItemsMenuItem,
-            this.overdueItemsMenuItem,
-            this.chargedItemsMenuItem,
-            this.fineItemsMenuItem,
-            this.recallItemsMenuItem,
-            this.unavailableHoldsMenuItem});
-            this.patronInformationContextMenu.Name = "patronInformationContextMenu";
-            this.patronInformationContextMenu.Size = new System.Drawing.Size(170, 158);
+            patronInformationContextMenu.Items.AddRange(new ToolStripItem[] { noneMenuItem, holdItemsMenuItem, overdueItemsMenuItem, chargedItemsMenuItem, fineItemsMenuItem, recallItemsMenuItem, unavailableHoldsMenuItem });
+            patronInformationContextMenu.Name = "patronInformationContextMenu";
+            patronInformationContextMenu.Size = new Size(170, 158);
             // 
             // noneMenuItem
             // 
-            this.noneMenuItem.Name = "noneMenuItem";
-            this.noneMenuItem.Size = new System.Drawing.Size(169, 22);
-            this.noneMenuItem.Text = "None";
-            this.noneMenuItem.Click += new System.EventHandler(this.noneMenuItem_Click);
+            noneMenuItem.Name = "noneMenuItem";
+            noneMenuItem.Size = new Size(169, 22);
+            noneMenuItem.Text = "None";
+            noneMenuItem.Click += noneMenuItem_Click;
             // 
             // holdItemsMenuItem
             // 
-            this.holdItemsMenuItem.Name = "holdItemsMenuItem";
-            this.holdItemsMenuItem.Size = new System.Drawing.Size(169, 22);
-            this.holdItemsMenuItem.Text = "Hold Items";
-            this.holdItemsMenuItem.Click += new System.EventHandler(this.holdItemsMenuItem_Click);
+            holdItemsMenuItem.Name = "holdItemsMenuItem";
+            holdItemsMenuItem.Size = new Size(169, 22);
+            holdItemsMenuItem.Text = "Hold Items";
+            holdItemsMenuItem.Click += holdItemsMenuItem_Click;
             // 
             // overdueItemsMenuItem
             // 
-            this.overdueItemsMenuItem.Name = "overdueItemsMenuItem";
-            this.overdueItemsMenuItem.Size = new System.Drawing.Size(169, 22);
-            this.overdueItemsMenuItem.Text = "Overdue Items";
-            this.overdueItemsMenuItem.Click += new System.EventHandler(this.overdueItemsMenuItem_Click);
+            overdueItemsMenuItem.Name = "overdueItemsMenuItem";
+            overdueItemsMenuItem.Size = new Size(169, 22);
+            overdueItemsMenuItem.Text = "Overdue Items";
+            overdueItemsMenuItem.Click += overdueItemsMenuItem_Click;
             // 
             // chargedItemsMenuItem
             // 
-            this.chargedItemsMenuItem.Name = "chargedItemsMenuItem";
-            this.chargedItemsMenuItem.Size = new System.Drawing.Size(169, 22);
-            this.chargedItemsMenuItem.Text = "Charged Items";
-            this.chargedItemsMenuItem.Click += new System.EventHandler(this.chargedItemsMenuItem_Click);
+            chargedItemsMenuItem.Name = "chargedItemsMenuItem";
+            chargedItemsMenuItem.Size = new Size(169, 22);
+            chargedItemsMenuItem.Text = "Charged Items";
+            chargedItemsMenuItem.Click += chargedItemsMenuItem_Click;
             // 
             // fineItemsMenuItem
             // 
-            this.fineItemsMenuItem.Name = "fineItemsMenuItem";
-            this.fineItemsMenuItem.Size = new System.Drawing.Size(169, 22);
-            this.fineItemsMenuItem.Text = "Fine Items";
-            this.fineItemsMenuItem.Click += new System.EventHandler(this.fineItemsMenuItem_Click);
+            fineItemsMenuItem.Name = "fineItemsMenuItem";
+            fineItemsMenuItem.Size = new Size(169, 22);
+            fineItemsMenuItem.Text = "Fine Items";
+            fineItemsMenuItem.Click += fineItemsMenuItem_Click;
             // 
             // recallItemsMenuItem
             // 
-            this.recallItemsMenuItem.Name = "recallItemsMenuItem";
-            this.recallItemsMenuItem.Size = new System.Drawing.Size(169, 22);
-            this.recallItemsMenuItem.Text = "Recall Items";
-            this.recallItemsMenuItem.Click += new System.EventHandler(this.recallItemsMenuItem_Click);
+            recallItemsMenuItem.Name = "recallItemsMenuItem";
+            recallItemsMenuItem.Size = new Size(169, 22);
+            recallItemsMenuItem.Text = "Recall Items";
+            recallItemsMenuItem.Click += recallItemsMenuItem_Click;
             // 
             // unavailableHoldsMenuItem
             // 
-            this.unavailableHoldsMenuItem.Name = "unavailableHoldsMenuItem";
-            this.unavailableHoldsMenuItem.Size = new System.Drawing.Size(169, 22);
-            this.unavailableHoldsMenuItem.Text = "Unavailable Holds";
-            this.unavailableHoldsMenuItem.Click += new System.EventHandler(this.unavailableHoldsMenuItem_Click);
+            unavailableHoldsMenuItem.Name = "unavailableHoldsMenuItem";
+            unavailableHoldsMenuItem.Size = new Size(169, 22);
+            unavailableHoldsMenuItem.Text = "Unavailable Holds";
+            unavailableHoldsMenuItem.Click += unavailableHoldsMenuItem_Click;
             // 
             // groupBox5
             // 
-            this.groupBox5.Controls.Add(this.locationCodeTextBox);
-            this.groupBox5.Controls.Add(this.label20);
-            this.groupBox5.Controls.Add(this.label7);
-            this.groupBox5.Controls.Add(this.vendorProfileComboBox);
-            this.groupBox5.Controls.Add(this.usernameTextBox);
-            this.groupBox5.Controls.Add(this.loginButton);
-            this.groupBox5.Controls.Add(this.label1);
-            this.groupBox5.Controls.Add(this.label2);
-            this.groupBox5.Controls.Add(this.passwordTextBox);
-            this.groupBox5.Location = new System.Drawing.Point(198, 7);
-            this.groupBox5.Name = "groupBox5";
-            this.groupBox5.Size = new System.Drawing.Size(214, 147);
-            this.groupBox5.TabIndex = 1;
-            this.groupBox5.TabStop = false;
-            this.groupBox5.Text = "Login Information";
+            groupBox5.Controls.Add(locationCodeTextBox);
+            groupBox5.Controls.Add(label20);
+            groupBox5.Controls.Add(label7);
+            groupBox5.Controls.Add(vendorProfileComboBox);
+            groupBox5.Controls.Add(usernameTextBox);
+            groupBox5.Controls.Add(loginButton);
+            groupBox5.Controls.Add(label1);
+            groupBox5.Controls.Add(label2);
+            groupBox5.Controls.Add(passwordTextBox);
+            groupBox5.Location = new Point(231, 8);
+            groupBox5.Margin = new Padding(4, 3, 4, 3);
+            groupBox5.Name = "groupBox5";
+            groupBox5.Padding = new Padding(4, 3, 4, 3);
+            groupBox5.Size = new Size(250, 170);
+            groupBox5.TabIndex = 1;
+            groupBox5.TabStop = false;
+            groupBox5.Text = "Login Information";
             // 
             // locationCodeTextBox
             // 
-            this.locationCodeTextBox.Location = new System.Drawing.Point(83, 90);
-            this.locationCodeTextBox.Name = "locationCodeTextBox";
-            this.locationCodeTextBox.Size = new System.Drawing.Size(125, 20);
-            this.locationCodeTextBox.TabIndex = 3;
+            locationCodeTextBox.AccessibleName = "Location Code";
+            locationCodeTextBox.Location = new Point(97, 104);
+            locationCodeTextBox.Margin = new Padding(4, 3, 4, 3);
+            locationCodeTextBox.Name = "locationCodeTextBox";
+            locationCodeTextBox.Size = new Size(145, 23);
+            locationCodeTextBox.TabIndex = 3;
             // 
             // label20
             // 
-            this.label20.AutoSize = true;
-            this.label20.Location = new System.Drawing.Point(2, 94);
-            this.label20.Name = "label20";
-            this.label20.Size = new System.Drawing.Size(76, 13);
-            this.label20.TabIndex = 8;
-            this.label20.Text = "Location Code";
-            this.label20.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
+            label20.AutoSize = true;
+            label20.Location = new Point(2, 108);
+            label20.Margin = new Padding(4, 0, 4, 0);
+            label20.Name = "label20";
+            label20.Size = new Size(84, 15);
+            label20.TabIndex = 8;
+            label20.Text = "Location Code";
+            label20.TextAlign = ContentAlignment.MiddleRight;
             // 
             // vendorProfileComboBox
             // 
-            this.vendorProfileComboBox.FormattingEnabled = true;
-            this.vendorProfileComboBox.Items.AddRange(new object[] {
-            "Envisionware",
-            "Comprise",
-            "3M",
-            "ITG"});
-            this.vendorProfileComboBox.Location = new System.Drawing.Point(83, 65);
-            this.vendorProfileComboBox.Name = "vendorProfileComboBox";
-            this.vendorProfileComboBox.Size = new System.Drawing.Size(125, 21);
-            this.vendorProfileComboBox.TabIndex = 2;
+            vendorProfileComboBox.AccessibleName = "Vendor Profile";
+            vendorProfileComboBox.FormattingEnabled = true;
+            vendorProfileComboBox.Items.AddRange(new object[] { "Envisionware", "Comprise", "3M", "ITG" });
+            vendorProfileComboBox.Location = new Point(97, 75);
+            vendorProfileComboBox.Margin = new Padding(4, 3, 4, 3);
+            vendorProfileComboBox.Name = "vendorProfileComboBox";
+            vendorProfileComboBox.Size = new Size(145, 23);
+            vendorProfileComboBox.TabIndex = 2;
             // 
             // renewAllButton
             // 
-            this.renewAllButton.Location = new System.Drawing.Point(951, 60);
-            this.renewAllButton.Name = "renewAllButton";
-            this.renewAllButton.Size = new System.Drawing.Size(75, 34);
-            this.renewAllButton.TabIndex = 9;
-            this.renewAllButton.Text = "Renew All Items";
-            this.renewAllButton.UseVisualStyleBackColor = true;
-            this.renewAllButton.Click += new System.EventHandler(this.renewAllButton_Click);
+            renewAllButton.AccessibleName = "Renew All Items";
+            renewAllButton.Location = new Point(1110, 69);
+            renewAllButton.Margin = new Padding(4, 3, 4, 3);
+            renewAllButton.Name = "renewAllButton";
+            renewAllButton.Size = new Size(88, 39);
+            renewAllButton.TabIndex = 9;
+            renewAllButton.Text = "Renew All Items";
+            renewAllButton.UseVisualStyleBackColor = true;
+            renewAllButton.Click += renewAllButton_Click;
             // 
             // renewButton
             // 
-            this.renewButton.Location = new System.Drawing.Point(870, 98);
-            this.renewButton.Name = "renewButton";
-            this.renewButton.Size = new System.Drawing.Size(75, 34);
-            this.renewButton.TabIndex = 11;
-            this.renewButton.Text = "Renew   Item";
-            this.renewButton.UseVisualStyleBackColor = true;
-            this.renewButton.Click += new System.EventHandler(this.renewButton_Click);
+            renewButton.AccessibleName = "Renew Item";
+            renewButton.Location = new Point(1015, 113);
+            renewButton.Margin = new Padding(4, 3, 4, 3);
+            renewButton.Name = "renewButton";
+            renewButton.Size = new Size(88, 39);
+            renewButton.TabIndex = 11;
+            renewButton.Text = "Renew   Item";
+            renewButton.UseVisualStyleBackColor = true;
+            renewButton.Click += renewButton_Click;
             // 
             // groupBox2
             // 
-            this.groupBox2.Controls.Add(this.bpTextBox);
-            this.groupBox2.Controls.Add(this.label13);
-            this.groupBox2.Controls.Add(this.patronBarcodeTextBox);
-            this.groupBox2.Controls.Add(this.label12);
-            this.groupBox2.Controls.Add(this.label5);
-            this.groupBox2.Controls.Add(this.bqTextBox);
-            this.groupBox2.Controls.Add(this.label6);
-            this.groupBox2.Controls.Add(this.patronPinTextBox);
-            this.groupBox2.Location = new System.Drawing.Point(417, 9);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(178, 89);
-            this.groupBox2.TabIndex = 2;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Patron Information";
+            groupBox2.Controls.Add(bpTextBox);
+            groupBox2.Controls.Add(label13);
+            groupBox2.Controls.Add(patronBarcodeTextBox);
+            groupBox2.Controls.Add(label12);
+            groupBox2.Controls.Add(label5);
+            groupBox2.Controls.Add(bqTextBox);
+            groupBox2.Controls.Add(label6);
+            groupBox2.Controls.Add(patronPinTextBox);
+            groupBox2.Location = new Point(486, 10);
+            groupBox2.Margin = new Padding(4, 3, 4, 3);
+            groupBox2.Name = "groupBox2";
+            groupBox2.Padding = new Padding(4, 3, 4, 3);
+            groupBox2.Size = new Size(208, 103);
+            groupBox2.TabIndex = 2;
+            groupBox2.TabStop = false;
+            groupBox2.Text = "Patron Information";
             // 
             // bpTextBox
             // 
-            this.bpTextBox.Location = new System.Drawing.Point(60, 60);
-            this.bpTextBox.Name = "bpTextBox";
-            this.bpTextBox.Size = new System.Drawing.Size(40, 20);
-            this.bpTextBox.TabIndex = 2;
-            this.bpTextBox.Text = "1";
+            bpTextBox.AccessibleName = "SIP BP Field";
+            bpTextBox.Location = new Point(70, 69);
+            bpTextBox.Margin = new Padding(4, 3, 4, 3);
+            bpTextBox.Name = "bpTextBox";
+            bpTextBox.Size = new Size(46, 23);
+            bpTextBox.TabIndex = 2;
+            bpTextBox.Text = "1";
             // 
             // label13
             // 
-            this.label13.AutoSize = true;
-            this.label13.Location = new System.Drawing.Point(32, 64);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(21, 13);
-            this.label13.TabIndex = 3;
-            this.label13.Text = "BP";
+            label13.AutoSize = true;
+            label13.Location = new Point(37, 74);
+            label13.Margin = new Padding(4, 0, 4, 0);
+            label13.Name = "label13";
+            label13.Size = new Size(21, 15);
+            label13.TabIndex = 3;
+            label13.Text = "BP";
             // 
             // patronBarcodeTextBox
             // 
-            this.patronBarcodeTextBox.Location = new System.Drawing.Point(60, 17);
-            this.patronBarcodeTextBox.Name = "patronBarcodeTextBox";
-            this.patronBarcodeTextBox.Size = new System.Drawing.Size(107, 20);
-            this.patronBarcodeTextBox.TabIndex = 0;
+            patronBarcodeTextBox.AccessibleName = "Patron Barcode";
+            patronBarcodeTextBox.Location = new Point(70, 20);
+            patronBarcodeTextBox.Margin = new Padding(4, 3, 4, 3);
+            patronBarcodeTextBox.Name = "patronBarcodeTextBox";
+            patronBarcodeTextBox.Size = new Size(124, 23);
+            patronBarcodeTextBox.TabIndex = 0;
             // 
             // label12
             // 
-            this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(100, 63);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(22, 13);
-            this.label12.TabIndex = 2;
-            this.label12.Text = "BQ";
+            label12.AutoSize = true;
+            label12.Location = new Point(117, 73);
+            label12.Margin = new Padding(4, 0, 4, 0);
+            label12.Name = "label12";
+            label12.Size = new Size(23, 15);
+            label12.TabIndex = 2;
+            label12.Text = "BQ";
             // 
             // label5
             // 
-            this.label5.AutoSize = true;
-            this.label5.Location = new System.Drawing.Point(6, 20);
-            this.label5.Name = "label5";
-            this.label5.Size = new System.Drawing.Size(47, 13);
-            this.label5.TabIndex = 3;
-            this.label5.Text = "Barcode";
+            label5.AutoSize = true;
+            label5.Location = new Point(7, 23);
+            label5.Margin = new Padding(4, 0, 4, 0);
+            label5.Name = "label5";
+            label5.Size = new Size(50, 15);
+            label5.TabIndex = 3;
+            label5.Text = "Barcode";
             // 
             // bqTextBox
             // 
-            this.bqTextBox.Location = new System.Drawing.Point(127, 60);
-            this.bqTextBox.Name = "bqTextBox";
-            this.bqTextBox.Size = new System.Drawing.Size(40, 20);
-            this.bqTextBox.TabIndex = 3;
-            this.bqTextBox.Text = "5";
+            bqTextBox.AccessibleName = "SIP BQ Field";
+            bqTextBox.Location = new Point(148, 69);
+            bqTextBox.Margin = new Padding(4, 3, 4, 3);
+            bqTextBox.Name = "bqTextBox";
+            bqTextBox.Size = new Size(46, 23);
+            bqTextBox.TabIndex = 3;
+            bqTextBox.Text = "5";
             // 
             // label6
             // 
-            this.label6.AutoSize = true;
-            this.label6.Location = new System.Drawing.Point(28, 41);
-            this.label6.Name = "label6";
-            this.label6.Size = new System.Drawing.Size(25, 13);
-            this.label6.TabIndex = 3;
-            this.label6.Text = "PIN";
+            label6.AutoSize = true;
+            label6.Location = new Point(33, 47);
+            label6.Margin = new Padding(4, 0, 4, 0);
+            label6.Name = "label6";
+            label6.Size = new Size(26, 15);
+            label6.TabIndex = 3;
+            label6.Text = "PIN";
             // 
             // patronPinTextBox
             // 
-            this.patronPinTextBox.Location = new System.Drawing.Point(60, 38);
-            this.patronPinTextBox.Name = "patronPinTextBox";
-            this.patronPinTextBox.Size = new System.Drawing.Size(107, 20);
-            this.patronPinTextBox.TabIndex = 1;
+            patronPinTextBox.AccessibleName = "Patron PIN";
+            patronPinTextBox.Location = new Point(70, 44);
+            patronPinTextBox.Margin = new Padding(4, 3, 4, 3);
+            patronPinTextBox.Name = "patronPinTextBox";
+            patronPinTextBox.Size = new Size(124, 23);
+            patronPinTextBox.TabIndex = 1;
             // 
             // checkoutButton
             // 
-            this.checkoutButton.Location = new System.Drawing.Point(870, 22);
-            this.checkoutButton.Name = "checkoutButton";
-            this.checkoutButton.Size = new System.Drawing.Size(75, 34);
-            this.checkoutButton.TabIndex = 5;
-            this.checkoutButton.Text = "Item Checkout";
-            this.checkoutButton.UseVisualStyleBackColor = true;
-            this.checkoutButton.Click += new System.EventHandler(this.checkoutButton_Click);
+            checkoutButton.AccessibleName = "Item Checkout";
+            checkoutButton.Location = new Point(1015, 25);
+            checkoutButton.Margin = new Padding(4, 3, 4, 3);
+            checkoutButton.Name = "checkoutButton";
+            checkoutButton.Size = new Size(88, 39);
+            checkoutButton.TabIndex = 5;
+            checkoutButton.Text = "Item Checkout";
+            checkoutButton.UseVisualStyleBackColor = true;
+            checkoutButton.Click += checkoutButton_Click;
             // 
             // patronStatusButton
             // 
-            this.patronStatusButton.Location = new System.Drawing.Point(789, 60);
-            this.patronStatusButton.Name = "patronStatusButton";
-            this.patronStatusButton.Size = new System.Drawing.Size(75, 34);
-            this.patronStatusButton.TabIndex = 7;
-            this.patronStatusButton.Text = "Patron Status";
-            this.patronStatusButton.UseVisualStyleBackColor = true;
-            this.patronStatusButton.Click += new System.EventHandler(this.patronStatusButton_Click);
+            patronStatusButton.AccessibleName = "Patron Status";
+            patronStatusButton.Location = new Point(920, 69);
+            patronStatusButton.Margin = new Padding(4, 3, 4, 3);
+            patronStatusButton.Name = "patronStatusButton";
+            patronStatusButton.Size = new Size(88, 39);
+            patronStatusButton.TabIndex = 7;
+            patronStatusButton.Text = "Patron Status";
+            patronStatusButton.UseVisualStyleBackColor = true;
+            patronStatusButton.Click += patronStatusButton_Click;
             // 
             // checkInButton
             // 
-            this.checkInButton.Location = new System.Drawing.Point(870, 60);
-            this.checkInButton.Name = "checkInButton";
-            this.checkInButton.Size = new System.Drawing.Size(75, 34);
-            this.checkInButton.TabIndex = 8;
-            this.checkInButton.Text = "Item Check-in";
-            this.checkInButton.UseVisualStyleBackColor = true;
-            this.checkInButton.Click += new System.EventHandler(this.checkInButton_Click);
+            checkInButton.AccessibleName = "Item Check-in";
+            checkInButton.Location = new Point(1015, 69);
+            checkInButton.Margin = new Padding(4, 3, 4, 3);
+            checkInButton.Name = "checkInButton";
+            checkInButton.Size = new Size(88, 39);
+            checkInButton.TabIndex = 8;
+            checkInButton.Text = "Item Check-in";
+            checkInButton.UseVisualStyleBackColor = true;
+            checkInButton.Click += checkInButton_Click;
             // 
             // groupBox3
             // 
-            this.groupBox3.Controls.Add(this.label8);
-            this.groupBox3.Controls.Add(this.itemBarcodeTextBox);
-            this.groupBox3.Location = new System.Drawing.Point(418, 109);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(178, 50);
-            this.groupBox3.TabIndex = 3;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Item Information";
+            groupBox3.Controls.Add(label8);
+            groupBox3.Controls.Add(itemBarcodeTextBox);
+            groupBox3.Location = new Point(486, 120);
+            groupBox3.Margin = new Padding(4, 3, 4, 3);
+            groupBox3.Name = "groupBox3";
+            groupBox3.Padding = new Padding(4, 3, 4, 3);
+            groupBox3.Size = new Size(208, 58);
+            groupBox3.TabIndex = 3;
+            groupBox3.TabStop = false;
+            groupBox3.Text = "Item Information";
             // 
             // label8
             // 
-            this.label8.AutoSize = true;
-            this.label8.Location = new System.Drawing.Point(11, 22);
-            this.label8.Name = "label8";
-            this.label8.Size = new System.Drawing.Size(47, 13);
-            this.label8.TabIndex = 4;
-            this.label8.Text = "Barcode";
+            label8.AutoSize = true;
+            label8.Location = new Point(13, 25);
+            label8.Margin = new Padding(4, 0, 4, 0);
+            label8.Name = "label8";
+            label8.Size = new Size(50, 15);
+            label8.TabIndex = 4;
+            label8.Text = "Barcode";
             // 
             // itemBarcodeTextBox
             // 
-            this.itemBarcodeTextBox.Location = new System.Drawing.Point(60, 19);
-            this.itemBarcodeTextBox.Name = "itemBarcodeTextBox";
-            this.itemBarcodeTextBox.Size = new System.Drawing.Size(107, 20);
-            this.itemBarcodeTextBox.TabIndex = 0;
+            itemBarcodeTextBox.AccessibleName = "Item Barcode";
+            itemBarcodeTextBox.Location = new Point(70, 22);
+            itemBarcodeTextBox.Margin = new Padding(4, 3, 4, 3);
+            itemBarcodeTextBox.Name = "itemBarcodeTextBox";
+            itemBarcodeTextBox.Size = new Size(124, 23);
+            itemBarcodeTextBox.TabIndex = 0;
             // 
             // endSessionButton
             // 
-            this.endSessionButton.Location = new System.Drawing.Point(789, 98);
-            this.endSessionButton.Name = "endSessionButton";
-            this.endSessionButton.Size = new System.Drawing.Size(75, 34);
-            this.endSessionButton.TabIndex = 10;
-            this.endSessionButton.Text = "End  Session";
-            this.endSessionButton.UseVisualStyleBackColor = true;
-            this.endSessionButton.Click += new System.EventHandler(this.endSessionButton_Click);
+            endSessionButton.AccessibleName = "End Session";
+            endSessionButton.Location = new Point(920, 113);
+            endSessionButton.Margin = new Padding(4, 3, 4, 3);
+            endSessionButton.Name = "endSessionButton";
+            endSessionButton.Size = new Size(88, 39);
+            endSessionButton.TabIndex = 10;
+            endSessionButton.Text = "End  Session";
+            endSessionButton.UseVisualStyleBackColor = true;
+            endSessionButton.Click += endSessionButton_Click;
             // 
             // itemInformationButton
             // 
-            this.itemInformationButton.Location = new System.Drawing.Point(951, 98);
-            this.itemInformationButton.Name = "itemInformationButton";
-            this.itemInformationButton.Size = new System.Drawing.Size(75, 34);
-            this.itemInformationButton.TabIndex = 12;
-            this.itemInformationButton.Text = "Item Information";
-            this.itemInformationButton.UseVisualStyleBackColor = true;
-            this.itemInformationButton.Click += new System.EventHandler(this.itemInformationButton_Click);
+            itemInformationButton.AccessibleName = "Item Information";
+            itemInformationButton.Location = new Point(1110, 113);
+            itemInformationButton.Margin = new Padding(4, 3, 4, 3);
+            itemInformationButton.Name = "itemInformationButton";
+            itemInformationButton.Size = new Size(88, 39);
+            itemInformationButton.TabIndex = 12;
+            itemInformationButton.Text = "Item Information";
+            itemInformationButton.UseVisualStyleBackColor = true;
+            itemInformationButton.Click += itemInformationButton_Click;
             // 
             // patronInformationButton
             // 
-            this.patronInformationButton.Location = new System.Drawing.Point(789, 22);
-            this.patronInformationButton.Name = "patronInformationButton";
-            this.patronInformationButton.Size = new System.Drawing.Size(75, 34);
-            this.patronInformationButton.TabIndex = 4;
-            this.patronInformationButton.Text = "Patron Information";
-            this.patronInformationButton.UseVisualStyleBackColor = true;
-            this.patronInformationButton.Click += new System.EventHandler(this.patronInformationButton_Click);
+            patronInformationButton.AccessibleName = "Patron Information";
+            patronInformationButton.Location = new Point(920, 25);
+            patronInformationButton.Margin = new Padding(4, 3, 4, 3);
+            patronInformationButton.Name = "patronInformationButton";
+            patronInformationButton.Size = new Size(88, 39);
+            patronInformationButton.TabIndex = 4;
+            patronInformationButton.Text = "Patron Information";
+            patronInformationButton.UseVisualStyleBackColor = true;
+            patronInformationButton.Click += patronInformationButton_Click;
             // 
             // statusStrip1
             // 
-            this.statusStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.toolStripStatusLabel1});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 541);
-            this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1049, 22);
-            this.statusStrip1.TabIndex = 28;
-            this.statusStrip1.Text = "statusStrip1";
+            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1 });
+            statusStrip1.Location = new Point(0, 628);
+            statusStrip1.Name = "statusStrip1";
+            statusStrip1.Padding = new Padding(1, 0, 16, 0);
+            statusStrip1.Size = new Size(1224, 22);
+            statusStrip1.TabIndex = 28;
+            statusStrip1.Text = "statusStrip1";
             // 
             // toolStripStatusLabel1
             // 
-            this.toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            this.toolStripStatusLabel1.Size = new System.Drawing.Size(88, 17);
-            this.toolStripStatusLabel1.Text = "Not Connected";
+            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
+            toolStripStatusLabel1.Size = new Size(88, 17);
+            toolStripStatusLabel1.Text = "Not Connected";
             // 
             // splitContainer1
             // 
-            this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.splitContainer1.FixedPanel = System.Windows.Forms.FixedPanel.Panel1;
-            this.splitContainer1.Location = new System.Drawing.Point(0, 0);
-            this.splitContainer1.Name = "splitContainer1";
-            this.splitContainer1.Orientation = System.Windows.Forms.Orientation.Horizontal;
+            splitContainer1.Dock = DockStyle.Fill;
+            splitContainer1.FixedPanel = FixedPanel.Panel1;
+            splitContainer1.Location = new Point(0, 0);
+            splitContainer1.Margin = new Padding(4, 3, 4, 3);
+            splitContainer1.Name = "splitContainer1";
+            splitContainer1.Orientation = Orientation.Horizontal;
             // 
             // splitContainer1.Panel1
             // 
-            this.splitContainer1.Panel1.Controls.Add(this.noticeUpdateButton);
-            this.splitContainer1.Panel1.Controls.Add(this.feePaidButton);
-            this.splitContainer1.Panel1.Controls.Add(this.groupBox4);
-            this.splitContainer1.Panel1.Controls.Add(this.label14);
-            this.splitContainer1.Panel1.Controls.Add(this.label9);
-            this.splitContainer1.Panel1.Controls.Add(this.importSettingsButton);
-            this.splitContainer1.Panel1.Controls.Add(this.exportSettingsButton);
-            this.splitContainer1.Panel1.Controls.Add(this.exportLogButton);
-            this.splitContainer1.Panel1.Controls.Add(this.clearLogButton);
-            this.splitContainer1.Panel1.Controls.Add(this.reloadDefaultSettingsButton);
-            this.splitContainer1.Panel1.Controls.Add(this.changeDefaultSettingsButton);
-            this.splitContainer1.Panel1.Controls.Add(this.groupBox1);
-            this.splitContainer1.Panel1.Controls.Add(this.groupBox5);
-            this.splitContainer1.Panel1.Controls.Add(this.renewAllButton);
-            this.splitContainer1.Panel1.Controls.Add(this.patronInformationButton);
-            this.splitContainer1.Panel1.Controls.Add(this.renewButton);
-            this.splitContainer1.Panel1.Controls.Add(this.itemInformationButton);
-            this.splitContainer1.Panel1.Controls.Add(this.groupBox2);
-            this.splitContainer1.Panel1.Controls.Add(this.checkoutButton);
-            this.splitContainer1.Panel1.Controls.Add(this.endSessionButton);
-            this.splitContainer1.Panel1.Controls.Add(this.patronStatusButton);
-            this.splitContainer1.Panel1.Controls.Add(this.groupBox3);
-            this.splitContainer1.Panel1.Controls.Add(this.checkInButton);
+            splitContainer1.Panel1.Controls.Add(btnAcsStatus);
+            splitContainer1.Panel1.Controls.Add(noticeUpdateButton);
+            splitContainer1.Panel1.Controls.Add(feePaidButton);
+            splitContainer1.Panel1.Controls.Add(groupBox4);
+            splitContainer1.Panel1.Controls.Add(label14);
+            splitContainer1.Panel1.Controls.Add(label9);
+            splitContainer1.Panel1.Controls.Add(importSettingsButton);
+            splitContainer1.Panel1.Controls.Add(exportSettingsButton);
+            splitContainer1.Panel1.Controls.Add(exportLogButton);
+            splitContainer1.Panel1.Controls.Add(clearLogButton);
+            splitContainer1.Panel1.Controls.Add(reloadDefaultSettingsButton);
+            splitContainer1.Panel1.Controls.Add(changeDefaultSettingsButton);
+            splitContainer1.Panel1.Controls.Add(groupBox1);
+            splitContainer1.Panel1.Controls.Add(groupBox5);
+            splitContainer1.Panel1.Controls.Add(renewAllButton);
+            splitContainer1.Panel1.Controls.Add(patronInformationButton);
+            splitContainer1.Panel1.Controls.Add(renewButton);
+            splitContainer1.Panel1.Controls.Add(itemInformationButton);
+            splitContainer1.Panel1.Controls.Add(groupBox2);
+            splitContainer1.Panel1.Controls.Add(checkoutButton);
+            splitContainer1.Panel1.Controls.Add(endSessionButton);
+            splitContainer1.Panel1.Controls.Add(patronStatusButton);
+            splitContainer1.Panel1.Controls.Add(groupBox3);
+            splitContainer1.Panel1.Controls.Add(checkInButton);
             // 
             // splitContainer1.Panel2
             // 
-            this.splitContainer1.Panel2.Controls.Add(this.logRichTextBox);
-            this.splitContainer1.Size = new System.Drawing.Size(1049, 541);
-            this.splitContainer1.SplitterDistance = 198;
-            this.splitContainer1.TabIndex = 1;
-            this.splitContainer1.TabStop = false;
+            splitContainer1.Panel2.Controls.Add(logRichTextBox);
+            splitContainer1.Size = new Size(1224, 628);
+            splitContainer1.SplitterDistance = 213;
+            splitContainer1.SplitterWidth = 5;
+            splitContainer1.TabIndex = 1;
+            splitContainer1.TabStop = false;
             // 
             // noticeUpdateButton
             // 
-            this.noticeUpdateButton.Location = new System.Drawing.Point(870, 138);
-            this.noticeUpdateButton.Name = "noticeUpdateButton";
-            this.noticeUpdateButton.Size = new System.Drawing.Size(75, 35);
-            this.noticeUpdateButton.TabIndex = 2;
-            this.noticeUpdateButton.Text = "Update Notice";
-            this.noticeUpdateButton.UseVisualStyleBackColor = true;
-            this.noticeUpdateButton.Click += new System.EventHandler(this.noticeUpdateButton_Click);
+            noticeUpdateButton.AccessibleName = "Update Notice";
+            noticeUpdateButton.Location = new Point(1015, 159);
+            noticeUpdateButton.Margin = new Padding(4, 3, 4, 3);
+            noticeUpdateButton.Name = "noticeUpdateButton";
+            noticeUpdateButton.Size = new Size(88, 40);
+            noticeUpdateButton.TabIndex = 13;
+            noticeUpdateButton.Text = "Update Notice";
+            noticeUpdateButton.UseVisualStyleBackColor = true;
+            noticeUpdateButton.Click += noticeUpdateButton_Click;
             // 
             // feePaidButton
             // 
-            this.feePaidButton.Location = new System.Drawing.Point(951, 22);
-            this.feePaidButton.Name = "feePaidButton";
-            this.feePaidButton.Size = new System.Drawing.Size(75, 34);
-            this.feePaidButton.TabIndex = 6;
-            this.feePaidButton.Text = "Fee Paid";
-            this.feePaidButton.UseVisualStyleBackColor = true;
-            this.feePaidButton.Click += new System.EventHandler(this.feePaidButton_Click);
+            feePaidButton.AccessibleName = "Fee Paid";
+            feePaidButton.Location = new Point(1110, 25);
+            feePaidButton.Margin = new Padding(4, 3, 4, 3);
+            feePaidButton.Name = "feePaidButton";
+            feePaidButton.Size = new Size(88, 39);
+            feePaidButton.TabIndex = 6;
+            feePaidButton.Text = "Fee Paid";
+            feePaidButton.UseVisualStyleBackColor = true;
+            feePaidButton.Click += feePaidButton_Click;
             // 
             // groupBox4
             // 
-            this.groupBox4.Controls.Add(this.amountTextBox);
-            this.groupBox4.Controls.Add(this.transactionIdTextBox);
-            this.groupBox4.Controls.Add(this.label17);
-            this.groupBox4.Controls.Add(this.feeIdentifierTextBox);
-            this.groupBox4.Controls.Add(this.label19);
-            this.groupBox4.Controls.Add(this.paymentTypeTextBox);
-            this.groupBox4.Controls.Add(this.label18);
-            this.groupBox4.Controls.Add(this.label16);
-            this.groupBox4.Controls.Add(this.feeTypeTextBox);
-            this.groupBox4.Controls.Add(this.label15);
-            this.groupBox4.Location = new System.Drawing.Point(602, 9);
-            this.groupBox4.Name = "groupBox4";
-            this.groupBox4.Size = new System.Drawing.Size(172, 150);
-            this.groupBox4.TabIndex = 3;
-            this.groupBox4.TabStop = false;
-            this.groupBox4.Text = "Fee Information";
+            groupBox4.Controls.Add(amountTextBox);
+            groupBox4.Controls.Add(transactionIdTextBox);
+            groupBox4.Controls.Add(label17);
+            groupBox4.Controls.Add(feeIdentifierTextBox);
+            groupBox4.Controls.Add(label19);
+            groupBox4.Controls.Add(paymentTypeTextBox);
+            groupBox4.Controls.Add(label18);
+            groupBox4.Controls.Add(label16);
+            groupBox4.Controls.Add(feeTypeTextBox);
+            groupBox4.Controls.Add(label15);
+            groupBox4.Location = new Point(702, 10);
+            groupBox4.Margin = new Padding(4, 3, 4, 3);
+            groupBox4.Name = "groupBox4";
+            groupBox4.Padding = new Padding(4, 3, 4, 3);
+            groupBox4.Size = new Size(201, 168);
+            groupBox4.TabIndex = 4;
+            groupBox4.TabStop = false;
+            groupBox4.Text = "Fee Information";
             // 
             // amountTextBox
             // 
-            this.amountTextBox.Location = new System.Drawing.Point(85, 112);
-            this.amountTextBox.Name = "amountTextBox";
-            this.amountTextBox.Size = new System.Drawing.Size(81, 20);
-            this.amountTextBox.TabIndex = 4;
+            amountTextBox.AccessibleName = "Payment Amount";
+            amountTextBox.Location = new Point(99, 129);
+            amountTextBox.Margin = new Padding(4, 3, 4, 3);
+            amountTextBox.Name = "amountTextBox";
+            amountTextBox.Size = new Size(94, 23);
+            amountTextBox.TabIndex = 4;
             // 
             // transactionIdTextBox
             // 
-            this.transactionIdTextBox.Location = new System.Drawing.Point(85, 89);
-            this.transactionIdTextBox.Name = "transactionIdTextBox";
-            this.transactionIdTextBox.Size = new System.Drawing.Size(81, 20);
-            this.transactionIdTextBox.TabIndex = 3;
+            transactionIdTextBox.AccessibleName = "Transaction ID";
+            transactionIdTextBox.Location = new Point(99, 103);
+            transactionIdTextBox.Margin = new Padding(4, 3, 4, 3);
+            transactionIdTextBox.Name = "transactionIdTextBox";
+            transactionIdTextBox.Size = new Size(94, 23);
+            transactionIdTextBox.TabIndex = 3;
             // 
             // label17
             // 
-            this.label17.AutoSize = true;
-            this.label17.Location = new System.Drawing.Point(12, 115);
-            this.label17.Name = "label17";
-            this.label17.Size = new System.Drawing.Size(69, 13);
-            this.label17.TabIndex = 5;
-            this.label17.Text = "Payment Amt";
+            label17.AutoSize = true;
+            label17.Location = new Point(14, 133);
+            label17.Margin = new Padding(4, 0, 4, 0);
+            label17.Name = "label17";
+            label17.Size = new Size(80, 15);
+            label17.TabIndex = 5;
+            label17.Text = "Payment Amt";
             // 
             // feeIdentifierTextBox
             // 
-            this.feeIdentifierTextBox.Location = new System.Drawing.Point(85, 66);
-            this.feeIdentifierTextBox.Name = "feeIdentifierTextBox";
-            this.feeIdentifierTextBox.Size = new System.Drawing.Size(81, 20);
-            this.feeIdentifierTextBox.TabIndex = 2;
+            feeIdentifierTextBox.AccessibleName = "Fee Identifier";
+            feeIdentifierTextBox.Location = new Point(99, 76);
+            feeIdentifierTextBox.Margin = new Padding(4, 3, 4, 3);
+            feeIdentifierTextBox.Name = "feeIdentifierTextBox";
+            feeIdentifierTextBox.Size = new Size(94, 23);
+            feeIdentifierTextBox.TabIndex = 2;
             // 
             // label19
             // 
-            this.label19.AutoSize = true;
-            this.label19.Location = new System.Drawing.Point(4, 92);
-            this.label19.Name = "label19";
-            this.label19.Size = new System.Drawing.Size(77, 13);
-            this.label19.TabIndex = 5;
-            this.label19.Text = "Transaction ID";
+            label19.AutoSize = true;
+            label19.Location = new Point(5, 106);
+            label19.Margin = new Padding(4, 0, 4, 0);
+            label19.Name = "label19";
+            label19.Size = new Size(81, 15);
+            label19.TabIndex = 5;
+            label19.Text = "Transaction ID";
             // 
             // paymentTypeTextBox
             // 
-            this.paymentTypeTextBox.Location = new System.Drawing.Point(85, 43);
-            this.paymentTypeTextBox.Name = "paymentTypeTextBox";
-            this.paymentTypeTextBox.Size = new System.Drawing.Size(81, 20);
-            this.paymentTypeTextBox.TabIndex = 1;
+            paymentTypeTextBox.AccessibleName = "Payment Type";
+            paymentTypeTextBox.Location = new Point(99, 50);
+            paymentTypeTextBox.Margin = new Padding(4, 3, 4, 3);
+            paymentTypeTextBox.Name = "paymentTypeTextBox";
+            paymentTypeTextBox.Size = new Size(94, 23);
+            paymentTypeTextBox.TabIndex = 1;
             // 
             // label18
             // 
-            this.label18.AutoSize = true;
-            this.label18.Location = new System.Drawing.Point(13, 69);
-            this.label18.Name = "label18";
-            this.label18.Size = new System.Drawing.Size(68, 13);
-            this.label18.TabIndex = 5;
-            this.label18.Text = "Fee Identifier";
+            label18.AutoSize = true;
+            label18.Location = new Point(15, 80);
+            label18.Margin = new Padding(4, 0, 4, 0);
+            label18.Name = "label18";
+            label18.Size = new Size(75, 15);
+            label18.TabIndex = 5;
+            label18.Text = "Fee Identifier";
             // 
             // label16
             // 
-            this.label16.AutoSize = true;
-            this.label16.Location = new System.Drawing.Point(6, 46);
-            this.label16.Name = "label16";
-            this.label16.Size = new System.Drawing.Size(75, 13);
-            this.label16.TabIndex = 5;
-            this.label16.Text = "Payment Type";
+            label16.AutoSize = true;
+            label16.Location = new Point(7, 53);
+            label16.Margin = new Padding(4, 0, 4, 0);
+            label16.Name = "label16";
+            label16.Size = new Size(81, 15);
+            label16.TabIndex = 5;
+            label16.Text = "Payment Type";
             // 
             // feeTypeTextBox
             // 
-            this.feeTypeTextBox.Location = new System.Drawing.Point(85, 19);
-            this.feeTypeTextBox.Name = "feeTypeTextBox";
-            this.feeTypeTextBox.Size = new System.Drawing.Size(81, 20);
-            this.feeTypeTextBox.TabIndex = 0;
+            feeTypeTextBox.AccessibleName = "Fee Type";
+            feeTypeTextBox.Location = new Point(99, 22);
+            feeTypeTextBox.Margin = new Padding(4, 3, 4, 3);
+            feeTypeTextBox.Name = "feeTypeTextBox";
+            feeTypeTextBox.Size = new Size(94, 23);
+            feeTypeTextBox.TabIndex = 0;
             // 
             // label15
             // 
-            this.label15.AutoSize = true;
-            this.label15.Location = new System.Drawing.Point(29, 22);
-            this.label15.Name = "label15";
-            this.label15.Size = new System.Drawing.Size(52, 13);
-            this.label15.TabIndex = 5;
-            this.label15.Text = "Fee Type";
+            label15.AutoSize = true;
+            label15.Location = new Point(34, 25);
+            label15.Margin = new Padding(4, 0, 4, 0);
+            label15.Name = "label15";
+            label15.Size = new Size(52, 15);
+            label15.TabIndex = 5;
+            label15.Text = "Fee Type";
             // 
             // label14
             // 
-            this.label14.AutoSize = true;
-            this.label14.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label14.Location = new System.Drawing.Point(513, 168);
-            this.label14.Name = "label14";
-            this.label14.Size = new System.Drawing.Size(15, 20);
-            this.label14.TabIndex = 37;
-            this.label14.Text = "|";
+            label14.AutoSize = true;
+            label14.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
+            label14.Location = new Point(598, 181);
+            label14.Margin = new Padding(4, 0, 4, 0);
+            label14.Name = "label14";
+            label14.Size = new Size(15, 20);
+            label14.TabIndex = 37;
+            label14.Text = "|";
             // 
             // label9
             // 
-            this.label9.AutoSize = true;
-            this.label9.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label9.Location = new System.Drawing.Point(194, 168);
-            this.label9.Name = "label9";
-            this.label9.Size = new System.Drawing.Size(15, 20);
-            this.label9.TabIndex = 36;
-            this.label9.Text = "|";
+            label9.AutoSize = true;
+            label9.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
+            label9.Location = new Point(226, 181);
+            label9.Margin = new Padding(4, 0, 4, 0);
+            label9.Name = "label9";
+            label9.Size = new Size(15, 20);
+            label9.TabIndex = 36;
+            label9.Text = "|";
             // 
             // importSettingsButton
             // 
-            this.importSettingsButton.Location = new System.Drawing.Point(632, 167);
-            this.importSettingsButton.Name = "importSettingsButton";
-            this.importSettingsButton.Size = new System.Drawing.Size(96, 23);
-            this.importSettingsButton.TabIndex = 35;
-            this.importSettingsButton.Text = "Import Settings";
-            this.importSettingsButton.UseVisualStyleBackColor = true;
-            this.importSettingsButton.Click += new System.EventHandler(this.importSettingsButton_Click);
+            importSettingsButton.AccessibleName = "Import Settings";
+            importSettingsButton.Location = new Point(737, 180);
+            importSettingsButton.Margin = new Padding(4, 3, 4, 3);
+            importSettingsButton.Name = "importSettingsButton";
+            importSettingsButton.Size = new Size(112, 27);
+            importSettingsButton.TabIndex = 19;
+            importSettingsButton.Text = "Import Settings";
+            importSettingsButton.UseVisualStyleBackColor = true;
+            importSettingsButton.Click += importSettingsButton_Click;
             // 
             // exportSettingsButton
             // 
-            this.exportSettingsButton.Location = new System.Drawing.Point(530, 167);
-            this.exportSettingsButton.Name = "exportSettingsButton";
-            this.exportSettingsButton.Size = new System.Drawing.Size(96, 23);
-            this.exportSettingsButton.TabIndex = 34;
-            this.exportSettingsButton.Text = "Export Settings";
-            this.exportSettingsButton.UseVisualStyleBackColor = true;
-            this.exportSettingsButton.Click += new System.EventHandler(this.exportSettingsButton_Click);
+            exportSettingsButton.AccessibleName = "Export Settings";
+            exportSettingsButton.Location = new Point(618, 180);
+            exportSettingsButton.Margin = new Padding(4, 3, 4, 3);
+            exportSettingsButton.Name = "exportSettingsButton";
+            exportSettingsButton.Size = new Size(112, 27);
+            exportSettingsButton.TabIndex = 18;
+            exportSettingsButton.Text = "Export Settings";
+            exportSettingsButton.UseVisualStyleBackColor = true;
+            exportSettingsButton.Click += exportSettingsButton_Click;
             // 
             // exportLogButton
             // 
-            this.exportLogButton.Location = new System.Drawing.Point(107, 167);
-            this.exportLogButton.Name = "exportLogButton";
-            this.exportLogButton.Size = new System.Drawing.Size(85, 23);
-            this.exportLogButton.TabIndex = 33;
-            this.exportLogButton.TabStop = false;
-            this.exportLogButton.Text = "Export Log";
-            this.exportLogButton.UseVisualStyleBackColor = true;
-            this.exportLogButton.Click += new System.EventHandler(this.exportLogButton_Click);
+            exportLogButton.AccessibleName = "Export Log";
+            exportLogButton.Location = new Point(125, 180);
+            exportLogButton.Margin = new Padding(4, 3, 4, 3);
+            exportLogButton.Name = "exportLogButton";
+            exportLogButton.Size = new Size(99, 27);
+            exportLogButton.TabIndex = 15;
+            exportLogButton.Text = "Export Log";
+            exportLogButton.UseVisualStyleBackColor = true;
+            exportLogButton.Click += exportLogButton_Click;
             // 
             // clearLogButton
             // 
-            this.clearLogButton.Location = new System.Drawing.Point(12, 167);
-            this.clearLogButton.Name = "clearLogButton";
-            this.clearLogButton.Size = new System.Drawing.Size(85, 23);
-            this.clearLogButton.TabIndex = 32;
-            this.clearLogButton.TabStop = false;
-            this.clearLogButton.Text = "Clear Log";
-            this.clearLogButton.UseVisualStyleBackColor = true;
-            this.clearLogButton.Click += new System.EventHandler(this.clearLogButton_Click);
+            clearLogButton.AccessibleName = "Clear Log";
+            clearLogButton.Location = new Point(14, 180);
+            clearLogButton.Margin = new Padding(4, 3, 4, 3);
+            clearLogButton.Name = "clearLogButton";
+            clearLogButton.Size = new Size(99, 27);
+            clearLogButton.TabIndex = 14;
+            clearLogButton.Text = "Clear Log";
+            clearLogButton.UseVisualStyleBackColor = true;
+            clearLogButton.Click += clearLogButton_Click;
             // 
             // reloadDefaultSettingsButton
             // 
-            this.reloadDefaultSettingsButton.Location = new System.Drawing.Point(364, 167);
-            this.reloadDefaultSettingsButton.Name = "reloadDefaultSettingsButton";
-            this.reloadDefaultSettingsButton.Size = new System.Drawing.Size(147, 23);
-            this.reloadDefaultSettingsButton.TabIndex = 30;
-            this.reloadDefaultSettingsButton.TabStop = false;
-            this.reloadDefaultSettingsButton.Text = "Reload Default Values";
-            this.reloadDefaultSettingsButton.UseVisualStyleBackColor = true;
-            this.reloadDefaultSettingsButton.Click += new System.EventHandler(this.reloadDefaultSettingsButton_Click);
+            reloadDefaultSettingsButton.AccessibleName = "Reload Default Values";
+            reloadDefaultSettingsButton.Location = new Point(425, 180);
+            reloadDefaultSettingsButton.Margin = new Padding(4, 3, 4, 3);
+            reloadDefaultSettingsButton.Name = "reloadDefaultSettingsButton";
+            reloadDefaultSettingsButton.Size = new Size(172, 27);
+            reloadDefaultSettingsButton.TabIndex = 17;
+            reloadDefaultSettingsButton.Text = "Reload Default Values";
+            reloadDefaultSettingsButton.UseVisualStyleBackColor = true;
+            reloadDefaultSettingsButton.Click += reloadDefaultSettingsButton_Click;
             // 
             // changeDefaultSettingsButton
             // 
-            this.changeDefaultSettingsButton.Location = new System.Drawing.Point(211, 167);
-            this.changeDefaultSettingsButton.Name = "changeDefaultSettingsButton";
-            this.changeDefaultSettingsButton.Size = new System.Drawing.Size(147, 23);
-            this.changeDefaultSettingsButton.TabIndex = 29;
-            this.changeDefaultSettingsButton.TabStop = false;
-            this.changeDefaultSettingsButton.Text = "Change Default Settings";
-            this.changeDefaultSettingsButton.UseVisualStyleBackColor = true;
-            this.changeDefaultSettingsButton.Click += new System.EventHandler(this.changeDefaultSettingsButton_Click);
+            changeDefaultSettingsButton.AccessibleName = "Change Default Settings";
+            changeDefaultSettingsButton.Location = new Point(246, 180);
+            changeDefaultSettingsButton.Margin = new Padding(4, 3, 4, 3);
+            changeDefaultSettingsButton.Name = "changeDefaultSettingsButton";
+            changeDefaultSettingsButton.Size = new Size(172, 27);
+            changeDefaultSettingsButton.TabIndex = 16;
+            changeDefaultSettingsButton.Text = "Change Default Settings";
+            changeDefaultSettingsButton.UseVisualStyleBackColor = true;
+            changeDefaultSettingsButton.Click += changeDefaultSettingsButton_Click;
             // 
             // logRichTextBox
             // 
-            this.logRichTextBox.BackColor = System.Drawing.Color.White;
-            this.logRichTextBox.DetectUrls = false;
-            this.logRichTextBox.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.logRichTextBox.Font = new System.Drawing.Font("Microsoft Sans Serif", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.logRichTextBox.Location = new System.Drawing.Point(0, 0);
-            this.logRichTextBox.Name = "logRichTextBox";
-            this.logRichTextBox.ReadOnly = true;
-            this.logRichTextBox.Size = new System.Drawing.Size(1049, 339);
-            this.logRichTextBox.TabIndex = 1;
-            this.logRichTextBox.TabStop = false;
-            this.logRichTextBox.Text = "";
-            // 
+            logRichTextBox.BackColor = Color.White;
+            logRichTextBox.DetectUrls = false;
+            logRichTextBox.Dock = DockStyle.Fill;
+            logRichTextBox.Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Bold);
+            logRichTextBox.Location = new Point(0, 0);
+            logRichTextBox.Margin = new Padding(4, 3, 4, 3);
+            logRichTextBox.Name = "logRichTextBox";
+            logRichTextBox.ReadOnly = true;
+            logRichTextBox.Size = new Size(1224, 410);
+            logRichTextBox.TabIndex = 1;
+            logRichTextBox.TabStop = false;
+            logRichTextBox.Text = "";
+            //
+            // btnAcsStatus
+            //
+            btnAcsStatus.AccessibleName = "ACS Status";
+            btnAcsStatus.Location = new Point(915, 159);
+            btnAcsStatus.Margin = new Padding(4, 3, 4, 3);
+            btnAcsStatus.Name = "btnAcsStatus";
+            btnAcsStatus.Size = new Size(88, 40);
+            btnAcsStatus.TabIndex = 18;
+            btnAcsStatus.Text = "ACS Status";
+            btnAcsStatus.UseVisualStyleBackColor = true;
+            btnAcsStatus.Click += btnAcsStatus_Click;
+            //
             // MainForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
-            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1049, 563);
-            this.Controls.Add(this.splitContainer1);
-            this.Controls.Add(this.statusStrip1);
-            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
-            this.Name = "MainForm";
-            this.Text = "SIP Testing Tool";
-            this.Load += new System.EventHandler(this.MainForm_Load);
-            this.groupBox1.ResumeLayout(false);
-            this.groupBox1.PerformLayout();
-            this.patronInformationContextMenu.ResumeLayout(false);
-            this.groupBox5.ResumeLayout(false);
-            this.groupBox5.PerformLayout();
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox2.PerformLayout();
-            this.groupBox3.ResumeLayout(false);
-            this.groupBox3.PerformLayout();
-            this.statusStrip1.ResumeLayout(false);
-            this.statusStrip1.PerformLayout();
-            this.splitContainer1.Panel1.ResumeLayout(false);
-            this.splitContainer1.Panel1.PerformLayout();
-            this.splitContainer1.Panel2.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).EndInit();
-            this.splitContainer1.ResumeLayout(false);
-            this.groupBox4.ResumeLayout(false);
-            this.groupBox4.PerformLayout();
-            this.ResumeLayout(false);
-            this.PerformLayout();
+            AutoScaleDimensions = new SizeF(7F, 15F);
+            AutoScaleMode = AutoScaleMode.Font;
+            ClientSize = new Size(1224, 650);
+            Controls.Add(splitContainer1);
+            Controls.Add(statusStrip1);
+            Icon = (Icon)resources.GetObject("$this.Icon");
+            Margin = new Padding(4, 3, 4, 3);
+            Name = "MainForm";
+            Text = "SIP Testing Tool";
+            Load += MainForm_Load;
+            groupBox1.ResumeLayout(false);
+            groupBox1.PerformLayout();
+            patronInformationContextMenu.ResumeLayout(false);
+            groupBox5.ResumeLayout(false);
+            groupBox5.PerformLayout();
+            groupBox2.ResumeLayout(false);
+            groupBox2.PerformLayout();
+            groupBox3.ResumeLayout(false);
+            groupBox3.PerformLayout();
+            statusStrip1.ResumeLayout(false);
+            statusStrip1.PerformLayout();
+            splitContainer1.Panel1.ResumeLayout(false);
+            splitContainer1.Panel1.PerformLayout();
+            splitContainer1.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitContainer1).EndInit();
+            splitContainer1.ResumeLayout(false);
+            groupBox4.ResumeLayout(false);
+            groupBox4.PerformLayout();
+            ResumeLayout(false);
+            PerformLayout();
+        }
 
-		}
+        #endregion
 
-		#endregion
-
-		private System.Windows.Forms.TextBox usernameTextBox;
-		private System.Windows.Forms.TextBox passwordTextBox;
-		private System.Windows.Forms.Label label1;
-		private System.Windows.Forms.Label label2;
-		private System.Windows.Forms.Button loginButton;
-		private System.Windows.Forms.TextBox serverTextBox;
-		private System.Windows.Forms.TextBox portTextBox;
-		private System.Windows.Forms.Label label3;
-		private System.Windows.Forms.Label label4;
-		private System.Windows.Forms.GroupBox groupBox1;
-		private System.Windows.Forms.Label label7;
-		private System.Windows.Forms.ContextMenuStrip patronInformationContextMenu;
-		private System.Windows.Forms.ToolStripMenuItem noneMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem holdItemsMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem overdueItemsMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem chargedItemsMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem fineItemsMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem recallItemsMenuItem;
-		private System.Windows.Forms.ToolStripMenuItem unavailableHoldsMenuItem;
-		private System.Windows.Forms.GroupBox groupBox5;
-		private System.Windows.Forms.Button renewAllButton;
-		private System.Windows.Forms.Button renewButton;
-		private System.Windows.Forms.GroupBox groupBox2;
-		private System.Windows.Forms.TextBox patronBarcodeTextBox;
-		private System.Windows.Forms.Label label5;
-		private System.Windows.Forms.Label label6;
-		private System.Windows.Forms.TextBox patronPinTextBox;
-		private System.Windows.Forms.Button checkoutButton;
-		private System.Windows.Forms.Button patronStatusButton;
-		private System.Windows.Forms.Button checkInButton;
-		private System.Windows.Forms.GroupBox groupBox3;
-		private System.Windows.Forms.Label label8;
-		private System.Windows.Forms.TextBox itemBarcodeTextBox;
-		private System.Windows.Forms.Button endSessionButton;
-		private System.Windows.Forms.Button itemInformationButton;
-		private System.Windows.Forms.Button patronInformationButton;
-		private System.Windows.Forms.Button connectButton;
-		private System.Windows.Forms.TextBox aoTextBox;
-		private System.Windows.Forms.Label label10;
-		private System.Windows.Forms.Label label11;
-		private System.Windows.Forms.TextBox apTextBox;
-		private System.Windows.Forms.StatusStrip statusStrip1;
-		private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
-		private System.Windows.Forms.SplitContainer splitContainer1;
-		private System.Windows.Forms.ComboBox vendorProfileComboBox;
-		private System.Windows.Forms.Button changeDefaultSettingsButton;
-		private System.Windows.Forms.Button reloadDefaultSettingsButton;
-		private System.Windows.Forms.RichTextBox logRichTextBox;
-		private System.Windows.Forms.Button clearLogButton;
-		private System.Windows.Forms.TextBox bpTextBox;
-		private System.Windows.Forms.Label label13;
-		private System.Windows.Forms.Label label12;
-		private System.Windows.Forms.TextBox bqTextBox;
-		private System.Windows.Forms.Button exportLogButton;
-		private System.Windows.Forms.Button exportSettingsButton;
-		private System.Windows.Forms.Button importSettingsButton;
-		private System.Windows.Forms.Label label14;
-		private System.Windows.Forms.Label label9;
-		private System.Windows.Forms.Button feePaidButton;
-		private System.Windows.Forms.GroupBox groupBox4;
-		private System.Windows.Forms.TextBox transactionIdTextBox;
-		private System.Windows.Forms.TextBox feeIdentifierTextBox;
-		private System.Windows.Forms.Label label19;
-		private System.Windows.Forms.TextBox paymentTypeTextBox;
-		private System.Windows.Forms.Label label18;
-		private System.Windows.Forms.Label label16;
-		private System.Windows.Forms.TextBox feeTypeTextBox;
-		private System.Windows.Forms.Label label15;
-		private System.Windows.Forms.TextBox amountTextBox;
-		private System.Windows.Forms.Label label17;
-		private System.Windows.Forms.TextBox locationCodeTextBox;
-		private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.TextBox usernameTextBox;
+        private System.Windows.Forms.TextBox passwordTextBox;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button loginButton;
+        private System.Windows.Forms.TextBox serverTextBox;
+        private System.Windows.Forms.TextBox portTextBox;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.GroupBox groupBox1;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.ContextMenuStrip patronInformationContextMenu;
+        private System.Windows.Forms.ToolStripMenuItem noneMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem holdItemsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem overdueItemsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem chargedItemsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem fineItemsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem recallItemsMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem unavailableHoldsMenuItem;
+        private System.Windows.Forms.GroupBox groupBox5;
+        private System.Windows.Forms.Button renewAllButton;
+        private System.Windows.Forms.Button renewButton;
+        private System.Windows.Forms.GroupBox groupBox2;
+        private System.Windows.Forms.TextBox patronBarcodeTextBox;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.TextBox patronPinTextBox;
+        private System.Windows.Forms.Button checkoutButton;
+        private System.Windows.Forms.Button patronStatusButton;
+        private System.Windows.Forms.Button checkInButton;
+        private System.Windows.Forms.GroupBox groupBox3;
+        private System.Windows.Forms.Label label8;
+        private System.Windows.Forms.TextBox itemBarcodeTextBox;
+        private System.Windows.Forms.Button endSessionButton;
+        private System.Windows.Forms.Button itemInformationButton;
+        private System.Windows.Forms.Button patronInformationButton;
+        private System.Windows.Forms.Button connectButton;
+        private System.Windows.Forms.TextBox aoTextBox;
+        private System.Windows.Forms.Label label10;
+        private System.Windows.Forms.Label label11;
+        private System.Windows.Forms.TextBox apTextBox;
+        private System.Windows.Forms.StatusStrip statusStrip1;
+        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
+        private System.Windows.Forms.SplitContainer splitContainer1;
+        private System.Windows.Forms.ComboBox vendorProfileComboBox;
+        private System.Windows.Forms.Button changeDefaultSettingsButton;
+        private System.Windows.Forms.Button reloadDefaultSettingsButton;
+        private System.Windows.Forms.RichTextBox logRichTextBox;
+        private System.Windows.Forms.Button clearLogButton;
+        private System.Windows.Forms.TextBox bpTextBox;
+        private System.Windows.Forms.Label label13;
+        private System.Windows.Forms.Label label12;
+        private System.Windows.Forms.TextBox bqTextBox;
+        private System.Windows.Forms.Button exportLogButton;
+        private System.Windows.Forms.Button exportSettingsButton;
+        private System.Windows.Forms.Button importSettingsButton;
+        private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Button feePaidButton;
+        private System.Windows.Forms.GroupBox groupBox4;
+        private System.Windows.Forms.TextBox transactionIdTextBox;
+        private System.Windows.Forms.TextBox feeIdentifierTextBox;
+        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.TextBox paymentTypeTextBox;
+        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.TextBox feeTypeTextBox;
+        private System.Windows.Forms.Label label15;
+        private System.Windows.Forms.TextBox amountTextBox;
+        private System.Windows.Forms.Label label17;
+        private System.Windows.Forms.TextBox locationCodeTextBox;
+        private System.Windows.Forms.Label label20;
         private System.Windows.Forms.Button noticeUpdateButton;
+        private System.Windows.Forms.Button btnAcsStatus;
     }
 }
 

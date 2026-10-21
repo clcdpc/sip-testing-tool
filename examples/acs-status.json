@@ -1,0 +1,16 @@
+{
+  "Host": "127.0.0.1",
+  "Port": 5002,
+  "EncodingName": "UTF-8",
+  "CheckChecksum": true,
+  "Commands": [
+    {
+      "Sequence": 1,
+      "Name": "ACS Status",
+      "Method": "99",
+      "FixedFields": "01002.00",
+      "VariableFields": {},
+      "SuccessRegex": "^98"
+    }
+  ]
+}
