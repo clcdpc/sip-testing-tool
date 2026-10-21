@@ -5,6 +5,11 @@
     <RootNamespace>Clc.Sip</RootNamespace>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>clc_orange_icon.ico</ApplicationIcon>
+    <Version>2.1.0</Version>
+    <FileVersion>2.1.0.8</FileVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />

@@ -2,5 +2,10 @@
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Clc.Sip</RootNamespace>
+    <Version>2.1.0</Version>
+    <FileVersion>2.1.0.8</FileVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
 </Project>

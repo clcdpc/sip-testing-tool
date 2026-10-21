@@ -4,6 +4,11 @@
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <AppConfig>..\..\src\sip-testing-tool\App.config</AppConfig>
+    <Version>2.1.0</Version>
+    <FileVersion>2.1.0.8</FileVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Deterministic>true</Deterministic>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\sip-core\sip-core.csproj" />
