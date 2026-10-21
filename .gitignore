@@ -3,7 +3,6 @@
 **/bin/
 **/obj/
 artifacts/
-private/
 *.user
 *.suo
 *.pfx

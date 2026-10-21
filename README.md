@@ -19,12 +19,6 @@ Use **Change Default Settings** and **Reload Default Values** in the app. The ch
 
 Visual Studio publish profiles are under the app project's `Properties/PublishProfiles`. Folder publishing writes to `artifacts/app`; ClickOnce writes to `artifacts/clickonce` and retains the existing install URL and release sequence.
 
-The ignored `private` folder contains:
-
-- `signing/code_signing_exp2026.pfx`: the certificate referenced by the ClickOnce profile.
-- `settings/settings.config`: imported legacy console settings, retained for reference.
-- `legacy-import.zip`: older signing files, original publish profiles, and consolidation records.
-
-Keep `private` with your local backup. Ordinary builds do not require a signing key. Generated output is ignored by Git.
+Signing will be configured separately before release. Generated output is ignored by Git.
 
 The original Git history is preserved. This version combines the .NET 10 app with ACS Status, Always On Top, configurable encoding/checksum validation, and connection-loss handling from the older project.
