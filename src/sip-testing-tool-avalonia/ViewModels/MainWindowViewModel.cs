@@ -160,7 +160,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         }
 
         await settingsStore.SaveAsync(value);
-        ApplyPreferences(value, true);
+        ApplyPreferences(value, false);
     }
 
     private void ApplyPreferences(AppPreferences value, bool reloadFields)

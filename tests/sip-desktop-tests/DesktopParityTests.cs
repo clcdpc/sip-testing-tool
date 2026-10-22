@@ -361,6 +361,100 @@ public sealed class DesktopParityTests
     }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
 
     [TestMethod]
+    [DataRow("")]
+    [DataRow("not-a-port")]
+    [DataRow("70000")]
+    public Task DefaultPortCanBeSavedAndReloadedBeforeConnectValidatesIt(string port) => ui.Dispatch(async () =>
+    {
+        using var directory = new ScratchDirectory();
+        var store = new SettingsStore(Path.Combine(directory.Path, "settings.json"));
+        using var model = new MainWindowViewModel(settingsStore: store) { Fields = SampleFields() };
+        var main = new MainWindow { DataContext = model };
+        var settings = new SettingsWindow(model.Preferences);
+        main.Show();
+        var result = settings.ShowDialog<AppPreferences?>(main);
+        try
+        {
+            Layout(settings);
+            var field = settings.FindControl<TextBox>("DefaultPortField")!;
+            field.Focus();
+            field.SelectAll();
+            Press(settings, Key.Back);
+            if (port.Length > 0) { settings.KeyTextInput(port); }
+            Press(settings, Key.Tab);
+            Assert.AreEqual(port, ((AppPreferences)settings.DataContext!).Defaults.Port);
+            settings.FindControl<Button>("SaveDefaultsButton")!.Focus();
+            settings.KeyPress(Key.Enter, RawInputModifiers.None, PhysicalKey.Enter, null);
+            Dispatcher.UIThread.RunJobs();
+            Assert.IsTrue(result.IsCompleted, "Saving defaults should not require a connectable endpoint.");
+            var saved = await result;
+            Assert.IsNotNull(saved);
+            Assert.AreEqual(port, saved.Defaults.Port);
+            await model.SavePreferencesAsync(saved);
+            Assert.AreEqual("5002", model.Fields.Port, "Saving defaults must preserve the current ribbon values.");
+            Assert.AreEqual(port, (await store.LoadAsync()).Defaults.Port);
+
+            using var exported = new MemoryStream();
+            await SettingsStore.ExportAsync(exported, saved.Defaults);
+            exported.Position = 0;
+            Assert.AreEqual(port, (await SettingsStore.ImportAsync(exported)).Port);
+            await model.ReloadDefaultsAsync();
+            Assert.AreEqual(port, model.Fields.Port);
+            model.Fields.Server = "127.0.0.1";
+            Layout(main);
+            main.FindControl<TextBox>("PortField")!.Focus();
+            Press(main, Key.Enter);
+            await model.ConnectCommand.ExecutionTask!;
+            Assert.IsFalse(model.IsConnected || model.IsBusy);
+            StringAssert.Contains(model.ErrorMessage!, "Port must be a number between 1 and 65535.");
+            Assert.IsTrue(main.FindControl<TextBox>("PortField")!.IsFocused);
+            Assert.AreEqual(port, model.Fields.Port, "Validation should leave the entered value intact.");
+        }
+        finally { settings.Close(); main.Close(); }
+        return true;
+    }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
+
+    [TestMethod]
+    public Task SavingDefaultsPreservesTheCurrentConnectionFieldsOptionsAndLog() => ui.Dispatch(async () =>
+    {
+        using var scratch = new ScratchDirectory();
+        var store = new SettingsStore(Path.Combine(scratch.Path, "settings.json"));
+        string? request = null;
+        await using var server = new SipServer(async (stream, token) =>
+        {
+            request = await ReadMessage(stream, token);
+            await WriteMessage(stream, "941", token);
+        });
+        using var model = new MainWindowViewModel(settingsStore: store) { Fields = SampleFields() };
+        model.Fields.Server = "127.0.0.1";
+        model.Fields.Port = server.Port.ToString();
+        await model.ConnectCommand.ExecuteAsync(null);
+        Assert.IsTrue(model.IsConnected);
+        var currentFields = model.Fields;
+        var options = model.Options;
+        options.ItemProperties = "keep options";
+        model.AppendTransaction(new() { Message = "old request", Response = "old response" });
+        var log = model.LogDocument.Text;
+
+        await model.SavePreferencesAsync(new() { Defaults = new() { Port = "", Username = "future-user" } });
+        Assert.AreSame(currentFields, model.Fields);
+        Assert.AreSame(options, model.Options);
+        Assert.AreEqual("keep options", model.Options.ItemProperties);
+        Assert.AreEqual(log, model.LogDocument.Text);
+        Assert.IsTrue(model.IsConnected);
+        Assert.AreEqual("", (await store.LoadAsync()).Defaults.Port);
+        await model.LoginCommand.ExecuteAsync(null);
+        await server.Completion;
+        StringAssert.Contains(request!, "CNtest-user|");
+        Assert.IsFalse(model.HasError);
+
+        await model.ReloadDefaultsAsync();
+        Assert.AreEqual("", model.Fields.Port);
+        Assert.AreEqual("future-user", model.Fields.Username);
+        return true;
+    }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
+
+    [TestMethod]
     public Task SettingsThemePreviewAndTextboxSelectionRemainConsistent() => ui.Dispatch(() =>
     {
         using var model = new MainWindowViewModel { Fields = SampleFields() };

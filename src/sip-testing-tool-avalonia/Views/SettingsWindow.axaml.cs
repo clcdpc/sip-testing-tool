@@ -57,11 +57,6 @@ public partial class SettingsWindow : Window
                 _ = UpdateService.GetFeedUrl(preferences.UpdateFeedUrl);
             }
 
-            if (!int.TryParse(preferences.Defaults.Port, out var port) || port is < 1 or > 65535)
-            {
-                throw new ArgumentException("Port must be a number between 1 and 65535.");
-            }
-
             accepted = true;
             Close(preferences);
         }

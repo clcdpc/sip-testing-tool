@@ -12,7 +12,7 @@
           <TextBlock Classes="groupTitle" Text="Connection and login" />
           <Grid ColumnDefinitions="*,82">
             <StackPanel Classes="field" Margin="0,0,10,0"><TextBlock Classes="fieldLabel" Text="Server" /><TextBox Text="{Binding Defaults.Server}" /></StackPanel>
-            <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Port" /><TextBox Text="{Binding Defaults.Port}" /></StackPanel>
+            <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Port" /><TextBox x:Name="DefaultPortField" Text="{Binding Defaults.Port}" /></StackPanel>
           </Grid>
           <Grid ColumnDefinitions="*,*">
             <StackPanel Classes="field" Margin="0,0,10,0"><TextBlock Classes="fieldLabel" Text="Institution (AO)" /><TextBox Text="{Binding Defaults.Ao}" /></StackPanel>
@@ -49,7 +49,7 @@
     </ScrollViewer>
     <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,18,0,0">
       <Button Content="Cancel" Click="Cancel_Click" />
-      <Button Content="Save defaults" Classes="accent" Click="Save_Click" />
+      <Button x:Name="SaveDefaultsButton" Content="Save defaults" Classes="accent" Click="Save_Click" />
     </StackPanel>
   </Grid>
 </Window>
