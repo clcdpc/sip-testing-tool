@@ -40,6 +40,7 @@ public sealed record SummaryChoice(string Name, string Key)
 
 public sealed record CommandFields
 {
+    public CommandOptions? Options { get; init; }
     public string Summary { get; init; } = "none";
     public string FeeType { get; init; } = "";
     public string PaymentType { get; init; } = "";

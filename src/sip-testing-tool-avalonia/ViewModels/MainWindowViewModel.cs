@@ -12,11 +12,13 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     private readonly SipSession session;
     private readonly SettingsStore settingsStore;
     private readonly UpdateService updates;
+    private readonly Dictionary<SipCommand, CommandOptions> commandOptions = CommandChoice.All
+        .ToDictionary(choice => choice.Command, choice => CommandOptions.Create(choice.Command));
 
     [ObservableProperty] private SessionFields fields = new();
     [ObservableProperty] private AppPreferences preferences = new();
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsPatronQuery), nameof(IsFeePaid), nameof(IsNotice), nameof(ExecuteLabel), nameof(CommandHint))]
+    [NotifyPropertyChangedFor(nameof(IsPatronQuery), nameof(IsFeePaid), nameof(IsNotice), nameof(ExecuteLabel), nameof(CommandHint), nameof(Options))]
     private CommandChoice selectedCommand = CommandChoice.All[0];
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(UsesRange))]
@@ -42,7 +44,6 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [ObservableProperty] private NoticeStatus selectedNoticeStatus;
     [ObservableProperty] private NoticeMedium selectedNoticeMedium;
     [ObservableProperty] private NotificationType selectedNoticeType;
-    [ObservableProperty] private string deliveryDate = DateTime.Now.ToString();
     [ObservableProperty] private string noticeComment = "";
     [ObservableProperty] private string updateStatus = "";
     [ObservableProperty]
@@ -55,7 +56,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     public IReadOnlyList<CommandChoice> Commands => CommandChoice.All;
     public IReadOnlyList<SummaryChoice> Summaries => SummaryChoice.All;
-    public IReadOnlyList<string> VendorProfiles { get; } = ["Envisionware", "Comprise", "3M", "ITG"];
+    public IReadOnlyList<string> VendorProfiles { get; } = ["SIP", "ENVISIONWARE", "COMPRISE", "3M", "ITG"];
+    public CommandOptions Options => commandOptions[SelectedCommand.Command];
     public IReadOnlyList<NoticeStatus> NoticeStatuses { get; } = Enum.GetValues<NoticeStatus>();
     public IReadOnlyList<NoticeMedium> NoticeMedia { get; } = Enum.GetValues<NoticeMedium>();
     public IReadOnlyList<NotificationType> NoticeTypes { get; } = Enum.GetValues<NotificationType>();
@@ -82,6 +84,41 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     public event Action? TransactionAppended;
     public event Action? ThemeChanged;
+    public event Action<string>? ValidationFailed;
+
+    [RelayCommand]
+    private void ResetOptions()
+    {
+        var command = SelectedCommand.Command;
+        commandOptions[command] = CommandOptions.Create(command);
+        if (command == SipCommand.PatronInformation)
+        {
+            SelectedSummary = SummaryChoice.All[0];
+            Fields.Bp = "1";
+            Fields.Bq = "5";
+        }
+        if (command == SipCommand.FeePaid)
+        {
+            FeeType = PaymentType = Amount = FeeIdentifier = TransactionId = "";
+        }
+        if (command == SipCommand.NoticeUpdate)
+        {
+            SelectedNoticeStatus = default;
+            SelectedNoticeMedium = default;
+            SelectedNoticeType = default;
+            NoticeComment = "";
+        }
+        OnPropertyChanged(nameof(Options));
+    }
+
+    [RelayCommand]
+    private async Task ToggleThemeAsync()
+    {
+        Preferences.DarkTheme = !Preferences.DarkTheme;
+        ThemeChanged?.Invoke();
+        try { await settingsStore.SaveAsync(Preferences); }
+        catch (Exception ex) { ErrorMessage = "Theme changed, but the preference could not be saved: " + ex.Message; }
+    }
 
     public MainWindowViewModel(SipSession? session = null, SettingsStore? settingsStore = null, UpdateService? updates = null)
     {
@@ -163,14 +200,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     private Task ExecuteSipAsync(SipCommand command) => RunAsync(async () =>
     {
-        var date = DateTime.Now;
-        if (command == SipCommand.NoticeUpdate && !DateTime.TryParse(DeliveryDate, out date))
-        {
-            throw new ArgumentException("Enter a valid delivery date and time.");
-        }
-
         var inputs = new CommandFields
         {
+            Options = commandOptions[command].Copy(),
             Summary = SelectedSummary.Key,
             FeeType = FeeType,
             PaymentType = PaymentType,
@@ -181,7 +213,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             NoticeMedium = SelectedNoticeMedium,
             NoticeType = SelectedNoticeType,
             NoticeComment = NoticeComment,
-            DeliveryDate = date
+            DeliveryDate = DateTime.Now
         };
         var transaction = await session.ExecuteAsync(command, Fields.Copy(), inputs,
             Preferences.EncodingName, Preferences.ValidateChecksums);
@@ -206,6 +238,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
         IsBusy = true;
         ErrorMessage = null;
+        string? invalidField = null;
         try
         {
             await operation();
@@ -213,6 +246,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         catch (Exception ex)
         {
             ErrorMessage = ex.Message;
+            invalidField = (ex as CommandValidationException)?.FieldName;
             if (!session.IsConnected)
             {
                 Status = "Not connected";
@@ -222,6 +256,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         {
             IsConnected = session.IsConnected;
             IsBusy = false;
+            if (invalidField != null) { ValidationFailed?.Invoke(invalidField); }
         }
     }
 

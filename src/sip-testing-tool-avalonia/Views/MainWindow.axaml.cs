@@ -2,6 +2,10 @@ using System.Text;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
+using Avalonia.Input;
+using Avalonia.VisualTree;
+using CommunityToolkit.Mvvm.Input;
+using Clc.Sip.Desktop.Models;
 using Avalonia.Platform.Storage;
 using Avalonia.Styling;
 using Clc.Sip.Desktop.Services;
@@ -13,11 +17,35 @@ public partial class MainWindow : Window
 {
     private MainWindowViewModel? model;
     private readonly SipLogColorizer colorizer = new();
+    public SipLogInspector LogInspection { get; }
     private MainWindowViewModel Model => (MainWindowViewModel)DataContext!;
 
     public MainWindow()
     {
         InitializeComponent();
+        AddHandler(KeyDownEvent, SessionKeyDown, RoutingStrategies.Tunnel);
+        LogInspection = new SipLogInspector(MessageLog, MessageFields);
+        PropertyChanged += (_, args) =>
+        {
+            if (args.Property == ActualThemeVariantProperty) { RefreshLogTheme(); }
+        };
+        LogContent.RowDefinitions[0].MinHeight = 100;
+        LogInspection.ExpansionChanged += expanded =>
+        {
+            LogContent.RowDefinitions[2].MinHeight = expanded ? 100 : 0;
+            if (expanded && !MessageFields.IsVisible)
+            {
+                LogContent.RowDefinitions[1].Height = new GridLength(6);
+                LogContent.RowDefinitions[2].Height = new GridLength(Math.Clamp(LogContent.Bounds.Height * 0.45, 150, 260));
+            }
+            if (!expanded)
+            {
+                LogContent.RowDefinitions[1].Height = new GridLength(0);
+                LogContent.RowDefinitions[2].Height = new GridLength(0);
+                if (MessageFields.IsKeyboardFocusWithin) { MessageLog.Focus(); }
+            }
+            InspectorDivider.IsVisible = MessageFields.IsVisible = expanded;
+        };
         MessageLog.TextArea.TextView.LineTransformers.Add(colorizer);
         DataContextChanged += (_, _) =>
         {
@@ -25,26 +53,62 @@ public partial class MainWindow : Window
             {
                 model.TransactionAppended -= ScrollLog;
                 model.ThemeChanged -= ApplyTheme;
+                model.ValidationFailed -= FocusInvalidField;
             }
             model = DataContext as MainWindowViewModel;
             if (model != null)
             {
                 model.TransactionAppended += ScrollLog;
                 model.ThemeChanged += ApplyTheme;
+                model.ValidationFailed += FocusInvalidField;
+                ApplyTheme();
             }
         };
         Closed += (_, _) =>
         {
+            LogInspection.Dispose();
             if (model != null)
             {
                 model.TransactionAppended -= ScrollLog;
                 model.ThemeChanged -= ApplyTheme;
+                model.ValidationFailed -= FocusInvalidField;
                 model.Dispose();
             }
         };
     }
 
     private void ScrollLog() => MessageLog.ScrollToEnd();
+
+    private async void SessionKeyDown(object? sender, KeyEventArgs args)
+    {
+        if (args.Key != Key.Enter || args.KeyModifiers != KeyModifiers.None || args.Source is not Control source || source is Button) { return; }
+        var ancestors = source.GetVisualAncestors().Prepend(source).ToArray();
+        Button? button = ancestors.Contains(ConnectionGroup) ? ConnectButton :
+            ancestors.Contains(LoginGroup) || source.Name is "UidAlgorithmField" or "PwdAlgorithmField" ? LoginButton : null;
+        if (button == null || (ancestors.Contains(VendorProfileField) && VendorProfileField.IsDropDownOpen)) { return; }
+        args.Handled = true;
+        if (button.Command is not IAsyncRelayCommand command || !command.CanExecute(null)) { return; }
+        button.Focus();
+        await command.ExecuteAsync(null);
+        if (!Model.HasError) { button.Focus(); }
+    }
+
+    private void FocusInvalidField(string property)
+    {
+        var control = this.GetVisualDescendants().OfType<Control>().FirstOrDefault(field => field.Name == property + "Field");
+        if (control == null || !control.IsEffectivelyVisible)
+        {
+            Model.SelectedCommand = CommandChoice.All.Single(choice => choice.Command == SipCommand.Login);
+            control = this.GetVisualDescendants().OfType<Control>().FirstOrDefault(field => field.Name == property + "Field");
+        }
+        control?.BringIntoView();
+        if (control is OptionalDateTimeInput date) { date.FocusEditor(); }
+        else if (control != null)
+        {
+            control.Focus();
+            if (control is TextBox text) { text.SelectAll(); }
+        }
+    }
 
     private void ApplyTheme()
     {
@@ -53,7 +117,13 @@ public partial class MainWindow : Window
             Application.Current.RequestedThemeVariant = Model.Preferences.DarkTheme ? ThemeVariant.Dark : ThemeVariant.Light;
         }
 
+        RefreshLogTheme();
+    }
+
+    private void RefreshLogTheme()
+    {
         MessageLog.TextArea.TextView.Redraw();
+        LogInspection.RefreshTheme();
     }
 
     private async void Settings_Click(object? sender, RoutedEventArgs args)
@@ -74,7 +144,7 @@ public partial class MainWindow : Window
         {
             await Model.SavePreferencesAsync(preferences);
         }
-        catch (Exception ex) { Model.ErrorMessage = "Could not save defaults: " + ex.Message; }
+        catch (Exception ex) { Model.ErrorMessage = "Could not save defaults: " + ex.Message; ApplyTheme(); }
     }
 
     private async void ReloadDefaults_Click(object? sender, RoutedEventArgs args) => await Model.ReloadDefaultsAsync();
@@ -149,4 +219,5 @@ public partial class MainWindow : Window
 
     private void CopyLog_Click(object? sender, RoutedEventArgs args) => MessageLog.Copy();
     private void SelectLog_Click(object? sender, RoutedEventArgs args) => MessageLog.SelectAll();
+    private void InspectLog_Click(object? sender, RoutedEventArgs args) => LogInspection.ExpandMessageAtOffset(MessageLog.CaretOffset);
 }

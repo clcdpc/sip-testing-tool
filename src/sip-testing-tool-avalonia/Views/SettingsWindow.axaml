@@ -20,7 +20,7 @@
           </Grid>
           <Grid ColumnDefinitions="*,*">
             <StackPanel Classes="field" Margin="0,0,10,0"><TextBlock Classes="fieldLabel" Text="Username" /><TextBox Text="{Binding Defaults.Username}" /></StackPanel>
-            <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Password" /><TextBox Text="{Binding Defaults.Password}" PasswordChar="●" /></StackPanel>
+            <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Password" /><TextBox Text="{Binding Defaults.Password}" /></StackPanel>
           </Grid>
           <Grid ColumnDefinitions="*,*">
             <StackPanel Classes="field" Margin="0,0,10,0"><TextBlock Classes="fieldLabel" Text="Location code (CP)" /><TextBox Text="{Binding Defaults.LocationCode}" /></StackPanel>
@@ -35,7 +35,7 @@
           <TextBlock Classes="groupTitle" Text="Patron and item" />
           <Grid ColumnDefinitions="*,100">
             <StackPanel Classes="field" Margin="0,0,10,0"><TextBlock Classes="fieldLabel" Text="Patron barcode" /><TextBox Text="{Binding Defaults.PatronBarcode}" /></StackPanel>
-            <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Patron PIN" /><TextBox Text="{Binding Defaults.PatronPin}" PasswordChar="●" /></StackPanel>
+            <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Patron PIN" /><TextBox Text="{Binding Defaults.PatronPin}" /></StackPanel>
           </Grid>
           <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Item barcode" /><TextBox Text="{Binding Defaults.ItemBarcode}" /></StackPanel>
           <Separator Margin="0,8" />

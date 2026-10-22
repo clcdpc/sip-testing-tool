@@ -1,6 +1,8 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Controls;
+using Avalonia.Input;
 using Clc.Sip.Desktop.ViewModels;
 using Clc.Sip.Desktop.Views;
 
@@ -8,7 +10,14 @@ namespace Clc.Sip.Desktop;
 
 public partial class App : Application
 {
-    public override void Initialize() => AvaloniaXamlLoader.Load(this);
+    public override void Initialize()
+    {
+        AvaloniaXamlLoader.Load(this);
+        InputElement.GotFocusEvent.AddClassHandler<TextBox>((field, args) =>
+        {
+            if (args.NavigationMethod == NavigationMethod.Tab) { field.SelectAll(); }
+        });
+    }
 
     public override void OnFrameworkInitializationCompleted()
     {

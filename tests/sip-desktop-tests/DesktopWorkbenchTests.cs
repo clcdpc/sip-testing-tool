@@ -155,7 +155,8 @@ public sealed class DesktopWorkbenchTests
         await model.ConnectCommand.ExecuteAsync(null);
         Assert.IsTrue(model.IsConnected && model.ExecuteCommand.CanExecute(null), "Connect did not enable commands.");
         model.SelectedCommand = CommandChoice.All.Single(c => c.Command == SipCommand.NoticeUpdate);
-        model.DeliveryDate = "invalid-date";
+        model.Options.UseDate = true;
+        model.Options.DateText = "invalid-date";
         await model.ExecuteCommand.ExecuteAsync(null);
         Assert.IsTrue(model.HasError && !model.IsBusy && model.LogDocument.TextLength == 0, "Invalid notice dates should be rejected before sending.");
         model.SelectedCommand = CommandChoice.All.Single(c => c.Command == SipCommand.Checkout);
