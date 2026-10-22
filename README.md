@@ -83,7 +83,7 @@ Right-click **sip-testing-tool-avalonia → Publish**, select one of its checked
 | `Velopack-Linux` | `artifacts/avalonia/publish/linux-x64` | `artifacts/velopack/linux-x64` |
 | `Windows-SingleFile` | `artifacts/avalonia/publish/win-x64-single-file/sip-testing-tool-avalonia.exe` | — |
 
-The paths above are relative to the consolidated repository root. `PublishPaths.props` calculates the absolute `artifacts` path from its location in that root. All Avalonia and Windows Forms profiles use it, so Visual Studio and command-line publishing share the same destination in any checkout.
+The paths above are relative to the consolidated repository root. Publish profiles store plain folder paths relative to each application's `.csproj`, which both Visual Studio and command-line publishing resolve into that root's `artifacts` folder. Visual Studio also reads profiles from XML streams without their file location, so profile values must not depend on `MSBuildProjectDirectory`, `MSBuildThisFileDirectory`, or imports that use those properties. `PublishPaths.props` supplies the absolute root for Velopack packaging during the application build.
 
 The two **Velopack** profiles publish self-contained .NET applications and then run the pinned local Velopack CLI. Windows produces an installer, portable ZIP and update package; Linux produces an AppImage and update package. Both Velopack profiles can be packaged on Windows. Increase **Version** in the Avalonia `.csproj` for every release; a release version must identify the same application contents whenever it is served to users. Keep old release packages when publishing subsequent versions so Velopack can generate deltas.
 
@@ -121,7 +121,7 @@ From the repository root, the equivalent command is:
 dotnet test src/sip-testing-tool.sln
 ```
 
-Run `dotnet msbuild build/VerifyPublishPaths.proj` to check all five publish profiles from a publishing-helper context outside the application projects. This checks their output destinations without building, signing or packaging a release.
+Run `dotnet msbuild build/VerifyPublishPaths.proj` to check all five publish profiles, including Visual Studio's XML-stream reader that has no profile file location. This checks their output destinations without building, signing or packaging a release.
 
 Tests are ordinary MSTest methods grouped by behavior: checksums, connections, console output, workbench behavior, checkout, themes, command-option state, settings, updates and desktop sessions. Test classes use MSTest lifecycle methods; the shared test support is limited to UI setup, test data and loopback SIP peers. Both projects use MSTest assertions directly.
 
