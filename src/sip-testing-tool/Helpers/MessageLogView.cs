@@ -124,18 +124,21 @@ public sealed class MessageLogView : UserControl
         BackColor = split.BackColor = AppTheme.Border;
         gutter.BackColor = AppTheme.LogBackground;
         heading.Parent.BackColor = heading.BackColor = AppTheme.Surface;
-        grid.BackgroundColor = grid.DefaultCellStyle.BackColor = AppTheme.LogBackground;
-        grid.DefaultCellStyle.ForeColor = AppTheme.Text;
-        grid.GridColor = AppTheme.Border;
-        grid.ColumnHeadersDefaultCellStyle.BackColor = AppTheme.Surface;
-        grid.ColumnHeadersDefaultCellStyle.ForeColor = AppTheme.Text;
-        grid.ColumnHeadersDefaultCellStyle.Font = boldFont;
-        grid.DefaultCellStyle.SelectionBackColor = SystemColors.Highlight;
-        grid.DefaultCellStyle.SelectionForeColor = SystemColors.HighlightText;
-        foreach (DataGridViewRow row in grid.Rows)
+        UpdateGrid(() =>
         {
-            StyleRow(row);
-        }
+            grid.BackgroundColor = grid.DefaultCellStyle.BackColor = AppTheme.LogBackground;
+            grid.DefaultCellStyle.ForeColor = AppTheme.Text;
+            grid.GridColor = AppTheme.Border;
+            grid.ColumnHeadersDefaultCellStyle.BackColor = AppTheme.Surface;
+            grid.ColumnHeadersDefaultCellStyle.ForeColor = AppTheme.Text;
+            grid.ColumnHeadersDefaultCellStyle.Font = boldFont;
+            grid.DefaultCellStyle.SelectionBackColor = SystemColors.Highlight;
+            grid.DefaultCellStyle.SelectionForeColor = SystemColors.HighlightText;
+            foreach (DataGridViewRow row in grid.Rows)
+            {
+                StyleRow(row);
+            }
+        });
         foreach (var button in buttons.Values)
         {
             StyleButton(button);
@@ -283,34 +286,60 @@ public sealed class MessageLogView : UserControl
         }
         var details = SipLogFields.DescribeMessage(message.Text);
         heading.Text = $"{(message.Sent ? "Sent" : "Received")} message {message.Number} · {details.Name}";
-        grid.Rows.Clear();
-        foreach (var field in details.Fields)
+        UpdateGrid(() =>
         {
-            AddRow(field);
-            if (field.Children != null)
+            grid.Rows.Clear();
+            var rows = new List<DataGridViewRow>();
+            foreach (var field in details.Fields)
             {
-                foreach (var flag in field.Children)
+                rows.Add(CreateRow(field));
+                if (field.Children != null)
                 {
-                    AddRow(flag, child: true);
+                    foreach (var flag in field.Children)
+                    {
+                        rows.Add(CreateRow(flag, child: true));
+                    }
                 }
             }
-        }
-        grid.ClearSelection();
-        var opening = split.Panel2Collapsed;
-        expandedOffset = offset;
-        split.Panel2Collapsed = false;
+            grid.Rows.AddRange(rows.ToArray());
+            var opening = split.Panel2Collapsed;
+            expandedOffset = offset;
+            split.Panel2Collapsed = false;
+            if (opening && split.Height > 140)
+            {
+                split.SplitterDistance = Math.Max(70, split.Height / 3);
+            }
+        });
         grid.CurrentCell = null;
         grid.ClearSelection();
-        if (opening && split.Height > 140)
-        {
-            split.SplitterDistance = Math.Max(70, split.Height / 3);
-        }
         RefreshButtons();
     }
 
-    private void AddRow(SipLogDetail field, bool child = false)
+    private void UpdateGrid(Action update)
     {
-        var row = grid.Rows[grid.Rows.Add(field.Name, field.Description, child ? field.Meaning : field.DisplayValue)];
+        var rowSizing = grid.AutoSizeRowsMode;
+        var columnSizing = grid.AutoSizeColumnsMode;
+        grid.SuspendLayout();
+        grid.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.None;
+        grid.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.None;
+        try
+        {
+            update();
+        }
+        finally
+        {
+            // SuspendLayout alone does not stop DataGridView's cell measuring.
+            // Fit columns first, then measure wrapped rows at their final widths.
+            grid.ResumeLayout();
+            grid.AutoSizeColumnsMode = columnSizing;
+            grid.AutoSizeRowsMode = rowSizing;
+        }
+    }
+
+    private DataGridViewRow CreateRow(SipLogDetail field, bool child = false)
+    {
+        var row = new DataGridViewRow();
+        row.CreateCells(grid, field.Name, field.Description, child ? field.Meaning : field.DisplayValue);
         row.Tag = field;
         if (child)
         {
@@ -318,6 +347,7 @@ public sealed class MessageLogView : UserControl
             row.Cells[0].Value = "↳ " + field.Name;
         }
         StyleRow(row);
+        return row;
     }
 
     private void StyleRow(DataGridViewRow row)

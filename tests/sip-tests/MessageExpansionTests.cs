@@ -252,6 +252,88 @@ public sealed class MessageExpansionTests
         }
     }
 
+    [TestMethod(DisplayName = "Large message tables use bounded sizing passes when switching, reopening, resizing and changing themes")]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void LargeMessagesAreSizedInBatches(bool darkMode)
+    {
+        // Same field layout and vendor extensions as the reported slow message,
+        // with synthetic patron details.
+        const string response = "64YYYY      Y   00120261022    083815000100000000000600000000" +
+            "AO123|AA12345678901234|AEUSER, TEST ACCOUNT|BZ0060|CA0112|CB0117|BLY|CQY|BHUSD|BV20.89|CC10.00|" +
+            "BD456 Example Avenue, EXAMPLE CITY, OH 12345|BEreader@example.test|BF5550101234|BC19890101    000000|" +
+            "PA1|PEFLOCK|PS|U1|U2NONE or UNUSED|U3NONE or UNUSED|U4YES Computer Access|U5|PZ12345|" +
+            "PX22220124    235959|PYN|FA0.00|PC1234567|PB12345678901234|" +
+            "AFPatron has too many fines.|AGPatron has too many fines.|AY1AZ81AC";
+        var previousTheme = AppTheme.IsDarkMode;
+        try
+        {
+            AppTheme.SetDarkMode(darkMode);
+            using var form = new MainForm();
+            ShowOffscreen(form);
+            form.LogOutput(new SipTransaction { Message = "6300020261022    083815          AO123|AA12345678901234|", Response = response });
+            Application.DoEvents();
+            var log = form.GetRichTextBox("logRichTextBox");
+            var transcript = log.Text;
+            var grid = form.GetDataGridView("messageFieldsGrid");
+            foreach (DataGridViewColumn column in grid.Columns)
+            {
+                column.CellTemplate = new MeasuringCell();
+            }
+            var responseOffset = transcript.IndexOf("<--", StringComparison.Ordinal);
+            AssertBoundedSizing(() => Expand(responseOffset), "Opening a large message");
+            Assert.AreEqual(57, grid.Rows.Count);
+            Assert.AreEqual(14, grid.Rows.Cast<DataGridViewRow>().Count(row => row.Cells[0].Value.ToString().StartsWith("↳")));
+            AssertBoundedSizing(() => Expand(0), "Switching to a smaller message");
+            AssertBoundedSizing(() => Expand(responseOffset), "Switching back to a large message");
+            form.GetButton("collapseMessageButton").PerformClick();
+            Application.DoEvents();
+            AssertBoundedSizing(() => Expand(responseOffset), "Reopening a large message");
+            AssertBoundedSizing(() => AppTheme.SetDarkMode(!darkMode), "Changing the theme");
+            AssertBoundedSizing(() => form.Width -= 200, "Resizing a large message");
+            Assert.AreEqual(57, grid.Rows.Count);
+            Assert.AreEqual(transcript, log.Text);
+            Assert.AreEqual("SET (Y)", grid.Rows[2].Cells[2].Value);
+            Assert.IsTrue(grid.Rows[2].Cells[2].Style.Font.Bold);
+            Assert.AreEqual("Not set (space)", grid.Rows[6].Cells[2].Value);
+            Assert.AreEqual(AppTheme.Surface, grid.Rows[1].DefaultCellStyle.BackColor);
+            Assert.IsTrue(grid.Rows.Cast<DataGridViewRow>().Any(row => row.Height > grid.RowTemplate.Height), "Descriptions should still wrap at narrow widths.");
+            foreach (DataGridViewRow row in grid.Rows)
+            {
+                Assert.IsTrue(row.Height >= row.GetPreferredHeight(row.Index, DataGridViewAutoSizeRowMode.AllCellsExceptHeader, fixedWidth: true),
+                    $"Row {row.Index} must fit its wrapped contents after the column widths settle.");
+            }
+
+            void Expand(int offset) => form.GetButton($"expandMessage{offset}Button").PerformClick();
+
+            void AssertBoundedSizing(Action update, string operation)
+            {
+                MeasuringCell.PreferredSizeCalls = 0;
+                update();
+                Application.DoEvents();
+                // Allow several full passes for scrollbar and column-width changes.
+                // The previous code measured all rows after each insertion/style
+                // change, resulting in over 21,000 calls for this 57-row message.
+                var budget = grid.Rows.Count * grid.Columns.Count * 4;
+                Assert.IsTrue(MeasuringCell.PreferredSizeCalls <= budget,
+                    $"{operation} made {MeasuringCell.PreferredSizeCalls} size calculations; expected at most {budget}.");
+            }
+        }
+        finally { AppTheme.SetDarkMode(previousTheme); }
+    }
+
+    private sealed class MeasuringCell : DataGridViewTextBoxCell
+    {
+        public static int PreferredSizeCalls;
+        public MeasuringCell() { }
+
+        protected override Size GetPreferredSize(Graphics graphics, DataGridViewCellStyle cellStyle, int rowIndex, Size constraintSize)
+        {
+            PreferredSizeCalls++;
+            return base.GetPreferredSize(graphics, cellStyle, rowIndex, constraintSize);
+        }
+    }
+
     private sealed class RecreatedLog : RichTextBox
     {
         public void RecreateNativeHandle() => RecreateHandle();

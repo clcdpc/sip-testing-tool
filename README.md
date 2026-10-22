@@ -97,7 +97,7 @@ ClickOnce signing uses DigiCert KeyLocker through the Windows current-user Perso
 
 ## Verification
 
-Both test projects use MSTest.Sdk 4.5.1. Open `src/sip-testing-tool.sln`, build the solution, then use **Test > Test Explorer > Run All**. The Windows Forms project exposes 132 regression tests, 24 focused command-option tests and 116 individually named form-to-submission cases; the Avalonia project exposes 13 tests. UI tests run on an STA thread. Each assembly runs sequentially because its checks share UI and process state.
+Both test projects use MSTest.Sdk 4.5.1. Open `src/sip-testing-tool.sln`, build the solution, then use **Test > Test Explorer > Run All**. The Windows Forms project exposes 134 regression tests, 24 focused command-option tests and 116 individually named form-to-submission cases; the Avalonia project exposes 13 tests. UI tests run on an STA thread. Each assembly runs sequentially because its checks share UI and process state.
 
 From the repository root, the equivalent command is:
 
