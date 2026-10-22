@@ -243,6 +243,52 @@ public sealed class DesktopParityTests
     }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public Task OptionalFieldsUseInlineLabelsAndReflowWithoutClipping(bool dark) => ui.Dispatch(() =>
+    {
+        using var model = new MainWindowViewModel { Fields = SampleFields() };
+        model.Preferences.DarkTheme = dark;
+        var window = new MainWindow { DataContext = model };
+        window.Show();
+        try
+        {
+            var columns = window.FindControl<ComboBox>("CommandPicker")!.GetVisualAncestors().OfType<Grid>().Last(grid => grid.ColumnDefinitions.Count == 3);
+            foreach (var command in CommandChoice.All)
+            {
+                model.SelectedCommand = command;
+                foreach (var width in new[] { 280, 322, 500 })
+                {
+                    columns.ColumnDefinitions[0].Width = new GridLength(width);
+                    Layout(window);
+                    foreach (var row in window.GetVisualDescendants().OfType<OptionalFieldRow>().Where(control => control.IsEffectivelyVisible))
+                    {
+                        var label = row.Children.OfType<TextBlock>().Single();
+                        var input = row.Field!;
+                        Assert.IsTrue(input.Bounds.Width > 0 && input.Bounds.Height > 0, row.Label + " must remain visible.");
+                        Assert.IsTrue(input.Bounds.Right <= row.Bounds.Width + 0.5 && input.Bounds.Bottom <= row.Bounds.Height + 0.5, row.Label + " input is clipped.");
+                        Assert.IsTrue(label.Bounds.Right <= row.Bounds.Width + 0.5 && label.Bounds.Bottom <= row.Bounds.Height + 0.5, row.Label + " label is clipped.");
+                        Assert.IsFalse(input.Bounds.Intersects(label.Bounds), row.Label + " overlaps its input.");
+                        Assert.IsTrue(label.DesiredSize.Width <= label.Bounds.Width + 0.5, row.Label + " text is clipped.");
+                    }
+                    if (command.Command == SipCommand.Renew)
+                    {
+                        var title = Field<TextBox>(window, "TitleIdentifierField");
+                        Assert.IsTrue(title.Bounds.X > 0, "The short title label should fit beside its input.");
+                        var date = Field<OptionalDateTimeInput>(window, "DateTextField");
+                        Assert.AreEqual(width == 500, date.Bounds.X > 0, "Date inputs need a full row until the workbench is wide enough.");
+                        title.Text = "retained while resizing";
+                        if (width == 322) { SaveFrame(window, dark ? "inline-options-dark" : "inline-options-light"); }
+                    }
+                }
+            }
+            model.SelectedCommand = Choice(SipCommand.Renew);
+            Assert.AreEqual("retained while resizing", model.Options.TitleIdentifier);
+        }
+        finally { window.Close(); }
+    }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
+
+    [TestMethod]
     public Task NoticeDateValidatesInPlaceAndEditedControlsReachTheRequest() => ui.Dispatch(async () =>
     {
         string? request = null;

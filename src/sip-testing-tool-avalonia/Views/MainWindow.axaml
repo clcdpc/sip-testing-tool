@@ -94,25 +94,25 @@
           <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="12">
               <StackPanel x:Name="PatronQueryPanel" IsVisible="{Binding IsPatronQuery}" Spacing="12">
-                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Summary" /><ComboBox ItemsSource="{Binding Summaries}" SelectedItem="{Binding SelectedSummary}" HorizontalAlignment="Stretch" /></StackPanel>
+                <views:OptionalFieldRow Label="Summary"><ComboBox ItemsSource="{Binding Summaries}" SelectedItem="{Binding SelectedSummary}" HorizontalAlignment="Stretch" /></views:OptionalFieldRow>
                 <Grid ColumnDefinitions="*,*">
-                  <StackPanel Classes="field" Margin="0,0,8,0"><TextBlock Classes="fieldLabel" Text="Start item (BP)" /><TextBox x:Name="BpField" Text="{Binding Fields.Bp}" AutomationProperties.Name="Start Item BP" /></StackPanel>
-                  <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="End item (BQ)" /><TextBox x:Name="BqField" Text="{Binding Fields.Bq}" AutomationProperties.Name="End Item BQ" /></StackPanel>
+                  <views:OptionalFieldRow Label="Start item (BP)" Margin="0,0,8,0"><TextBox x:Name="BpField" Text="{Binding Fields.Bp}" AutomationProperties.Name="Start Item BP" /></views:OptionalFieldRow>
+                  <views:OptionalFieldRow Grid.Column="1" Label="End item (BQ)"><TextBox x:Name="BqField" Text="{Binding Fields.Bq}" AutomationProperties.Name="End Item BQ" /></views:OptionalFieldRow>
                 </Grid>
               </StackPanel>
               <StackPanel x:Name="FeePanel" IsVisible="{Binding IsFeePaid}" Spacing="12">
-                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Fee type" /><TextBox x:Name="FeeTypeField" Text="{Binding FeeType}" /></StackPanel>
-                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Payment type" /><TextBox x:Name="PaymentTypeField" Text="{Binding PaymentType}" /></StackPanel>
-                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Payment amount" /><TextBox x:Name="AmountField" Text="{Binding Amount}" /></StackPanel>
-                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Fee identifier (CG)" /><TextBox Text="{Binding FeeIdentifier}" /></StackPanel>
-                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Transaction ID (BK)" /><TextBox Text="{Binding TransactionId}" /></StackPanel>
+                <views:OptionalFieldRow Label="Fee type"><TextBox x:Name="FeeTypeField" Text="{Binding FeeType}" /></views:OptionalFieldRow>
+                <views:OptionalFieldRow Label="Payment type"><TextBox x:Name="PaymentTypeField" Text="{Binding PaymentType}" /></views:OptionalFieldRow>
+                <views:OptionalFieldRow Label="Payment amount"><TextBox x:Name="AmountField" Text="{Binding Amount}" /></views:OptionalFieldRow>
+                <views:OptionalFieldRow Label="Fee identifier (CG)"><TextBox Text="{Binding FeeIdentifier}" /></views:OptionalFieldRow>
+                <views:OptionalFieldRow Label="Transaction ID (BK)"><TextBox Text="{Binding TransactionId}" /></views:OptionalFieldRow>
               </StackPanel>
               <StackPanel x:Name="NoticePanel" IsVisible="{Binding IsNotice}" Spacing="12">
-                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Delivery status" /><ComboBox x:Name="NoticeStatusField" ItemsSource="{Binding NoticeStatuses}" SelectedItem="{Binding SelectedNoticeStatus}" HorizontalAlignment="Stretch" /></StackPanel>
-                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Delivery date/time" /><views:OptionalDateTimeInput x:Name="NoticeDateField" DateText="{Binding Options.DateText}" IsIncluded="{Binding Options.UseDate}" ToolTip.Tip="Unchecked uses the time of execution." AutomationProperties.Name="Delivery date/time" /></StackPanel>
-                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Delivery medium" /><ComboBox x:Name="NoticeMediumField" ItemsSource="{Binding NoticeMedia}" SelectedItem="{Binding SelectedNoticeMedium}" HorizontalAlignment="Stretch" /></StackPanel>
-                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Notice type" /><ComboBox x:Name="NoticeTypeField" ItemsSource="{Binding NoticeTypes}" SelectedItem="{Binding SelectedNoticeType}" HorizontalAlignment="Stretch" /></StackPanel>
-                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Comment (DE)" /><TextBox x:Name="NoticeCommentField" Text="{Binding NoticeComment}" /></StackPanel>
+                <views:OptionalFieldRow Label="Delivery status"><ComboBox x:Name="NoticeStatusField" ItemsSource="{Binding NoticeStatuses}" SelectedItem="{Binding SelectedNoticeStatus}" HorizontalAlignment="Stretch" /></views:OptionalFieldRow>
+                <views:OptionalFieldRow Label="Delivery date/time"><views:OptionalDateTimeInput x:Name="NoticeDateField" DateText="{Binding Options.DateText}" IsIncluded="{Binding Options.UseDate}" ToolTip.Tip="Unchecked uses the time of execution." AutomationProperties.Name="Delivery date/time" /></views:OptionalFieldRow>
+                <views:OptionalFieldRow Label="Delivery medium"><ComboBox x:Name="NoticeMediumField" ItemsSource="{Binding NoticeMedia}" SelectedItem="{Binding SelectedNoticeMedium}" HorizontalAlignment="Stretch" /></views:OptionalFieldRow>
+                <views:OptionalFieldRow Label="Notice type"><ComboBox x:Name="NoticeTypeField" ItemsSource="{Binding NoticeTypes}" SelectedItem="{Binding SelectedNoticeType}" HorizontalAlignment="Stretch" /></views:OptionalFieldRow>
+                <views:OptionalFieldRow Label="Comment (DE)"><TextBox x:Name="NoticeCommentField" Text="{Binding NoticeComment}" /></views:OptionalFieldRow>
               </StackPanel>
               <views:CommandOptionsView x:Name="CommandOptionsHost" />
             </StackPanel>

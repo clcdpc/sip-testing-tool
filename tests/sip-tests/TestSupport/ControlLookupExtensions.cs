@@ -5,6 +5,15 @@ namespace Clc.Sip.Tests.TestSupport;
 internal static class ControlLookupExtensions
 {
     public static TextBox GetTextBox(this Control parent, string name) => GetRequiredControl<TextBox>(parent, name);
+    public static IEnumerable<TextBox> GetTextBoxes(this Control parent)
+    {
+        foreach (Control child in parent.Controls)
+        {
+            if (child is TextBox input) { yield return input; }
+            foreach (var descendant in child.GetTextBoxes()) { yield return descendant; }
+        }
+    }
+
     public static CheckBox GetCheckBox(this Control parent, string name) => GetRequiredControl<CheckBox>(parent, name);
     public static ComboBox GetComboBox(this Control parent, string name) => GetRequiredControl<ComboBox>(parent, name);
     public static Button GetButton(this Control parent, string name) => GetRequiredControl<Button>(parent, name);

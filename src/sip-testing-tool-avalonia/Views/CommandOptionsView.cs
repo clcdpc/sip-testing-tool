@@ -111,7 +111,7 @@ public sealed class CommandOptionsView : UserControl
     {
         AutomationProperties.SetName(field, label);
         ToolTip.SetTip(field, hint);
-        return new StackPanel { Spacing = 4, Children = { new TextBlock { Text = label, Classes = { "fieldLabel" }, TextWrapping = Avalonia.Media.TextWrapping.Wrap }, field } };
+        return new OptionalFieldRow { Label = label, Field = field };
     }
 
     private static Binding Option(string property) => new("Options." + property) { Mode = BindingMode.TwoWay };

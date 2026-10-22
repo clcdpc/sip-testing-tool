@@ -73,7 +73,7 @@ public sealed class CommandOptionStateTests
                         }
                     }
 
-                    foreach (var input in options.Controls.OfType<TextBox>())
+                    foreach (var input in options.GetTextBoxes())
                     {
                         ControlAppearanceAssertions.MatchCurrentTheme(input);
                         Assert.IsTrue(!input.UseSystemPasswordChar && input.PasswordChar == '\0', "A command password is masked.");

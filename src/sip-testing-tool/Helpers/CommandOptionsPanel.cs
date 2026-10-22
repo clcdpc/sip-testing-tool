@@ -31,13 +31,10 @@ internal sealed class CommandOptionsPanel : TableLayoutPanel
 
     private void AddField(Control field, string label, string hint)
     {
-        AddRow(new Label { Text = label, AutoSize = true, Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 4) });
         field.AccessibleName = label;
-        field.Dock = DockStyle.Fill;
-        field.Margin = new Padding(0, 0, 0, 12);
         field.TabIndex = nextTabIndex++;
         toolTips.SetToolTip(field, hint);
-        AddRow(field);
+        AddRow(new OptionalFieldRow(new Label { Text = label }, field));
     }
 
     public TextBox AddTextField(string name, string label, string initial = "", string hint = "Blank omits this optional field.", int maxLength = 32767)

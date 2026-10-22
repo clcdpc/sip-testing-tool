@@ -67,6 +67,69 @@ public sealed class WorkbenchTests
         }
     }
 
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void OptionalFieldsUseInlineLabelsAndReflowWithoutClipping(bool dark)
+    {
+        var previousTheme = AppTheme.IsDarkMode;
+        AppTheme.SetDarkMode(dark);
+        try
+        {
+            using var form = new MainForm();
+            ShowOffscreen(form);
+            var commands = form.GetComboBox("commandComboBox");
+            var split = form.GetSplitContainer("splitContainer1");
+            foreach (var command in commands.Items.Cast<string>().ToArray())
+            {
+                commands.SelectedItem = command;
+                foreach (var width in new[] { 280, 312, 500 })
+                {
+                    split.SplitterDistance = width;
+                    LayoutTree(form);
+                    foreach (var row in Descendants(form).OfType<Panel>().Where(control => control.Visible && control.Name.EndsWith("Row", StringComparison.Ordinal)))
+                    {
+                        var label = row.Controls.OfType<Label>().Single();
+                        var input = row.Controls.Cast<Control>().Single(control => control != label);
+                        Assert.IsTrue(input.Width > 0 && input.Height > 0, input.Name + " must remain visible.");
+                        Assert.IsTrue(row.ClientRectangle.Contains(input.Bounds), $"{command} at {width}: {input.Name} {input.Bounds} is clipped by {row.ClientRectangle}.");
+                        Assert.IsTrue(row.ClientRectangle.Contains(label.Bounds), label.Text + " is clipped.");
+                        Assert.IsFalse(input.Bounds.IntersectsWith(label.Bounds), label.Text + " overlaps its input.");
+                    }
+                    if (command == "Renew")
+                    {
+                        var title = form.GetTextBox("renewTitleTextBox");
+                        Assert.IsTrue(title.Left > 0, "The short title label should fit beside its input.");
+                        var date = form.GetDatePicker("renewDueDatePicker");
+                        Assert.AreEqual(width == 500, date.Left > 0, "Date inputs need a full row until the workbench is wide enough.");
+                        var fee = form.GetComboBox("renewFeeComboBox");
+                        var reset = form.GetButton("resetRenewOptionsButton");
+                        Assert.IsTrue(reset.Top - fee.Parent.Bottom < 24, $"At {width}: resizing should reclaim space above Reset; gap is {reset.Top - fee.Parent.Bottom}.");
+                        title.Text = "retained while resizing";
+                        if (width == 312)
+                        {
+                            using var image = new Bitmap(form.Width, form.Height);
+                            form.DrawToBitmap(image, new Rectangle(Point.Empty, image.Size));
+                            image.Save(Path.Combine(AppContext.BaseDirectory, dark ? "optional-fields-dark.png" : "optional-fields-light.png"));
+                        }
+                    }
+                }
+            }
+            commands.SelectedItem = "Renew";
+            Assert.AreEqual("retained while resizing", form.GetTextBox("renewTitleTextBox").Text);
+        }
+        finally { AppTheme.SetDarkMode(previousTheme); }
+
+        static IEnumerable<Control> Descendants(Control parent)
+        {
+            foreach (Control child in parent.Controls)
+            {
+                yield return child;
+                foreach (var descendant in Descendants(child)) { yield return descendant; }
+            }
+        }
+    }
+
     [TestMethod(DisplayName = "Command fields and log survive selection")]
     public void CommandFieldsAndMessageHistorySurviveSelectionChanges()
     {

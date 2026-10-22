@@ -39,7 +39,7 @@ Checkout defaults preserve the previous request: renewals allowed, no-block off,
 
 ## Command options
 
-Only the selected command's options are shown. All command options stay in the running session while switching commands or themes. Each command has a **Reset … options** button that affects that command's fields. New command options are session-only; saved defaults and `.sipc` files continue to cover the existing shared settings.
+Only the selected command's options are shown. Labels sit beside their inputs when the workbench has enough room; longer labels and date editors move above their inputs to preserve a usable input width. The rows adjust when the divider is dragged. All command options stay in the running session while switching commands or themes. Each command has a **Reset … options** button that affects that command's fields. New command options are session-only; saved defaults and `.sipc` files continue to cover the existing shared settings.
 
 | Command | Editable options |
 | --- | --- |
@@ -107,7 +107,7 @@ ClickOnce signing uses DigiCert KeyLocker through the Windows current-user Perso
 
 ## Verification
 
-Both test projects use MSTest.Sdk 4.5.1. Open `src/sip-testing-tool.sln`, build the solution, then use **Test > Test Explorer > Run All**. The Windows Forms project exposes 209 regression tests, 24 focused command-option tests and 116 individually named form-to-submission cases; the Avalonia project exposes 100 tests. Windows Forms UI tests run on an STA thread; Avalonia UI tests use its headless dispatcher. Each assembly runs sequentially because its checks share UI and process state.
+Both test projects use MSTest.Sdk 4.5.1. Open `src/sip-testing-tool.sln`, build the solution, then use **Test > Test Explorer > Run All**. The Windows Forms project exposes 211 regression tests, 24 focused command-option tests and 116 individually named form-to-submission cases; the Avalonia project exposes 102 tests. Windows Forms UI tests run on an STA thread; Avalonia UI tests use its headless dispatcher. Each assembly runs sequentially because its checks share UI and process state.
 
 From the repository root, the equivalent command is:
 

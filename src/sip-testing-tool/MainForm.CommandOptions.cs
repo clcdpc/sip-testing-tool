@@ -70,6 +70,7 @@ public partial class MainForm
             InitializeNoticeUpdateOptions();
             InitializeLoginOptions();
             InitializeAcsStatusOptions();
+            InitializeExistingFieldRows();
             commandComboBox_SelectedIndexChanged(commandComboBox, EventArgs.Empty);
         }
         finally
@@ -80,6 +81,38 @@ public partial class MainForm
             }
             commandDetailsLayout.ResumeLayout(true);
             commandDetailsPanel.ResumeLayout(true);
+        }
+    }
+
+    private void InitializeExistingFieldRows()
+    {
+        (Label Label, Control Field)[] fields =
+        [
+            (checkoutDueDateLabel, checkoutDueDatePicker),
+            (checkoutItemPropertiesLabel, checkoutItemPropertiesTextBox),
+            (checkoutTerminalPasswordLabel, checkoutTerminalPasswordTextBox),
+            (checkoutFeeAcknowledgedLabel, checkoutFeeAcknowledgedComboBox),
+            (checkoutCancelLabel, checkoutCancelComboBox),
+            (summaryLabel, patronSummaryComboBox),
+            (startItemLabel, bpTextBox),
+            (endItemLabel, bqTextBox),
+            (feeTypeLabel, feeTypeTextBox),
+            (paymentTypeLabel, paymentTypeTextBox),
+            (amountLabel, amountTextBox),
+            (feeIdentifierLabel, feeIdentifierTextBox),
+            (transactionIdLabel, transactionIdTextBox)
+        ];
+        foreach (var (label, field) in fields)
+        {
+            var parent = (TableLayoutPanel)label.Parent;
+            var position = parent.GetPositionFromControl(label);
+            var span = parent.GetColumnSpan(label);
+            var spacing = field.Margin;
+            parent.Controls.Remove(label);
+            parent.Controls.Remove(field);
+            var row = new OptionalFieldRow(label, field) { Margin = spacing };
+            parent.Controls.Add(row, position.Column, position.Row);
+            parent.SetColumnSpan(row, span);
         }
     }
 
