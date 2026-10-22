@@ -42,7 +42,7 @@
               <StackPanel Classes="field" Margin="0,0,8,0"><TextBlock Classes="fieldLabel" Text="Institution (AO)" /><TextBox x:Name="AoField" Text="{Binding Fields.Ao}" AutomationProperties.Name="Institution AO" /></StackPanel>
               <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Terminal (AP)" /><TextBox x:Name="ApField" Text="{Binding Fields.Ap}" AutomationProperties.Name="Terminal AP" /></StackPanel>
             </Grid>
-            <Button x:Name="ConnectButton" Grid.Row="3" Content="{Binding ConnectLabel}" Command="{Binding ConnectCommand}" Margin="0,10,0,0" />
+            <Button x:Name="ConnectButton" Grid.Row="3" Content="Connect" Command="{Binding ConnectCommand}" Margin="0,10,0,0" />
           </Grid>
         </Border>
         <Border x:Name="LoginGroup" Grid.Column="1" Padding="14,12" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,1,0">
@@ -111,10 +111,11 @@
                 <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Transaction ID (BK)" /><TextBox Text="{Binding TransactionId}" /></StackPanel>
               </StackPanel>
               <StackPanel x:Name="NoticePanel" IsVisible="{Binding IsNotice}" Spacing="12">
-                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Notice status" /><ComboBox ItemsSource="{Binding NoticeStatuses}" SelectedItem="{Binding SelectedNoticeStatus}" HorizontalAlignment="Stretch" /></StackPanel>
-                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Notice medium" /><ComboBox ItemsSource="{Binding NoticeMedia}" SelectedItem="{Binding SelectedNoticeMedium}" HorizontalAlignment="Stretch" /></StackPanel>
-                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Notification type" /><ComboBox ItemsSource="{Binding NoticeTypes}" SelectedItem="{Binding SelectedNoticeType}" HorizontalAlignment="Stretch" /></StackPanel>
-                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Comment" /><TextBox Text="{Binding NoticeComment}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="64" /></StackPanel>
+                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Delivery status" /><ComboBox x:Name="NoticeStatusField" ItemsSource="{Binding NoticeStatuses}" SelectedItem="{Binding SelectedNoticeStatus}" HorizontalAlignment="Stretch" /></StackPanel>
+                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Delivery date/time" /><views:OptionalDateTimeInput x:Name="NoticeDateField" DateText="{Binding Options.DateText}" IsIncluded="{Binding Options.UseDate}" ToolTip.Tip="Unchecked uses the time of execution." AutomationProperties.Name="Delivery date/time" /></StackPanel>
+                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Delivery medium" /><ComboBox x:Name="NoticeMediumField" ItemsSource="{Binding NoticeMedia}" SelectedItem="{Binding SelectedNoticeMedium}" HorizontalAlignment="Stretch" /></StackPanel>
+                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Notice type" /><ComboBox x:Name="NoticeTypeField" ItemsSource="{Binding NoticeTypes}" SelectedItem="{Binding SelectedNoticeType}" HorizontalAlignment="Stretch" /></StackPanel>
+                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Comment (DE)" /><TextBox x:Name="NoticeCommentField" Text="{Binding NoticeComment}" /></StackPanel>
               </StackPanel>
               <views:CommandOptionsView x:Name="CommandOptionsHost" />
             </StackPanel>

@@ -24,11 +24,11 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(UsesRange))]
     private SummaryChoice selectedSummary = SummaryChoice.All[0];
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanRun), nameof(CanConnect), nameof(ConnectLabel), nameof(CanRestartUpdate))]
+    [NotifyPropertyChangedFor(nameof(CanRun), nameof(CanConnect), nameof(CanRestartUpdate))]
     [NotifyCanExecuteChangedFor(nameof(ConnectCommand), nameof(ExecuteCommand), nameof(LoginCommand), nameof(RestartUpdateCommand))]
     private bool isBusy;
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanRun), nameof(CanConnect), nameof(ConnectLabel))]
+    [NotifyPropertyChangedFor(nameof(CanRun), nameof(CanConnect))]
     [NotifyCanExecuteChangedFor(nameof(ConnectCommand), nameof(ExecuteCommand), nameof(LoginCommand))]
     private bool isConnected;
     [ObservableProperty] private string status = "Not connected";
@@ -70,7 +70,6 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     public bool CanConnect => !IsBusy;
     public bool CanRestartUpdate => UpdateReady && !IsBusy;
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
-    public string ConnectLabel => IsConnected ? "Disconnect" : "Connect";
     public string ExecuteLabel => "Execute " + SelectedCommand.Name;
     public string CommandHint => SelectedCommand.Command switch
     {
@@ -79,6 +78,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
             or SipCommand.EndSession or SipCommand.FeePaid => "Uses the shared patron barcode and PIN.",
         SipCommand.Login => "Uses the shared login settings.",
         SipCommand.AcsStatus => "Uses the current connection.",
+        SipCommand.NoticeUpdate => "Uses the shared patron and item barcodes.",
         _ => "Uses the shared patron and item values."
     };
 
@@ -177,13 +177,6 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [RelayCommand(CanExecute = nameof(CanConnect))]
     private async Task ConnectAsync()
     {
-        if (IsConnected)
-        {
-            session.Disconnect();
-            IsConnected = false;
-            Status = "Not connected";
-            return;
-        }
         await RunAsync(async () =>
         {
             Status = "Connecting…";
@@ -247,10 +240,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         {
             ErrorMessage = ex.Message;
             invalidField = (ex as CommandValidationException)?.FieldName;
-            if (!session.IsConnected)
-            {
-                Status = "Not connected";
-            }
+            Status = session.IsConnected ? "Connected to " + session.Endpoint : "Not connected";
         }
         finally
         {

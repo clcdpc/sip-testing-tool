@@ -67,6 +67,56 @@ public sealed class DesktopParityTests
     }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
 
     [TestMethod]
+    public Task EnterInConnectionFieldsValidatesBeforeReconnectingToTheEditedEndpoint() => ui.Dispatch(async () =>
+    {
+        await using var initial = new SipServer(async (stream, token) =>
+        {
+            var end = new byte[1];
+            Assert.AreEqual(0, await stream.ReadAsync(end, token), "Reconnect should close the first connection.");
+        });
+        string? request = null;
+        await using var replacement = new SipServer(async (stream, token) =>
+        {
+            request = await ReadMessage(stream, token);
+            await WriteMessage(stream, "941", token);
+        });
+        using var model = new MainWindowViewModel { Fields = SampleFields() };
+        model.Fields.Server = "127.0.0.1";
+        model.Fields.Port = initial.Port.ToString();
+        await model.ConnectCommand.ExecuteAsync(null);
+        var window = new MainWindow { DataContext = model };
+        window.Show();
+        try
+        {
+            Layout(window);
+            var button = window.FindControl<Button>("ConnectButton")!;
+            var port = window.FindControl<TextBox>("PortField")!;
+            Assert.AreEqual("Connect", button.Content);
+            port.Text = "";
+            port.Focus();
+            Press(window, Key.Enter);
+            await model.ConnectCommand.ExecutionTask!;
+            Assert.IsTrue(model.HasError && model.IsConnected, "An invalid edit must preserve the existing connection.");
+            Assert.IsTrue(port.IsFocused);
+            StringAssert.Contains(model.Status, initial.Port.ToString());
+            port.Text = replacement.Port.ToString();
+            Press(window, Key.Enter);
+            await model.ConnectCommand.ExecutionTask!;
+            await initial.Completion;
+            Assert.IsTrue(model.IsConnected && !model.HasError);
+            StringAssert.Contains(model.Status, replacement.Port.ToString());
+            Assert.IsTrue(button.IsFocused);
+            Press(window, Key.Tab);
+            Assert.IsTrue(window.FindControl<TextBox>("UsernameField")!.IsFocused);
+            await model.LoginCommand.ExecuteAsync(null);
+            await replacement.Completion;
+            StringAssert.Contains(request!, "CNtest-user|");
+        }
+        finally { window.Close(); }
+        return true;
+    }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
+
+    [TestMethod]
     [DataRow("UsernameField")]
     [DataRow("PasswordField")]
     [DataRow("LocationCodeField")]
@@ -141,6 +191,96 @@ public sealed class DesktopParityTests
             model.Options.UidAlgorithm = "0";
             await model.LoginCommand.ExecuteAsync(null);
             await server.Completion;
+        }
+        finally { window.Close(); }
+        return true;
+    }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
+
+    [TestMethod]
+    [DataRow(SipCommand.Checkout, "ItemPropertiesField,TerminalPasswordField,FeeAcknowledgedField,CancelField")]
+    [DataRow(SipCommand.Checkin, "ReturnLocationField,ItemPropertiesField,TerminalPasswordField,CancelField")]
+    [DataRow(SipCommand.Renew, "TitleIdentifierField,ItemPropertiesField,TerminalPasswordField,FeeAcknowledgedField")]
+    [DataRow(SipCommand.RenewAll, "TerminalPasswordField,FeeAcknowledgedField")]
+    [DataRow(SipCommand.NoticeUpdate, "NoticeCommentField,TerminalPasswordField")]
+    public Task CommandFieldsFollowWindowsFormsOrderWhenTabbing(SipCommand command, string fieldNames) => ui.Dispatch(() =>
+    {
+        using var model = new MainWindowViewModel { Fields = SampleFields(), SelectedCommand = Choice(command) };
+        var window = new MainWindow { DataContext = model };
+        window.Show();
+        try
+        {
+            Layout(window);
+            var ordered = fieldNames.Split(',').Select(name => Field<Control>(window, name)).ToArray();
+            ordered[0].Focus();
+            foreach (var field in ordered.Skip(1))
+            {
+                Press(window, Key.Tab);
+                Assert.IsTrue(field.IsFocused, "Expected Tab to advance to " + field.Name);
+            }
+            if (command == SipCommand.Checkout)
+            {
+                Point Position(string name) => Field<Control>(window, name).TranslatePoint(default, window)!.Value;
+                Assert.AreEqual(Position("RenewalAllowedField").Y, Position("NoBlockField").Y);
+                Assert.IsTrue(Position("RenewalAllowedField").X < Position("NoBlockField").X);
+                Assert.AreEqual(Position("FeeAcknowledgedField").Y, Position("CancelField").Y);
+                Assert.IsTrue(Position("FeeAcknowledgedField").X < Position("CancelField").X);
+                SaveFrame(window, "checkout-layout");
+            }
+            if (command == SipCommand.NoticeUpdate)
+            {
+                var previous = double.MinValue;
+                foreach (var name in new[] { "NoticeStatusField", "NoticeDateField", "NoticeMediumField", "NoticeTypeField", "NoticeCommentField", "TerminalPasswordField" })
+                {
+                    var top = Field<Control>(window, name).TranslatePoint(default, window)!.Value.Y;
+                    Assert.IsTrue(top > previous, name + " should follow the previous notice field.");
+                    previous = top;
+                }
+                Assert.IsFalse(Field<TextBox>(window, "NoticeCommentField").AcceptsReturn);
+                SaveFrame(window, "notice-layout");
+            }
+        }
+        finally { window.Close(); }
+    }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
+
+    [TestMethod]
+    public Task NoticeDateValidatesInPlaceAndEditedControlsReachTheRequest() => ui.Dispatch(async () =>
+    {
+        string? request = null;
+        await using var server = new SipServer(async (stream, token) =>
+        {
+            request = await ReadMessage(stream, token);
+            await WriteMessage(stream, "941", token);
+        });
+        using var model = new MainWindowViewModel { Fields = SampleFields(), SelectedCommand = Choice(SipCommand.NoticeUpdate) };
+        model.Fields.Server = "127.0.0.1";
+        model.Fields.Port = server.Port.ToString();
+        await model.ConnectCommand.ExecuteAsync(null);
+        var window = new MainWindow { DataContext = model };
+        window.Show();
+        try
+        {
+            Layout(window);
+            var date = Field<OptionalDateTimeInput>(window, "NoticeDateField");
+            var editor = Field<TextBox>(date, "DateTimeEditor");
+            Field<CheckBox>(date, "IncludeDate").IsChecked = true;
+            editor.Text = "invalid";
+            await model.ExecuteCommand.ExecuteAsync(null);
+            Assert.IsTrue(model.HasError);
+            Assert.AreEqual(SipCommand.NoticeUpdate, model.SelectedCommand.Command);
+            Assert.IsTrue(editor.IsFocused);
+            Assert.AreEqual("invalid", editor.SelectedText);
+            Assert.IsNull(request);
+            editor.Text = "2026-11-30 14:23:45";
+            Field<TextBox>(window, "NoticeCommentField").Text = "Delivery checked";
+            Field<TextBox>(window, "TerminalPasswordField").Text = "terminal-secret";
+            window.FindControl<Button>("ExecuteButton")!.Focus();
+            Press(window, Key.Enter);
+            await model.ExecuteCommand.ExecutionTask!;
+            await server.Completion;
+            Assert.IsFalse(model.HasError);
+            StringAssert.Contains(request!, "20261130    142345");
+            StringAssert.Contains(request!, "DEDelivery checked|");
+            StringAssert.Contains(request!, "ACterminal-secret|");
         }
         finally { window.Close(); }
         return true;

@@ -95,7 +95,8 @@ public partial class MainWindow : Window
 
     private void FocusInvalidField(string property)
     {
-        var control = this.GetVisualDescendants().OfType<Control>().FirstOrDefault(field => field.Name == property + "Field");
+        var control = property == nameof(Models.CommandOptions.DateText) && Model.IsNotice ? NoticeDateField :
+            this.GetVisualDescendants().OfType<Control>().FirstOrDefault(field => field.Name == property + "Field");
         if (control == null || !control.IsEffectivelyVisible)
         {
             Model.SelectedCommand = CommandChoice.All.Single(choice => choice.Command == SipCommand.Login);
