@@ -1,4 +1,4 @@
-﻿namespace Clc.Sip
+namespace Clc.Sip
 {
 	partial class SettingsForm
 	{
@@ -29,31 +29,31 @@
 		private void InitializeComponent()
 		{
             this.label1 = new System.Windows.Forms.Label();
-            this.hostnameTextBox = new System.Windows.Forms.TextBox();
+            this.hostnameTextBox = new Helpers.ThemedTextBox();
             this.label2 = new System.Windows.Forms.Label();
-            this.portTextBox = new System.Windows.Forms.TextBox();
+            this.portTextBox = new Helpers.ThemedTextBox();
             this.label3 = new System.Windows.Forms.Label();
-            this.aoTextBox = new System.Windows.Forms.TextBox();
+            this.aoTextBox = new Helpers.ThemedTextBox();
             this.label4 = new System.Windows.Forms.Label();
-            this.apTextBox = new System.Windows.Forms.TextBox();
+            this.apTextBox = new Helpers.ThemedTextBox();
             this.label5 = new System.Windows.Forms.Label();
-            this.usernameTextBox = new System.Windows.Forms.TextBox();
+            this.usernameTextBox = new Helpers.ThemedTextBox();
             this.label6 = new System.Windows.Forms.Label();
-            this.passwordTextBox = new System.Windows.Forms.TextBox();
+            this.passwordTextBox = new Helpers.ThemedTextBox();
             this.label7 = new System.Windows.Forms.Label();
-            this.vendorProfileTextBox = new System.Windows.Forms.TextBox();
+            this.vendorProfileTextBox = new Helpers.ThemedTextBox();
             this.label8 = new System.Windows.Forms.Label();
-            this.patronBarcodeTextBox = new System.Windows.Forms.TextBox();
+            this.patronBarcodeTextBox = new Helpers.ThemedTextBox();
             this.label9 = new System.Windows.Forms.Label();
-            this.patronPinTextBox = new System.Windows.Forms.TextBox();
+            this.patronPinTextBox = new Helpers.ThemedTextBox();
             this.label10 = new System.Windows.Forms.Label();
-            this.itemBarcodeTextBox = new System.Windows.Forms.TextBox();
+            this.itemBarcodeTextBox = new Helpers.ThemedTextBox();
             this.label11 = new System.Windows.Forms.Label();
             this.connectOnStartupCheckBox = new System.Windows.Forms.CheckBox();
-            this.button1 = new System.Windows.Forms.Button();
+            this.button1 = new Helpers.ThemedButton();
             this.label12 = new System.Windows.Forms.Label();
             this.darkThemeCheckBox = new System.Windows.Forms.CheckBox();
-            this.encodingComboBox = new System.Windows.Forms.ComboBox();
+            this.encodingComboBox = new Helpers.ThemedComboBox();
             this.label13 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
             this.checkChecksumCheckbox = new System.Windows.Forms.CheckBox();

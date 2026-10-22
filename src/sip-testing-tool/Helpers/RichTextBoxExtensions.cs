@@ -1,41 +1,73 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Net.Sockets;
-using System.Windows.Forms;
-using System.Drawing;
-using System.IO;
+using System.Runtime.InteropServices;
 
 namespace Clc.Sip.Helpers
 {
-	public static class RichTextBoxExtensions
-	{		
-		public static void AppendText(this RichTextBox box, string text, Color color)
-		{
-			Color _color;
-			string txt;
+    public static class RichTextBoxExtensions
+    {
+        public static void AppendText(this RichTextBox box, string text, Color color)
+        {
+            var start = box.TextLength;
+            box.Select(start, 0);
+            box.SelectionColor = color;
+            box.AppendText(text);
+            ColorSeparators(box, text, start);
+            box.Select(box.TextLength, 0);
+            box.SelectionColor = box.ForeColor;
+        }
 
-			foreach (var c in text)
-			{
-				if (c == '|')
-				{
-					_color = MainForm.darkTheme ? Color.Yellow : Color.Black;
-					txt = string.Format("{0}", c.ToString());
-				}
-				else
-				{
-					txt = c.ToString();
-					_color = color;
+        public static void RecolorTranscript(this RichTextBox box)
+        {
+            var selectionStart = box.SelectionStart;
+            var selectionLength = box.SelectionLength;
+            var scroll = new Point();
+            var handle = box.IsHandleCreated ? box.Handle : IntPtr.Zero;
+            if (handle != IntPtr.Zero)
+            {
+                SendMessage(handle, 0x04DD, IntPtr.Zero, ref scroll); // EM_GETSCROLLPOS
+                SendMessage(handle, 0x000B, IntPtr.Zero, IntPtr.Zero); // WM_SETREDRAW
+            }
+            try
+            {
+                var offset = 0;
+                foreach (var line in box.Lines)
+                {
+                    box.Select(offset, line.Length);
+                    box.SelectionColor = line.StartsWith("--> ", StringComparison.Ordinal) ? AppTheme.Sent
+                        : line.StartsWith("<-- ", StringComparison.Ordinal) ? AppTheme.Received : AppTheme.Text;
+                    ColorSeparators(box, line, offset);
+                    offset += line.Length + 1;
+                }
+            }
+            finally
+            {
+                box.Select(selectionStart, selectionLength);
+                if (selectionLength == 0)
+                {
+                    box.SelectionColor = box.ForeColor;
+                }
 
-				}
-				box.SelectionStart = box.TextLength;
-				box.SelectionLength = 0;
+                if (handle != IntPtr.Zero)
+                {
+                    SendMessage(handle, 0x04DE, IntPtr.Zero, ref scroll); // EM_SETSCROLLPOS
+                    SendMessage(handle, 0x000B, new IntPtr(1), IntPtr.Zero);
+                    box.Invalidate();
+                }
+            }
+        }
 
-				box.SelectionColor = _color;
-				box.AppendText(txt);
-				box.SelectionColor = box.ForeColor;
-			}
-		}
-	}
+        private static void ColorSeparators(RichTextBox box, string text, int offset)
+        {
+            for (var index = text.IndexOf('|'); index >= 0; index = text.IndexOf('|', index + 1))
+            {
+                box.Select(offset + index, 1);
+                box.SelectionColor = AppTheme.Separator;
+            }
+        }
+
+        [DllImport("user32.dll", EntryPoint = "SendMessageW")]
+        private static extern IntPtr SendMessage(IntPtr window, int message, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll", EntryPoint = "SendMessageW")]
+        private static extern IntPtr SendMessage(IntPtr window, int message, IntPtr wParam, ref Point point);
+    }
 }

@@ -1,4 +1,4 @@
-﻿namespace Clc.Sip
+namespace Clc.Sip
 {
     partial class NoticeUpdateForm
     {
@@ -28,20 +28,20 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.button1 = new System.Windows.Forms.Button();
-            this.noticeMediumComboBox = new System.Windows.Forms.ComboBox();
-            this.deliveryDateTextBox = new System.Windows.Forms.TextBox();
-            this.patronBarcodeTextBox = new System.Windows.Forms.TextBox();
-            this.itemBarcodeTextBox = new System.Windows.Forms.TextBox();
+            this.button1 = new Helpers.ThemedButton();
+            this.noticeMediumComboBox = new Helpers.ThemedComboBox();
+            this.deliveryDateTextBox = new Helpers.ThemedTextBox();
+            this.patronBarcodeTextBox = new Helpers.ThemedTextBox();
+            this.itemBarcodeTextBox = new Helpers.ThemedTextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label2 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
             this.label4 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
-            this.noticeStatusComboBox = new System.Windows.Forms.ComboBox();
-            this.notificationTypeComboBox = new System.Windows.Forms.ComboBox();
+            this.noticeStatusComboBox = new Helpers.ThemedComboBox();
+            this.notificationTypeComboBox = new Helpers.ThemedComboBox();
             this.label6 = new System.Windows.Forms.Label();
-            this.commentTextBox = new System.Windows.Forms.TextBox();
+            this.commentTextBox = new Helpers.ThemedTextBox();
             this.label7 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 

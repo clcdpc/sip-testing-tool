@@ -1,19 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Windows.Forms;
-using System.Net.Sockets;
-using System.Text.RegularExpressions;
-using Clc;
-using System.Reflection;
-using System.IO;
 using System.Configuration;
-using System.Diagnostics;
-using System.Media;
+using System.Globalization;
+using System.Text;
+using System.Text.RegularExpressions;
 using Clc.Sip.Helpers;
 using Newtonsoft.Json;
 
@@ -21,127 +9,192 @@ namespace Clc.Sip
 {
     public partial class MainForm : Form
     {
+        private enum WorkbenchCommand
+        {
+            Checkout,
+            Checkin,
+            Renew,
+            RenewAll,
+            ItemInformation,
+            PatronInformation,
+            PatronStatus,
+            EndSession,
+            FeePaid,
+            NoticeUpdate,
+            Login,
+            AcsStatus
+        }
+
         private sip2 sipclient;
-        List<Button> cmdButtons = new List<Button>();
+        private readonly List<Button> commandButtons = new();
         private bool allowCmd = false;
-        Color darkTextColor = ColorTranslator.FromHtml("#FFFF33");
-        Color darkBackgroundColor = ColorTranslator.FromHtml("#374147");
-        public static bool darkTheme = false;
-        SettingsForm settingsForm;
-        NoticeUpdateForm noticeUpdateForm;
+        private bool syncingThemeMenu;
+        private SettingsForm settingsForm;
+
         public MainForm()
         {
+            AppTheme.Initialize();
             InitializeComponent();
+            ResetCheckoutOptions();
+            InitializeCommandOptions();
 
             portTextBox.KeyPress += portTextBox_KeyPress;
 
-            cmdButtons.Add(this.patronInformationButton);
-            cmdButtons.Add(this.patronStatusButton);
-            cmdButtons.Add(this.renewAllButton);
-            cmdButtons.Add(this.renewButton);
-            cmdButtons.Add(this.itemInformationButton);
-            cmdButtons.Add(this.checkoutButton);
-            cmdButtons.Add(this.checkInButton);
-            cmdButtons.Add(this.endSessionButton);
-            cmdButtons.Add(this.loginButton);
-            cmdButtons.Add(this.feePaidButton);
-            cmdButtons.Add(this.noticeUpdateButton);
-            cmdButtons.Add(this.btnAcsStatus);
-
-            bool.TryParse(ConfigurationManager.AppSettings["dark_theme_enabled"], out darkTheme);
-            if (darkTheme) SwitchTheme(darkTextColor, darkBackgroundColor);
+            commandButtons.Add(this.loginButton);
+            commandButtons.Add(this.executeCommandButton);
 
             var alwaysOnTop = new ToolStripMenuItem("Always On Top") { CheckOnClick = true };
             alwaysOnTop.CheckedChanged += (sender, args) => TopMost = alwaysOnTop.Checked;
             ContextMenuStrip = new ContextMenuStrip(components);
             ContextMenuStrip.Items.Add(alwaysOnTop);
+            AppTheme.Attach(this, ThemeApplied);
             LoadTextboxDefaults();
             DisableButtons();
         }
 
-        void portTextBox_KeyPress(object sender, KeyPressEventArgs e)
+        private void commandComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (commandComboBox.SelectedIndex < 0)
+            {
+                return;
+            }
+
+            var command = (WorkbenchCommand)commandComboBox.SelectedIndex;
+            commandDetailsLayout.SuspendLayout();
+            checkoutFieldsLayout.Visible = command == WorkbenchCommand.Checkout;
+            patronQueryLayout.Visible = command == WorkbenchCommand.PatronInformation;
+            feeFieldsLayout.Visible = command == WorkbenchCommand.FeePaid;
+            foreach (var option in commandOptions)
+            {
+                option.Value.Visible = option.Key == command;
+            }
+
+            selectedCommandLabel.Text = commandComboBox.Text;
+            executeCommandButton.Text = "Execute " + commandComboBox.Text;
+            commandHintLabel.Text = command switch
+            {
+                WorkbenchCommand.Checkin or WorkbenchCommand.ItemInformation => "Uses the shared item barcode.",
+                WorkbenchCommand.PatronInformation or WorkbenchCommand.PatronStatus or
+                    WorkbenchCommand.EndSession or WorkbenchCommand.RenewAll or WorkbenchCommand.FeePaid
+                    => "Uses the shared patron barcode and PIN.",
+                WorkbenchCommand.Login => "Uses the shared login settings.",
+                WorkbenchCommand.AcsStatus => "Uses the current connection.",
+                WorkbenchCommand.NoticeUpdate => "Uses the shared patron and item barcodes.",
+                _ => "Uses the shared patron and item values."
+            };
+            commandDetailsLayout.ResumeLayout(true);
+            commandDetailsPanel.AutoScrollPosition = Point.Empty;
+        }
+
+        private void patronSummaryComboBox_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            bpTextBox.Enabled = bqTextBox.Enabled = true;
+        }
+
+        private void ResetCheckoutOptions()
+        {
+            checkoutRenewalCheckBox.Checked = true;
+            checkoutNoBlockCheckBox.Checked = false;
+            checkoutDueDatePicker.Value = DateTime.Now.AddDays(14);
+            checkoutDueDatePicker.Checked = false;
+            checkoutItemPropertiesTextBox.Clear();
+            checkoutTerminalPasswordTextBox.Clear();
+            checkoutFeeAcknowledgedComboBox.SelectedIndex = 1;
+            checkoutCancelComboBox.SelectedIndex = 0;
+        }
+
+        private void resetCheckoutOptionsButton_Click(object sender, EventArgs e) => ResetCheckoutOptions();
+
+        private static string GetOptionalFlagValue(ComboBox field) => field.SelectedIndex switch
+        {
+            1 => "N",
+            2 => "Y",
+            _ => ""
+        };
+
+        private void executeCommandButton_Click(object sender, EventArgs e)
+        {
+            if (!allowCmd || commandComboBox.SelectedIndex < 0)
+            {
+                return;
+            }
+
+            SyncSharedProtocolFields();
+            EventHandler execute = (WorkbenchCommand)commandComboBox.SelectedIndex switch
+            {
+                WorkbenchCommand.Checkout => checkoutButton_Click,
+                WorkbenchCommand.Checkin => checkInButton_Click,
+                WorkbenchCommand.Renew => renewButton_Click,
+                WorkbenchCommand.RenewAll => renewAllButton_Click,
+                WorkbenchCommand.ItemInformation => itemInformationButton_Click,
+                WorkbenchCommand.PatronInformation => patronInformationButton_Click,
+                WorkbenchCommand.PatronStatus => patronStatusButton_Click,
+                WorkbenchCommand.EndSession => endSessionButton_Click,
+                WorkbenchCommand.FeePaid => feePaidButton_Click,
+                WorkbenchCommand.NoticeUpdate => noticeUpdateButton_Click,
+                WorkbenchCommand.Login => loginButton_Click,
+                WorkbenchCommand.AcsStatus => btnAcsStatus_Click,
+                _ => throw new InvalidOperationException("Unknown SIP command.")
+            };
+            execute(sender, e);
+        }
+
+        private void portTextBox_KeyPress(object sender, KeyPressEventArgs e)
         {
             e.Handled = !char.IsDigit(e.KeyChar) && !(e.KeyChar == 8);
         }
 
-        void DisableButtons()
+        private void DisableButtons()
         {
             allowCmd = false;
-            foreach (var b in cmdButtons)
+            foreach (var button in commandButtons)
             {
-                if (darkTheme)
-                {
-                    cmdButtons.Where(t => t.Enabled == false).ToList().ForEach(t => t.Enabled = true);
-                    b.ForeColor = Color.Red;
-                }
-                else
-                {
-                    b.Enabled = false;
-                }
+                button.Enabled = false;
             }
         }
 
-        void EnableButtons()
+        private void EnableButtons()
         {
             allowCmd = true;
-            foreach (var b in cmdButtons)
+            foreach (var button in commandButtons)
             {
-                b.ForeColor = darkTheme ? darkTextColor : Color.Black;
-                if (!darkTheme || cmdButtons.Any(t => t.Enabled == false))
-                {
-                    b.Enabled = true;
-                }
+                button.Enabled = true;
             }
         }
 
-        void SwitchToDefaultTheme()
+        private void ThemeApplied()
         {
-            this.BackColor = Color.FromName("Control");
-            this.ForeColor = Color.FromName("ControlText");
-
-            foreach (Control c in this.Controls)
+            syncingThemeMenu = true;
+            try
             {
-                ChangeControlColors(c, Control.DefaultForeColor, Control.DefaultBackColor, Color.FromName("Window"));
+                darkModeMenuItem.Checked = AppTheme.IsDarkMode;
             }
+            finally { syncingThemeMenu = false; }
+            logRichTextBox.RecolorTranscript();
         }
 
-        void SwitchTheme(Color textColor, Color backgroundColor, Color? textBoxBackground = null)
+        private void darkModeMenuItem_CheckedChanged(object sender, EventArgs e)
         {
-            this.BackColor = backgroundColor;
-            this.statusStrip1.BackColor = backgroundColor;
-            textBoxBackground = textBoxBackground ?? backgroundColor;
-
-            foreach (Control c in this.Controls)
+            if (syncingThemeMenu)
             {
-                ChangeControlColors(c, textColor, backgroundColor, textBoxBackground);
+                return;
+            }
+
+            AppTheme.SetDarkMode(darkModeMenuItem.Checked);
+            try
+            {
+                AppTheme.SavePreference();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                toolStripStatusLabel1.Text = "Theme changed, but the preference could not be saved: " + ex.Message;
             }
         }
 
-        void ChangeControlColors(Control parent, Color textColor, Color backgroundColor, Color? textBoxBackground = null)
-        {
-            parent.ForeColor = textColor;
-            parent.BackColor = backgroundColor;
-            if (new Type[] { typeof(TextBox), typeof(RichTextBox), typeof(ComboBox) }.Contains(parent.GetType()))
-            {
-                if (textBoxBackground.HasValue) parent.BackColor = textBoxBackground.Value;
-            }
-            foreach (Control c in parent.Controls)
-            {
-                c.ForeColor = textColor;
-                c.BackColor = backgroundColor;
-                if (new Type[] { typeof(TextBox), typeof(RichTextBox), typeof(ComboBox) }.Contains(c.GetType()))
-                {
-                    if (textBoxBackground.HasValue) c.BackColor = textBoxBackground.Value;
-                }
-
-                ChangeControlColors(c, textColor, backgroundColor, textBoxBackground);
-            }
-        }
-
-        void LoadTextboxDefaults()
+        private void LoadTextboxDefaults()
         {
             serverTextBox.Text = ConfigurationManager.AppSettings["default_server_hostname"];
-            portTextBox.Text = ConfigurationManager.AppSettings["default_port"] ?? "5002";
+            portTextBox.Text = ConfigurationManager.AppSettings["default_port"];
             aoTextBox.Text = ConfigurationManager.AppSettings["default_ao"];
             apTextBox.Text = ConfigurationManager.AppSettings["default_ap"];
             usernameTextBox.Text = ConfigurationManager.AppSettings["default_sip_username"];
@@ -175,13 +228,17 @@ namespace Clc.Sip
             var message = txn.Message.Replace("\r", "").Replace("\n", "");
             var response = txn.Response.Replace("\r", "").Replace("\n", "");
 
-            logRichTextBox.AppendText(string.Format("--> {0}\n", message), darkTheme ? Color.Red : Color.Crimson);
-            logRichTextBox.AppendText(string.Format("<-- {0}", response), darkTheme ? Color.PowderBlue : Color.RoyalBlue);
+            logRichTextBox.AppendText(string.Format("--> {0}\n", message), AppTheme.Sent);
+            logRichTextBox.AppendText(string.Format("<-- {0}", response), AppTheme.Received);
             logRichTextBox.SelectionStart = this.logRichTextBox.Text.Length;
             logRichTextBox.ScrollToCaret();
+            if (sipclient?.IsConnected() == true)
+            {
+                toolStripStatusLabel1.Text = $"Connected to {sipclient.hostname}:{sipclient.port} | AO = {sipclient.AO} | AP = {sipclient.AP} | CP = {sipclient.CP} | VP = {sipclient.VP} |";
+            }
         }
 
-        void ConnectToSIPServer(string hostname, int port, string AO, string AP)
+        private void ConnectToSIPServer(string hostname, int port, string AO, string AP)
         {
             try
             {
@@ -231,147 +288,208 @@ namespace Clc.Sip
 
         #region SIP Methods
 
-        private void EndSession(string barcode)
+        private void EndSession()
         {
-            LogOutput(sipclient.EndSession(patronBarcodeTextBox.Text, patronPinTextBox.Text));
+            LogOutput(sipclient.EndSession(patronBarcodeTextBox.Text, patronPinTextBox.Text, endSessionPasswordTextBox.Text));
         }
 
         private void loginButton_Click(object sender, EventArgs e)
         {
-            if (!allowCmd) return;
-            var result = sipclient.Login(usernameTextBox.Text, passwordTextBox.Text, locationCodeTextBox.Text, vendorProfileComboBox.Text);
+            if (!allowCmd)
+            {
+                return;
+            }
+
+            if (!ValidateAlgorithmOption(loginUidAlgorithmTextBox) || !ValidateAlgorithmOption(loginPwdAlgorithmTextBox))
+            {
+                return;
+            }
+
+            SyncSharedProtocolFields();
+            var result = sipclient.Login(usernameTextBox.Text, passwordTextBox.Text, locationCodeTextBox.Text, vendorProfileComboBox.Text,
+                loginUidAlgorithmTextBox.Text, loginPwdAlgorithmTextBox.Text);
             toolStripStatusLabel1.Text = string.Format("Connected to {0}:{1} | AO = {2} | AP = {3} | CP = {4} | VP = {5} |", sipclient.hostname, sipclient.port, sipclient.AO, sipclient.AP, sipclient.CP, sipclient.VP);
             LogOutput(result);
         }
 
         private void patronStatusButton_Click(object sender, EventArgs e)
         {
-            if (!allowCmd) return;
-            LogOutput(sipclient.PatronStatus(patronBarcodeTextBox.Text, patronPinTextBox.Text));
+            if (!allowCmd)
+            {
+                return;
+            }
+
+            if (!TryLanguageOption(patronStatusLanguageTextBox, out var language))
+            {
+                return;
+            }
+
+            LogOutput(sipclient.PatronStatus(patronBarcodeTextBox.Text, patronPinTextBox.Text, patronStatusPasswordTextBox.Text, language));
         }
 
         private void patronInformationButton_Click(object sender, EventArgs e)
         {
-            if (!allowCmd) return;
-            patronInformationContextMenu.Show(patronInformationButton, new Point(0, patronInformationButton.Height));
+            if (!allowCmd)
+            {
+                return;
+            }
+
+            if (!TryLanguageOption(patronInfoLanguageTextBox, out var language) || !ValidatePatronRanges())
+            {
+                return;
+            }
+
+            string[] summaries = { "", "hold", "overdue", "charged", "fine", "recall", "unavail" };
+            var summary = summaries[Math.Max(0, patronSummaryComboBox.SelectedIndex)];
+            LogOutput(sipclient.PatronInformation(patronBarcodeTextBox.Text, patronPinTextBox.Text,
+                string.IsNullOrEmpty(summary) ? "none" : summary, bpTextBox.Text.Trim(), bqTextBox.Text.Trim(), patronInfoPasswordTextBox.Text, language));
         }
 
         private void endSessionButton_Click(object sender, EventArgs e)
         {
-            if (!allowCmd) return;
-            EndSession(itemBarcodeTextBox.Text);
+            if (!allowCmd)
+            {
+                return;
+            }
+
+            EndSession();
         }
 
         private void checkoutButton_Click(object sender, EventArgs e)
         {
-            if (!allowCmd) return;
-            LogOutput(sipclient.ItemCheckOut(patronBarcodeTextBox.Text, patronPinTextBox.Text, itemBarcodeTextBox.Text));
+            if (!allowCmd)
+            {
+                return;
+            }
+
+            if (!checkoutDueDatePicker.TryGetValue(out var dueDate))
+            {
+                toolStripStatusLabel1.Text = "Enter a valid no-block due date/time (yyyy-MM-dd HH:mm:ss), or uncheck it to omit the date.";
+                checkoutDueDatePicker.FocusEditor();
+                return;
+            }
+            LogOutput(sipclient.ItemCheckOut(patronBarcodeTextBox.Text, patronPinTextBox.Text, itemBarcodeTextBox.Text,
+                dueDate: checkoutDueDatePicker.Checked ? dueDate : null,
+                renewalOk: checkoutRenewalCheckBox.Checked ? "Y" : "N",
+                itemProperties: checkoutItemPropertiesTextBox.Text,
+                feeAcknowledged: GetOptionalFlagValue(checkoutFeeAcknowledgedComboBox),
+                noBlock: checkoutNoBlockCheckBox.Checked ? "Y" : "N",
+                cancel: GetOptionalFlagValue(checkoutCancelComboBox),
+                terminalPassword: checkoutTerminalPasswordTextBox.Text));
         }
 
         private void checkInButton_Click(object sender, EventArgs e)
         {
-            if (!allowCmd) return;
-            LogOutput(sipclient.ItemCheckIn(itemBarcodeTextBox.Text));
+            if (!allowCmd)
+            {
+                return;
+            }
+
+            if (!TryDateOption(checkinReturnDatePicker, "return date/time", out var returnDate))
+            {
+                return;
+            }
+
+            LogOutput(sipclient.ItemCheckIn(itemBarcodeTextBox.Text, returnDate, checkinLocationTextBox.Text, checkinPropertiesTextBox.Text,
+                checkinNoBlockCheckBox.Checked ? "Y" : "N", GetOptionalFlagValue(checkinCancelComboBox), checkinPasswordTextBox.Text));
         }
 
         private void itemInformationButton_Click(object sender, EventArgs e)
         {
-            if (!allowCmd) return;
-            LogOutput(sipclient.ItemInformation(itemBarcodeTextBox.Text));
-        }
+            if (!allowCmd)
+            {
+                return;
+            }
 
-        private void noneMenuItem_Click(object sender, EventArgs e)
-        {
-            if (!allowCmd) return;
-            LogOutput(sipclient.PatronInformation(patronBarcodeTextBox.Text, patronPinTextBox.Text));
-        }
-
-        private void holdItemsMenuItem_Click(object sender, EventArgs e)
-        {
-            if (!allowCmd) return;
-            LogOutput(sipclient.PatronInformation(patronBarcodeTextBox.Text, patronPinTextBox.Text, "hold", bpTextBox.Text, bqTextBox.Text));
-        }
-
-        private void overdueItemsMenuItem_Click(object sender, EventArgs e)
-        {
-            if (!allowCmd) return;
-            LogOutput(sipclient.PatronInformation(patronBarcodeTextBox.Text, patronPinTextBox.Text, "overdue", bpTextBox.Text, bqTextBox.Text));
-        }
-
-        private void chargedItemsMenuItem_Click(object sender, EventArgs e)
-        {
-            if (!allowCmd) return;
-            LogOutput(sipclient.PatronInformation(patronBarcodeTextBox.Text, patronPinTextBox.Text, "charged", bpTextBox.Text, bqTextBox.Text));
-        }
-
-        private void fineItemsMenuItem_Click(object sender, EventArgs e)
-        {
-            if (!allowCmd) return;
-            LogOutput(sipclient.PatronInformation(patronBarcodeTextBox.Text, patronPinTextBox.Text, "fine", bpTextBox.Text, bqTextBox.Text));
-        }
-
-        private void recallItemsMenuItem_Click(object sender, EventArgs e)
-        {
-            if (!allowCmd) return;
-            LogOutput(sipclient.PatronInformation(patronBarcodeTextBox.Text, patronPinTextBox.Text, "recall", bpTextBox.Text, bqTextBox.Text));
-        }
-
-        private void unavailableHoldsMenuItem_Click(object sender, EventArgs e)
-        {
-            if (!allowCmd) return;
-            LogOutput(sipclient.PatronInformation(patronBarcodeTextBox.Text, patronPinTextBox.Text, "unavail", bpTextBox.Text, bqTextBox.Text));
+            LogOutput(sipclient.ItemInformation(itemBarcodeTextBox.Text, itemInfoPasswordTextBox.Text));
         }
 
         private void renewButton_Click(object sender, EventArgs e)
         {
-            if (!allowCmd) return;
-            LogOutput(sipclient.Renew(patronBarcodeTextBox.Text, patronPinTextBox.Text, DateTime.Now.AddDays(14), itemBarcodeTextBox.Text));
+            if (!allowCmd)
+            {
+                return;
+            }
+
+            if (!TryDateOption(renewDueDatePicker, "renewal due date/time", out var dueDate))
+            {
+                return;
+            }
+
+            LogOutput(sipclient.Renew(patronBarcodeTextBox.Text, patronPinTextBox.Text, dueDate,
+                renewUseItemCheckBox.Checked ? itemBarcodeTextBox.Text : "", renewTitleTextBox.Text, renewPropertiesTextBox.Text,
+                renewThirdPartyCheckBox.Checked ? "Y" : "N", renewNoBlockCheckBox.Checked ? "Y" : "N",
+                GetOptionalFlagValue(renewFeeComboBox), renewPasswordTextBox.Text));
         }
 
         private void renewAllButton_Click(object sender, EventArgs e)
         {
-            if (!allowCmd) return;
-            LogOutput(sipclient.RenewAll(patronBarcodeTextBox.Text, patronPinTextBox.Text));
+            if (!allowCmd)
+            {
+                return;
+            }
+
+            LogOutput(sipclient.RenewAll(patronBarcodeTextBox.Text, patronPinTextBox.Text, GetOptionalFlagValue(renewAllFeeComboBox), renewAllPasswordTextBox.Text));
         }
 
         private void btnAcsStatus_Click(object sender, EventArgs e)
         {
-            if (!allowCmd) return;
-            LogOutput(sipclient.AcsStatus());
+            if (!allowCmd)
+            {
+                return;
+            }
+
+            if (!TryIntegerOption(acsPrintWidthTextBox, 0, 999, "Maximum print width", out var width))
+            {
+                return;
+            }
+
+            var version = acsVersionTextBox.Text.Trim();
+            if (!Regex.IsMatch(version, "^[0-9]\\.[0-9]{2}$"))
+            {
+                RejectOption(acsVersionTextBox, "Protocol version must use x.xx format, such as 2.00.");
+                return;
+            }
+            LogOutput(sipclient.AcsStatus(acsStatusComboBox.SelectedIndex.ToString(CultureInfo.InvariantCulture), width, version));
         }
 
         private void feePaidButton_Click(object sender, EventArgs e)
         {
-            if (!allowCmd) return;
-            int feeType, paymentType;
-            double amount;
-
-            if (!int.TryParse(feeTypeTextBox.Text, out feeType) || (feeType < 0 || feeType > 99))
+            if (!allowCmd)
             {
-                MessageBox.Show("Fee type must be a number between 0 and 99");
                 return;
             }
 
-            if (!int.TryParse(paymentTypeTextBox.Text, out paymentType) || (paymentType < 0 || paymentType > 99))
+            if (!TryIntegerOption(feeTypeTextBox, 0, 99, "Fee type", out var feeType)
+                || !TryIntegerOption(paymentTypeTextBox, 0, 99, "Payment type", out var paymentType))
             {
-                MessageBox.Show("Payment type must be a number between 0 and 99");
                 return;
             }
 
-            if (!double.TryParse(amountTextBox.Text.Replace("$", ""), out amount))
+            if (!double.TryParse(amountTextBox.Text.Replace("$", ""), NumberStyles.Number, CultureInfo.CurrentCulture, out var amount) || !double.IsFinite(amount))
             {
-                MessageBox.Show("Payment amount must be a number");
+                RejectOption(amountTextBox, "Payment amount must be a finite number.");
                 return;
             }
-
-            LogOutput(sipclient.FeePaid(feeType, paymentType, amount, patronBarcodeTextBox.Text, patronPinTextBox.Text, "USD", feeIdentifierTextBox.Text, transactionIdTextBox.Text));
+            var currency = feeCurrencyTextBox.Text.Trim().ToUpperInvariant();
+            if (currency.Length != 3 || !currency.All(c => c is >= 'A' and <= 'Z'))
+            {
+                RejectOption(feeCurrencyTextBox, "Currency must be a three-letter code, such as USD.");
+                return;
+            }
+            LogOutput(sipclient.FeePaid(feeType, paymentType, amount, patronBarcodeTextBox.Text, patronPinTextBox.Text,
+                currency, feeIdentifierTextBox.Text, transactionIdTextBox.Text, feePasswordTextBox.Text));
         }
 
         #endregion
 
         private void changeDefaultSettingsButton_Click(object sender, EventArgs e)
         {
-            if (settingsForm == null || settingsForm.IsDisposed) settingsForm = new SettingsForm();
+            if (settingsForm == null || settingsForm.IsDisposed)
+            {
+                settingsForm = new SettingsForm();
+            }
+
             settingsForm.Location = this.Location;
             settingsForm.Visible = true;
             settingsForm.Focus();
@@ -381,18 +499,13 @@ namespace Clc.Sip
         {
             LoadTextboxDefaults();
 
-            bool.TryParse(ConfigurationManager.AppSettings["dark_theme_enabled"], out darkTheme);
-            if (darkTheme)
-            {
-                SwitchTheme(darkTextColor, darkBackgroundColor);
-            }
-            else
-            {
-                SwitchToDefaultTheme();
-            }
+            AppTheme.ReloadPreference();
 
             ConfigureSipClient();
-            if (!allowCmd) DisableButtons();
+            if (!allowCmd)
+            {
+                DisableButtons();
+            }
         }
 
         private void clearLogButton_Click(object sender, EventArgs e)
@@ -499,15 +612,28 @@ namespace Clc.Sip
 
         private void noticeUpdateButton_Click(object sender, EventArgs e)
         {
-            if (noticeUpdateForm == null || noticeUpdateForm.IsDisposed) noticeUpdateForm = new NoticeUpdateForm(this);
-            noticeUpdateForm.Location = this.Location;
-            noticeUpdateForm.Visible = true;
-            noticeUpdateForm.Focus();
+            if (!allowCmd)
+            {
+                return;
+            }
+
+            if (!TryDateOption(noticeDeliveryDatePicker, "notice delivery date/time", out var deliveryDate))
+            {
+                return;
+            }
+
+            LogOutput(sipclient.NotificationUpdate((NoticeStatus)noticeStatusComboBox.SelectedItem, deliveryDate ?? DateTime.Now,
+                (NoticeMedium)noticeMediumComboBox.SelectedItem, (NotificationType)notificationTypeComboBox.SelectedItem,
+                patronBarcodeTextBox.Text, itemBarcodeTextBox.Text, noticeCommentTextBox.Text, noticePasswordTextBox.Text));
         }
 
         private void ConfigureSipClient()
         {
-            if (sipclient == null) return;
+            if (sipclient == null)
+            {
+                return;
+            }
+
             var encoding = ConfigurationManager.AppSettings["encoding"];
             sipclient.TextEncoding = Encoding.GetEncoding(string.IsNullOrWhiteSpace(encoding) ? "UTF-8" : encoding);
             sipclient.ValidateResponseChecksum = !bool.TryParse(ConfigurationManager.AppSettings["check_checksum"], out var check) || check;
@@ -517,13 +643,30 @@ namespace Clc.Sip
         {
             sipclient?.Dispose();
             settingsForm?.Dispose();
-            noticeUpdateForm?.Dispose();
             base.OnFormClosed(e);
         }
 
-        public string PatronBarcode { get { return patronBarcodeTextBox.Text; } }
-        public string ItemBarcode { get { return itemBarcodeTextBox.Text; } }
-        public sip2 SipClient { get { return sipclient; } }
+        public string PatronBarcode
+        {
+            get
+            {
+                return patronBarcodeTextBox.Text;
+            }
+        }
+        public string ItemBarcode
+        {
+            get
+            {
+                return itemBarcodeTextBox.Text;
+            }
+        }
+        public sip2 SipClient
+        {
+            get
+            {
+                return sipclient;
+            }
+        }
 
     }
 }

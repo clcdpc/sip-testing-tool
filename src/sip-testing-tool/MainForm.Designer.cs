@@ -2,1054 +2,1006 @@ namespace Clc.Sip
 {
     partial class MainForm
     {
-        /// <summary>
-        /// Required designer variable.
-        /// </summary>
         private System.ComponentModel.IContainer components = null;
 
-        /// <summary>
-        /// Clean up any resources being used.
-        /// </summary>
-        /// <param name="disposing">true if managed resources should be disposed; otherwise, false.</param>
         protected override void Dispose(bool disposing)
         {
-            if (disposing && (components != null))
-            {
-                components.Dispose();
-            }
+            if (disposing) components?.Dispose();
             base.Dispose(disposing);
         }
 
         #region Windows Form Designer generated code
 
-        /// <summary>
-        /// Required method for Designer support - do not modify
-        /// the contents of this method with the code editor.
-        /// </summary>
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
-            usernameTextBox = new TextBox();
-            passwordTextBox = new TextBox();
-            label1 = new Label();
-            label2 = new Label();
-            loginButton = new Button();
-            serverTextBox = new TextBox();
-            portTextBox = new TextBox();
-            label3 = new Label();
-            label4 = new Label();
-            groupBox1 = new GroupBox();
-            aoTextBox = new TextBox();
-            label10 = new Label();
-            connectButton = new Button();
-            label11 = new Label();
-            apTextBox = new TextBox();
-            label7 = new Label();
-            patronInformationContextMenu = new ContextMenuStrip(components);
-            noneMenuItem = new ToolStripMenuItem();
-            holdItemsMenuItem = new ToolStripMenuItem();
-            overdueItemsMenuItem = new ToolStripMenuItem();
-            chargedItemsMenuItem = new ToolStripMenuItem();
-            fineItemsMenuItem = new ToolStripMenuItem();
-            recallItemsMenuItem = new ToolStripMenuItem();
-            unavailableHoldsMenuItem = new ToolStripMenuItem();
-            groupBox5 = new GroupBox();
-            locationCodeTextBox = new TextBox();
-            label20 = new Label();
-            vendorProfileComboBox = new ComboBox();
-            renewAllButton = new Button();
-            renewButton = new Button();
-            groupBox2 = new GroupBox();
-            bpTextBox = new TextBox();
-            label13 = new Label();
-            patronBarcodeTextBox = new TextBox();
-            label12 = new Label();
-            label5 = new Label();
-            bqTextBox = new TextBox();
-            label6 = new Label();
-            patronPinTextBox = new TextBox();
-            checkoutButton = new Button();
-            patronStatusButton = new Button();
-            checkInButton = new Button();
-            groupBox3 = new GroupBox();
-            label8 = new Label();
-            itemBarcodeTextBox = new TextBox();
-            endSessionButton = new Button();
-            itemInformationButton = new Button();
-            patronInformationButton = new Button();
+            var resources = new System.ComponentModel.ComponentResourceManager(typeof(MainForm));
+            rootLayout = new TableLayoutPanel();
+            appMenuStrip = new MenuStrip();
+            settingsMenuItem = new ToolStripMenuItem();
+            viewMenuItem = new ToolStripMenuItem();
+            darkModeMenuItem = new ToolStripMenuItem();
+            importSettingsMenuItem = new ToolStripMenuItem();
+            exportSettingsMenuItem = new ToolStripMenuItem();
+            changeDefaultSettingsMenuItem = new ToolStripMenuItem();
+            reloadDefaultSettingsMenuItem = new ToolStripMenuItem();
+            ribbonLayout = new TableLayoutPanel();
+            connectionLayout = new TableLayoutPanel();
+            connectionLayoutHeading = new Label();
+            loginLayout = new TableLayoutPanel();
+            loginLayoutHeading = new Label();
+            patronLayout = new TableLayoutPanel();
+            patronLayoutHeading = new Label();
+            itemLayout = new TableLayoutPanel();
+            itemLayoutHeading = new Label();
+            serverLabel = new Label();
+            serverTextBox = new Helpers.ThemedTextBox();
+            portLabel = new Label();
+            portTextBox = new Helpers.ThemedTextBox();
+            institutionLabel = new Label();
+            aoTextBox = new Helpers.ThemedTextBox();
+            terminalLabel = new Label();
+            apTextBox = new Helpers.ThemedTextBox();
+            usernameLabel = new Label();
+            usernameTextBox = new Helpers.ThemedTextBox();
+            passwordLabel = new Label();
+            passwordTextBox = new Helpers.ThemedTextBox();
+            locationLabel = new Label();
+            locationCodeTextBox = new Helpers.ThemedTextBox();
+            patronBarcodeLabel = new Label();
+            patronBarcodeTextBox = new Helpers.ThemedTextBox();
+            patronPinLabel = new Label();
+            patronPinTextBox = new Helpers.ThemedTextBox();
+            itemBarcodeLabel = new Label();
+            itemBarcodeTextBox = new Helpers.ThemedTextBox();
+            vendorProfileLabel = new Label();
+            vendorProfileComboBox = new Helpers.ThemedComboBox();
+            connectButton = new Helpers.ThemedButton();
+            loginButton = new Helpers.ThemedButton();
+            splitContainer1 = new SplitContainer();
+            workbenchLayout = new TableLayoutPanel();
+            workbenchHeading = new Label();
+            commandComboBox = new Helpers.ThemedComboBox();
+            commandDetailsPanel = new Panel();
+            commandDetailsLayout = new TableLayoutPanel();
+            selectedCommandLabel = new Label();
+            commandHintLabel = new Label();
+            checkoutFieldsLayout = new TableLayoutPanel();
+            checkoutRenewalCheckBox = new CheckBox();
+            checkoutNoBlockCheckBox = new CheckBox();
+            checkoutDueDateLabel = new Label();
+            checkoutDueDatePicker = new Helpers.ThemedDateTimePicker();
+            checkoutItemPropertiesLabel = new Label();
+            checkoutItemPropertiesTextBox = new Helpers.ThemedTextBox();
+            checkoutTerminalPasswordLabel = new Label();
+            checkoutTerminalPasswordTextBox = new Helpers.ThemedTextBox();
+            checkoutFeeAcknowledgedLabel = new Label();
+            checkoutFeeAcknowledgedComboBox = new Helpers.ThemedComboBox();
+            checkoutCancelLabel = new Label();
+            checkoutCancelComboBox = new Helpers.ThemedComboBox();
+            resetCheckoutOptionsButton = new Helpers.ThemedButton();
+            checkoutToolTip = new ToolTip(components);
+            patronQueryLayout = new TableLayoutPanel();
+            summaryLabel = new Label();
+            patronSummaryComboBox = new Helpers.ThemedComboBox();
+            startItemLabel = new Label();
+            bpTextBox = new Helpers.ThemedTextBox();
+            endItemLabel = new Label();
+            bqTextBox = new Helpers.ThemedTextBox();
+            feeFieldsLayout = new TableLayoutPanel();
+            feeTypeLabel = new Label();
+            feeTypeTextBox = new Helpers.ThemedTextBox();
+            paymentTypeLabel = new Label();
+            paymentTypeTextBox = new Helpers.ThemedTextBox();
+            amountLabel = new Label();
+            amountTextBox = new Helpers.ThemedTextBox();
+            feeIdentifierLabel = new Label();
+            feeIdentifierTextBox = new Helpers.ThemedTextBox();
+            transactionIdLabel = new Label();
+            transactionIdTextBox = new Helpers.ThemedTextBox();
+            executeCommandButton = new Helpers.ThemedButton();
+            logLayout = new TableLayoutPanel();
+            logHeaderLayout = new TableLayoutPanel();
+            logHeading = new Label();
+            logActionsPanel = new FlowLayoutPanel();
+            clearLogButton = new Helpers.ThemedButton();
+            exportLogButton = new Helpers.ThemedButton();
+            logRichTextBox = new RichTextBox();
             statusStrip1 = new StatusStrip();
             toolStripStatusLabel1 = new ToolStripStatusLabel();
-            splitContainer1 = new SplitContainer();
-            noticeUpdateButton = new Button();
-            feePaidButton = new Button();
-            groupBox4 = new GroupBox();
-            amountTextBox = new TextBox();
-            transactionIdTextBox = new TextBox();
-            label17 = new Label();
-            feeIdentifierTextBox = new TextBox();
-            label19 = new Label();
-            paymentTypeTextBox = new TextBox();
-            label18 = new Label();
-            label16 = new Label();
-            feeTypeTextBox = new TextBox();
-            label15 = new Label();
-            label14 = new Label();
-            label9 = new Label();
-            importSettingsButton = new Button();
-            exportSettingsButton = new Button();
-            exportLogButton = new Button();
-            clearLogButton = new Button();
-            reloadDefaultSettingsButton = new Button();
-            changeDefaultSettingsButton = new Button();
-            logRichTextBox = new RichTextBox();
-            btnAcsStatus = new Button();
-            groupBox1.SuspendLayout();
-            patronInformationContextMenu.SuspendLayout();
-            groupBox5.SuspendLayout();
-            groupBox2.SuspendLayout();
-            groupBox3.SuspendLayout();
-            statusStrip1.SuspendLayout();
+            rootLayout.Name = "rootLayout";
+            appMenuStrip.Name = "appMenuStrip";
+            viewMenuItem.Name = "viewMenuItem";
+            darkModeMenuItem.Name = "darkModeMenuItem";
+            ribbonLayout.Name = "ribbonLayout";
+            connectionLayout.Name = "connectionLayout";
+            connectionLayoutHeading.Name = "connectionLayoutHeading";
+            loginLayout.Name = "loginLayout";
+            loginLayoutHeading.Name = "loginLayoutHeading";
+            patronLayout.Name = "patronLayout";
+            patronLayoutHeading.Name = "patronLayoutHeading";
+            itemLayout.Name = "itemLayout";
+            itemLayoutHeading.Name = "itemLayoutHeading";
+            serverLabel.Name = "serverLabel";
+            serverTextBox.Name = "serverTextBox";
+            portLabel.Name = "portLabel";
+            portTextBox.Name = "portTextBox";
+            institutionLabel.Name = "institutionLabel";
+            aoTextBox.Name = "aoTextBox";
+            terminalLabel.Name = "terminalLabel";
+            apTextBox.Name = "apTextBox";
+            usernameLabel.Name = "usernameLabel";
+            usernameTextBox.Name = "usernameTextBox";
+            passwordLabel.Name = "passwordLabel";
+            passwordTextBox.Name = "passwordTextBox";
+            locationLabel.Name = "locationLabel";
+            locationCodeTextBox.Name = "locationCodeTextBox";
+            patronBarcodeLabel.Name = "patronBarcodeLabel";
+            patronBarcodeTextBox.Name = "patronBarcodeTextBox";
+            patronPinLabel.Name = "patronPinLabel";
+            patronPinTextBox.Name = "patronPinTextBox";
+            itemBarcodeLabel.Name = "itemBarcodeLabel";
+            itemBarcodeTextBox.Name = "itemBarcodeTextBox";
+            vendorProfileLabel.Name = "vendorProfileLabel";
+            vendorProfileComboBox.Name = "vendorProfileComboBox";
+            connectButton.Name = "connectButton";
+            loginButton.Name = "loginButton";
+            splitContainer1.Name = "splitContainer1";
+            workbenchLayout.Name = "workbenchLayout";
+            workbenchHeading.Name = "workbenchHeading";
+            commandComboBox.Name = "commandComboBox";
+            commandDetailsPanel.Name = "commandDetailsPanel";
+            commandDetailsLayout.Name = "commandDetailsLayout";
+            selectedCommandLabel.Name = "selectedCommandLabel";
+            commandHintLabel.Name = "commandHintLabel";
+            checkoutFieldsLayout.Name = "checkoutFieldsLayout";
+            checkoutRenewalCheckBox.Name = "checkoutRenewalCheckBox";
+            checkoutNoBlockCheckBox.Name = "checkoutNoBlockCheckBox";
+            checkoutDueDateLabel.Name = "checkoutDueDateLabel";
+            checkoutDueDatePicker.Name = "checkoutDueDatePicker";
+            checkoutItemPropertiesLabel.Name = "checkoutItemPropertiesLabel";
+            checkoutItemPropertiesTextBox.Name = "checkoutItemPropertiesTextBox";
+            checkoutTerminalPasswordLabel.Name = "checkoutTerminalPasswordLabel";
+            checkoutTerminalPasswordTextBox.Name = "checkoutTerminalPasswordTextBox";
+            checkoutFeeAcknowledgedLabel.Name = "checkoutFeeAcknowledgedLabel";
+            checkoutFeeAcknowledgedComboBox.Name = "checkoutFeeAcknowledgedComboBox";
+            checkoutCancelLabel.Name = "checkoutCancelLabel";
+            checkoutCancelComboBox.Name = "checkoutCancelComboBox";
+            resetCheckoutOptionsButton.Name = "resetCheckoutOptionsButton";
+            patronQueryLayout.Name = "patronQueryLayout";
+            summaryLabel.Name = "summaryLabel";
+            patronSummaryComboBox.Name = "patronSummaryComboBox";
+            startItemLabel.Name = "startItemLabel";
+            bpTextBox.Name = "bpTextBox";
+            endItemLabel.Name = "endItemLabel";
+            bqTextBox.Name = "bqTextBox";
+            feeFieldsLayout.Name = "feeFieldsLayout";
+            feeTypeLabel.Name = "feeTypeLabel";
+            feeTypeTextBox.Name = "feeTypeTextBox";
+            paymentTypeLabel.Name = "paymentTypeLabel";
+            paymentTypeTextBox.Name = "paymentTypeTextBox";
+            amountLabel.Name = "amountLabel";
+            amountTextBox.Name = "amountTextBox";
+            feeIdentifierLabel.Name = "feeIdentifierLabel";
+            feeIdentifierTextBox.Name = "feeIdentifierTextBox";
+            transactionIdLabel.Name = "transactionIdLabel";
+            transactionIdTextBox.Name = "transactionIdTextBox";
+            executeCommandButton.Name = "executeCommandButton";
+            logLayout.Name = "logLayout";
+            logHeaderLayout.Name = "logHeaderLayout";
+            logHeading.Name = "logHeading";
+            logActionsPanel.Name = "logActionsPanel";
+            clearLogButton.Name = "clearLogButton";
+            exportLogButton.Name = "exportLogButton";
+            logRichTextBox.Name = "logRichTextBox";
+            statusStrip1.Name = "statusStrip1";
             ((System.ComponentModel.ISupportInitialize)splitContainer1).BeginInit();
+            rootLayout.SuspendLayout();
+            appMenuStrip.SuspendLayout();
+            ribbonLayout.SuspendLayout();
+            connectionLayout.SuspendLayout();
+            loginLayout.SuspendLayout();
+            patronLayout.SuspendLayout();
+            itemLayout.SuspendLayout();
+            workbenchLayout.SuspendLayout();
+            commandDetailsPanel.SuspendLayout();
+            commandDetailsLayout.SuspendLayout();
+            checkoutFieldsLayout.SuspendLayout();
+            patronQueryLayout.SuspendLayout();
+            feeFieldsLayout.SuspendLayout();
+            logLayout.SuspendLayout();
+            logHeaderLayout.SuspendLayout();
+            logActionsPanel.SuspendLayout();
+            statusStrip1.SuspendLayout();
             splitContainer1.Panel1.SuspendLayout();
             splitContainer1.Panel2.SuspendLayout();
             splitContainer1.SuspendLayout();
-            groupBox4.SuspendLayout();
             SuspendLayout();
-            // 
-            // usernameTextBox
-            // 
-            usernameTextBox.AccessibleName = "SIP Username";
-            usernameTextBox.Location = new Point(97, 17);
-            usernameTextBox.Margin = new Padding(4, 3, 4, 3);
-            usernameTextBox.Name = "usernameTextBox";
-            usernameTextBox.Size = new Size(145, 23);
-            usernameTextBox.TabIndex = 0;
-            // 
-            // passwordTextBox
-            // 
-            passwordTextBox.AccessibleName = "SIP Password";
-            passwordTextBox.Location = new Point(97, 46);
-            passwordTextBox.Margin = new Padding(4, 3, 4, 3);
-            passwordTextBox.Name = "passwordTextBox";
-            passwordTextBox.PasswordChar = '*';
-            passwordTextBox.Size = new Size(145, 23);
-            passwordTextBox.TabIndex = 1;
-            // 
-            // label1
-            // 
-            label1.AutoSize = true;
-            label1.Location = new Point(2, 22);
-            label1.Margin = new Padding(4, 0, 4, 0);
-            label1.Name = "label1";
-            label1.Size = new Size(79, 15);
-            label1.TabIndex = 3;
-            label1.Text = "SIP Username";
-            label1.TextAlign = ContentAlignment.MiddleRight;
-            // 
-            // label2
-            // 
-            label2.AutoSize = true;
-            label2.Location = new Point(5, 51);
-            label2.Margin = new Padding(4, 0, 4, 0);
-            label2.Name = "label2";
-            label2.Size = new Size(76, 15);
-            label2.TabIndex = 3;
-            label2.Text = "SIP Password";
-            label2.TextAlign = ContentAlignment.MiddleRight;
-            // 
-            // loginButton
-            // 
-            loginButton.Location = new Point(97, 134);
-            loginButton.Margin = new Padding(4, 3, 4, 3);
-            loginButton.Name = "loginButton";
-            loginButton.Size = new Size(75, 27);
-            loginButton.TabIndex = 4;
-            loginButton.Text = "Login";
-            loginButton.UseVisualStyleBackColor = true;
-            loginButton.Click += loginButton_Click;
-            // 
-            // serverTextBox
-            // 
+            rootLayout.Dock = DockStyle.Fill;
+            rootLayout.Margin = new Padding(0);
+            rootLayout.Padding = new Padding(0);
+            rootLayout.ColumnCount = 1;
+            rootLayout.RowCount = 3;
+            rootLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            rootLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            rootLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 188F));
+            rootLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            appMenuStrip.Dock = DockStyle.Fill;
+            appMenuStrip.TabIndex = 0;
+            settingsMenuItem.Text = "&Settings";
+            importSettingsMenuItem.Text = "&Import settings…";
+            exportSettingsMenuItem.Text = "&Export settings…";
+            changeDefaultSettingsMenuItem.Text = "&Change default settings…";
+            reloadDefaultSettingsMenuItem.Text = "&Reload default values";
+            importSettingsMenuItem.Click += importSettingsButton_Click;
+            exportSettingsMenuItem.Click += exportSettingsButton_Click;
+            changeDefaultSettingsMenuItem.Click += changeDefaultSettingsButton_Click;
+            reloadDefaultSettingsMenuItem.Click += reloadDefaultSettingsButton_Click;
+            settingsMenuItem.DropDownItems.AddRange(new ToolStripItem[] { importSettingsMenuItem, exportSettingsMenuItem, new ToolStripSeparator(), changeDefaultSettingsMenuItem, reloadDefaultSettingsMenuItem });
+            appMenuStrip.Items.Add(settingsMenuItem);
+            viewMenuItem.Text = "&View";
+            darkModeMenuItem.Text = "&Dark mode";
+            darkModeMenuItem.CheckOnClick = true;
+            darkModeMenuItem.ShortcutKeys = Keys.Control | Keys.Shift | Keys.D;
+            darkModeMenuItem.CheckedChanged += darkModeMenuItem_CheckedChanged;
+            viewMenuItem.DropDownItems.Add(darkModeMenuItem);
+            appMenuStrip.Items.Add(viewMenuItem);
+            rootLayout.Controls.Add(appMenuStrip, 0, 0);
+            ribbonLayout.Dock = DockStyle.Fill;
+            ribbonLayout.Margin = new Padding(0);
+            ribbonLayout.Padding = new Padding(6, 4, 6, 8);
+            ribbonLayout.ColumnCount = 4;
+            ribbonLayout.RowCount = 1;
+            ribbonLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 31F));
+            ribbonLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 29F));
+            ribbonLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 22F));
+            ribbonLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 18F));
+            ribbonLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            ribbonLayout.CellBorderStyle = TableLayoutPanelCellBorderStyle.Single;
+            ribbonLayout.TabIndex = 1;
+            connectionLayout.Dock = DockStyle.Fill;
+            connectionLayout.Margin = new Padding(0);
+            connectionLayout.Padding = new Padding(12, 6, 4, 6);
+            connectionLayout.ColumnCount = 2;
+            connectionLayout.RowCount = 6;
+            connectionLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            connectionLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 82F));
+            connectionLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
+            connectionLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            connectionLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            connectionLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            connectionLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            connectionLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            connectionLayout.TabIndex = 0;
+            connectionLayoutHeading.Text = "Connection";
+            connectionLayoutHeading.AutoSize = true;
+            connectionLayoutHeading.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            connectionLayoutHeading.Margin = new Padding(0, 0, 0, 4);
+            connectionLayoutHeading.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold);
+            connectionLayout.Controls.Add(connectionLayoutHeading, 0, 0);
+            connectionLayout.SetColumnSpan(connectionLayoutHeading, 2);
+            ribbonLayout.Controls.Add(connectionLayout, 0, 0);
+            loginLayout.Dock = DockStyle.Fill;
+            loginLayout.Margin = new Padding(0);
+            loginLayout.Padding = new Padding(12, 6, 4, 6);
+            loginLayout.ColumnCount = 2;
+            loginLayout.RowCount = 6;
+            loginLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            loginLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            loginLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
+            loginLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            loginLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            loginLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            loginLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            loginLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            loginLayout.TabIndex = 1;
+            loginLayoutHeading.Text = "Login";
+            loginLayoutHeading.AutoSize = true;
+            loginLayoutHeading.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            loginLayoutHeading.Margin = new Padding(0, 0, 0, 4);
+            loginLayoutHeading.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold);
+            loginLayout.Controls.Add(loginLayoutHeading, 0, 0);
+            loginLayout.SetColumnSpan(loginLayoutHeading, 2);
+            ribbonLayout.Controls.Add(loginLayout, 1, 0);
+            patronLayout.Dock = DockStyle.Fill;
+            patronLayout.Margin = new Padding(0);
+            patronLayout.Padding = new Padding(12, 6, 4, 6);
+            patronLayout.ColumnCount = 1;
+            patronLayout.RowCount = 6;
+            patronLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            patronLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
+            patronLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            patronLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            patronLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            patronLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            patronLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            patronLayout.TabIndex = 2;
+            patronLayoutHeading.Text = "Patron";
+            patronLayoutHeading.AutoSize = true;
+            patronLayoutHeading.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            patronLayoutHeading.Margin = new Padding(0, 0, 0, 4);
+            patronLayoutHeading.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold);
+            patronLayout.Controls.Add(patronLayoutHeading, 0, 0);
+            ribbonLayout.Controls.Add(patronLayout, 2, 0);
+            itemLayout.Dock = DockStyle.Fill;
+            itemLayout.Margin = new Padding(0);
+            itemLayout.Padding = new Padding(12, 6, 4, 6);
+            itemLayout.ColumnCount = 1;
+            itemLayout.RowCount = 6;
+            itemLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            itemLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
+            itemLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            itemLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            itemLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 20F));
+            itemLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            itemLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            itemLayout.TabIndex = 3;
+            itemLayoutHeading.Text = "Item";
+            itemLayoutHeading.AutoSize = true;
+            itemLayoutHeading.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            itemLayoutHeading.Margin = new Padding(0, 0, 0, 4);
+            itemLayoutHeading.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold);
+            itemLayout.Controls.Add(itemLayoutHeading, 0, 0);
+            ribbonLayout.Controls.Add(itemLayout, 3, 0);
+            serverLabel.Text = "Server";
+            serverLabel.AutoSize = true;
+            serverLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            serverLabel.Margin = new Padding(0, 0, 0, 4);
             serverTextBox.AccessibleName = "SIP Server";
-            serverTextBox.Location = new Point(82, 22);
-            serverTextBox.Margin = new Padding(4, 3, 4, 3);
-            serverTextBox.Name = "serverTextBox";
-            serverTextBox.Size = new Size(124, 23);
+            serverTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            serverTextBox.Margin = new Padding(0, 0, 8, 8);
             serverTextBox.TabIndex = 0;
-            // 
-            // portTextBox
-            // 
+            connectionLayout.Controls.Add(serverLabel, 0, 1);
+            connectionLayout.Controls.Add(serverTextBox, 0, 2);
+            portLabel.Text = "Port";
+            portLabel.AutoSize = true;
+            portLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            portLabel.Margin = new Padding(0, 0, 0, 4);
             portTextBox.AccessibleName = "SIP Server Port";
-            portTextBox.Location = new Point(82, 48);
-            portTextBox.Margin = new Padding(4, 3, 4, 3);
-            portTextBox.Name = "portTextBox";
-            portTextBox.Size = new Size(124, 23);
+            portTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            portTextBox.Margin = new Padding(0, 0, 8, 8);
             portTextBox.TabIndex = 1;
-            // 
-            // label3
-            // 
-            label3.AutoSize = true;
-            label3.Location = new Point(14, 25);
-            label3.Margin = new Padding(4, 0, 4, 0);
-            label3.Name = "label3";
-            label3.Size = new Size(58, 15);
-            label3.TabIndex = 3;
-            label3.Text = "SIP Server";
-            // 
-            // label4
-            // 
-            label4.AutoSize = true;
-            label4.Location = new Point(24, 52);
-            label4.Margin = new Padding(4, 0, 4, 0);
-            label4.Name = "label4";
-            label4.Size = new Size(48, 15);
-            label4.TabIndex = 3;
-            label4.Text = "SIP Port";
-            // 
-            // groupBox1
-            // 
-            groupBox1.Controls.Add(aoTextBox);
-            groupBox1.Controls.Add(label10);
-            groupBox1.Controls.Add(connectButton);
-            groupBox1.Controls.Add(label11);
-            groupBox1.Controls.Add(label4);
-            groupBox1.Controls.Add(apTextBox);
-            groupBox1.Controls.Add(serverTextBox);
-            groupBox1.Controls.Add(label3);
-            groupBox1.Controls.Add(portTextBox);
-            groupBox1.Location = new Point(14, 8);
-            groupBox1.Margin = new Padding(4, 3, 4, 3);
-            groupBox1.Name = "groupBox1";
-            groupBox1.Padding = new Padding(4, 3, 4, 3);
-            groupBox1.Size = new Size(210, 170);
-            groupBox1.TabIndex = 0;
-            groupBox1.TabStop = false;
-            groupBox1.Text = "Connection Information";
-            // 
-            // aoTextBox
-            // 
-            aoTextBox.AccessibleName = "SIP AO Field";
-            aoTextBox.Location = new Point(82, 76);
-            aoTextBox.Margin = new Padding(4, 3, 4, 3);
-            aoTextBox.Name = "aoTextBox";
-            aoTextBox.Size = new Size(124, 23);
+            connectionLayout.Controls.Add(portLabel, 1, 1);
+            connectionLayout.Controls.Add(portTextBox, 1, 2);
+            institutionLabel.Text = "Institution (AO)";
+            institutionLabel.AutoSize = true;
+            institutionLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            institutionLabel.Margin = new Padding(0, 0, 0, 4);
+            aoTextBox.AccessibleName = "Institution AO";
+            aoTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            aoTextBox.Margin = new Padding(0, 0, 8, 8);
             aoTextBox.TabIndex = 2;
-            // 
-            // label10
-            // 
-            label10.AutoSize = true;
-            label10.Location = new Point(48, 80);
-            label10.Margin = new Padding(4, 0, 4, 0);
-            label10.Name = "label10";
-            label10.Size = new Size(24, 15);
-            label10.TabIndex = 9;
-            label10.Text = "AO";
-            // 
-            // connectButton
-            // 
-            connectButton.Location = new Point(62, 134);
-            connectButton.Margin = new Padding(4, 3, 4, 3);
-            connectButton.Name = "connectButton";
-            connectButton.Size = new Size(88, 27);
-            connectButton.TabIndex = 4;
+            connectionLayout.Controls.Add(institutionLabel, 0, 3);
+            connectionLayout.Controls.Add(aoTextBox, 0, 4);
+            terminalLabel.Text = "Terminal (AP)";
+            terminalLabel.AutoSize = true;
+            terminalLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            terminalLabel.Margin = new Padding(0, 0, 0, 4);
+            apTextBox.AccessibleName = "Terminal AP";
+            apTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            apTextBox.Margin = new Padding(0, 0, 8, 8);
+            apTextBox.TabIndex = 3;
+            connectionLayout.Controls.Add(terminalLabel, 1, 3);
+            connectionLayout.Controls.Add(apTextBox, 1, 4);
+            usernameLabel.Text = "Username";
+            usernameLabel.AutoSize = true;
+            usernameLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            usernameLabel.Margin = new Padding(0, 0, 0, 4);
+            usernameTextBox.AccessibleName = "SIP Username";
+            usernameTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            usernameTextBox.Margin = new Padding(0, 0, 8, 8);
+            usernameTextBox.TabIndex = 0;
+            loginLayout.Controls.Add(usernameLabel, 0, 1);
+            loginLayout.Controls.Add(usernameTextBox, 0, 2);
+            passwordLabel.Text = "Password";
+            passwordLabel.AutoSize = true;
+            passwordLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            passwordLabel.Margin = new Padding(0, 0, 0, 4);
+            passwordTextBox.AccessibleName = "SIP Password";
+            passwordTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            passwordTextBox.Margin = new Padding(0, 0, 8, 8);
+            passwordTextBox.TabIndex = 1;
+            loginLayout.Controls.Add(passwordLabel, 1, 1);
+            loginLayout.Controls.Add(passwordTextBox, 1, 2);
+            locationLabel.Text = "Location code (CP)";
+            locationLabel.AutoSize = true;
+            locationLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            locationLabel.Margin = new Padding(0, 0, 0, 4);
+            locationCodeTextBox.AccessibleName = "Location Code";
+            locationCodeTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            locationCodeTextBox.Margin = new Padding(0, 0, 8, 8);
+            locationCodeTextBox.TabIndex = 2;
+            loginLayout.Controls.Add(locationLabel, 0, 3);
+            loginLayout.Controls.Add(locationCodeTextBox, 0, 4);
+            patronBarcodeLabel.Text = "Barcode (AA)";
+            patronBarcodeLabel.AutoSize = true;
+            patronBarcodeLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            patronBarcodeLabel.Margin = new Padding(0, 0, 0, 4);
+            patronBarcodeTextBox.AccessibleName = "Patron Barcode";
+            patronBarcodeTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            patronBarcodeTextBox.Margin = new Padding(0, 0, 8, 8);
+            patronBarcodeTextBox.TabIndex = 0;
+            patronLayout.Controls.Add(patronBarcodeLabel, 0, 1);
+            patronLayout.Controls.Add(patronBarcodeTextBox, 0, 2);
+            patronPinLabel.Text = "PIN (AD)";
+            patronPinLabel.AutoSize = true;
+            patronPinLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            patronPinLabel.Margin = new Padding(0, 0, 0, 4);
+            patronPinTextBox.AccessibleName = "Patron PIN";
+            patronPinTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            patronPinTextBox.Margin = new Padding(0, 0, 8, 8);
+            patronPinTextBox.TabIndex = 1;
+            patronLayout.Controls.Add(patronPinLabel, 0, 3);
+            patronLayout.Controls.Add(patronPinTextBox, 0, 4);
+            itemBarcodeLabel.Text = "Barcode (AB)";
+            itemBarcodeLabel.AutoSize = true;
+            itemBarcodeLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            itemBarcodeLabel.Margin = new Padding(0, 0, 0, 4);
+            itemBarcodeTextBox.AccessibleName = "Item Barcode";
+            itemBarcodeTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            itemBarcodeTextBox.Margin = new Padding(0, 0, 8, 8);
+            itemBarcodeTextBox.TabIndex = 0;
+            itemLayout.Controls.Add(itemBarcodeLabel, 0, 1);
+            itemLayout.Controls.Add(itemBarcodeTextBox, 0, 2);
+            vendorProfileLabel.Text = "Vendor profile (VP)";
+            vendorProfileLabel.AutoSize = true;
+            vendorProfileLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            vendorProfileLabel.Margin = new Padding(0, 0, 0, 4);
+            vendorProfileComboBox.AccessibleName = "Vendor Profile";
+            vendorProfileComboBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            vendorProfileComboBox.Margin = new Padding(0, 0, 8, 8);
+            vendorProfileComboBox.FormattingEnabled = true;
+            vendorProfileComboBox.TabIndex = 3;
+            vendorProfileComboBox.Items.AddRange(new object[] { "Envisionware", "Comprise", "3M", "ITG" });
+            loginLayout.Controls.Add(vendorProfileLabel, 1, 3);
+            loginLayout.Controls.Add(vendorProfileComboBox, 1, 4);
             connectButton.Text = "Connect";
+            connectButton.AutoSize = true;
+            connectButton.MinimumSize = new Size(88, 29);
+            connectButton.Margin = new Padding(0, 0, 8, 0);
+            connectButton.TabIndex = 4;
             connectButton.UseVisualStyleBackColor = true;
             connectButton.Click += connectButton_Click;
-            // 
-            // label11
-            // 
-            label11.AutoSize = true;
-            label11.Location = new Point(50, 107);
-            label11.Margin = new Padding(4, 0, 4, 0);
-            label11.Name = "label11";
-            label11.Size = new Size(22, 15);
-            label11.TabIndex = 10;
-            label11.Text = "AP";
-            // 
-            // apTextBox
-            // 
-            apTextBox.AccessibleName = "SIP AP Field";
-            apTextBox.Location = new Point(82, 104);
-            apTextBox.Margin = new Padding(4, 3, 4, 3);
-            apTextBox.Name = "apTextBox";
-            apTextBox.Size = new Size(124, 23);
-            apTextBox.TabIndex = 3;
-            // 
-            // label7
-            // 
-            label7.AutoSize = true;
-            label7.Location = new Point(5, 80);
-            label7.Margin = new Padding(4, 0, 4, 0);
-            label7.Name = "label7";
-            label7.Size = new Size(81, 15);
-            label7.TabIndex = 6;
-            label7.Text = "Vendor Profile";
-            label7.TextAlign = ContentAlignment.MiddleRight;
-            // 
-            // patronInformationContextMenu
-            // 
-            patronInformationContextMenu.Items.AddRange(new ToolStripItem[] { noneMenuItem, holdItemsMenuItem, overdueItemsMenuItem, chargedItemsMenuItem, fineItemsMenuItem, recallItemsMenuItem, unavailableHoldsMenuItem });
-            patronInformationContextMenu.Name = "patronInformationContextMenu";
-            patronInformationContextMenu.Size = new Size(170, 158);
-            // 
-            // noneMenuItem
-            // 
-            noneMenuItem.Name = "noneMenuItem";
-            noneMenuItem.Size = new Size(169, 22);
-            noneMenuItem.Text = "None";
-            noneMenuItem.Click += noneMenuItem_Click;
-            // 
-            // holdItemsMenuItem
-            // 
-            holdItemsMenuItem.Name = "holdItemsMenuItem";
-            holdItemsMenuItem.Size = new Size(169, 22);
-            holdItemsMenuItem.Text = "Hold Items";
-            holdItemsMenuItem.Click += holdItemsMenuItem_Click;
-            // 
-            // overdueItemsMenuItem
-            // 
-            overdueItemsMenuItem.Name = "overdueItemsMenuItem";
-            overdueItemsMenuItem.Size = new Size(169, 22);
-            overdueItemsMenuItem.Text = "Overdue Items";
-            overdueItemsMenuItem.Click += overdueItemsMenuItem_Click;
-            // 
-            // chargedItemsMenuItem
-            // 
-            chargedItemsMenuItem.Name = "chargedItemsMenuItem";
-            chargedItemsMenuItem.Size = new Size(169, 22);
-            chargedItemsMenuItem.Text = "Charged Items";
-            chargedItemsMenuItem.Click += chargedItemsMenuItem_Click;
-            // 
-            // fineItemsMenuItem
-            // 
-            fineItemsMenuItem.Name = "fineItemsMenuItem";
-            fineItemsMenuItem.Size = new Size(169, 22);
-            fineItemsMenuItem.Text = "Fine Items";
-            fineItemsMenuItem.Click += fineItemsMenuItem_Click;
-            // 
-            // recallItemsMenuItem
-            // 
-            recallItemsMenuItem.Name = "recallItemsMenuItem";
-            recallItemsMenuItem.Size = new Size(169, 22);
-            recallItemsMenuItem.Text = "Recall Items";
-            recallItemsMenuItem.Click += recallItemsMenuItem_Click;
-            // 
-            // unavailableHoldsMenuItem
-            // 
-            unavailableHoldsMenuItem.Name = "unavailableHoldsMenuItem";
-            unavailableHoldsMenuItem.Size = new Size(169, 22);
-            unavailableHoldsMenuItem.Text = "Unavailable Holds";
-            unavailableHoldsMenuItem.Click += unavailableHoldsMenuItem_Click;
-            // 
-            // groupBox5
-            // 
-            groupBox5.Controls.Add(locationCodeTextBox);
-            groupBox5.Controls.Add(label20);
-            groupBox5.Controls.Add(label7);
-            groupBox5.Controls.Add(vendorProfileComboBox);
-            groupBox5.Controls.Add(usernameTextBox);
-            groupBox5.Controls.Add(loginButton);
-            groupBox5.Controls.Add(label1);
-            groupBox5.Controls.Add(label2);
-            groupBox5.Controls.Add(passwordTextBox);
-            groupBox5.Location = new Point(231, 8);
-            groupBox5.Margin = new Padding(4, 3, 4, 3);
-            groupBox5.Name = "groupBox5";
-            groupBox5.Padding = new Padding(4, 3, 4, 3);
-            groupBox5.Size = new Size(250, 170);
-            groupBox5.TabIndex = 1;
-            groupBox5.TabStop = false;
-            groupBox5.Text = "Login Information";
-            // 
-            // locationCodeTextBox
-            // 
-            locationCodeTextBox.AccessibleName = "Location Code";
-            locationCodeTextBox.Location = new Point(97, 104);
-            locationCodeTextBox.Margin = new Padding(4, 3, 4, 3);
-            locationCodeTextBox.Name = "locationCodeTextBox";
-            locationCodeTextBox.Size = new Size(145, 23);
-            locationCodeTextBox.TabIndex = 3;
-            // 
-            // label20
-            // 
-            label20.AutoSize = true;
-            label20.Location = new Point(2, 108);
-            label20.Margin = new Padding(4, 0, 4, 0);
-            label20.Name = "label20";
-            label20.Size = new Size(84, 15);
-            label20.TabIndex = 8;
-            label20.Text = "Location Code";
-            label20.TextAlign = ContentAlignment.MiddleRight;
-            // 
-            // vendorProfileComboBox
-            // 
-            vendorProfileComboBox.AccessibleName = "Vendor Profile";
-            vendorProfileComboBox.FormattingEnabled = true;
-            vendorProfileComboBox.Items.AddRange(new object[] { "Envisionware", "Comprise", "3M", "ITG" });
-            vendorProfileComboBox.Location = new Point(97, 75);
-            vendorProfileComboBox.Margin = new Padding(4, 3, 4, 3);
-            vendorProfileComboBox.Name = "vendorProfileComboBox";
-            vendorProfileComboBox.Size = new Size(145, 23);
-            vendorProfileComboBox.TabIndex = 2;
-            // 
-            // renewAllButton
-            // 
-            renewAllButton.AccessibleName = "Renew All Items";
-            renewAllButton.Location = new Point(1110, 69);
-            renewAllButton.Margin = new Padding(4, 3, 4, 3);
-            renewAllButton.Name = "renewAllButton";
-            renewAllButton.Size = new Size(88, 39);
-            renewAllButton.TabIndex = 9;
-            renewAllButton.Text = "Renew All Items";
-            renewAllButton.UseVisualStyleBackColor = true;
-            renewAllButton.Click += renewAllButton_Click;
-            // 
-            // renewButton
-            // 
-            renewButton.AccessibleName = "Renew Item";
-            renewButton.Location = new Point(1015, 113);
-            renewButton.Margin = new Padding(4, 3, 4, 3);
-            renewButton.Name = "renewButton";
-            renewButton.Size = new Size(88, 39);
-            renewButton.TabIndex = 11;
-            renewButton.Text = "Renew   Item";
-            renewButton.UseVisualStyleBackColor = true;
-            renewButton.Click += renewButton_Click;
-            // 
-            // groupBox2
-            // 
-            groupBox2.Controls.Add(bpTextBox);
-            groupBox2.Controls.Add(label13);
-            groupBox2.Controls.Add(patronBarcodeTextBox);
-            groupBox2.Controls.Add(label12);
-            groupBox2.Controls.Add(label5);
-            groupBox2.Controls.Add(bqTextBox);
-            groupBox2.Controls.Add(label6);
-            groupBox2.Controls.Add(patronPinTextBox);
-            groupBox2.Location = new Point(486, 10);
-            groupBox2.Margin = new Padding(4, 3, 4, 3);
-            groupBox2.Name = "groupBox2";
-            groupBox2.Padding = new Padding(4, 3, 4, 3);
-            groupBox2.Size = new Size(208, 103);
-            groupBox2.TabIndex = 2;
-            groupBox2.TabStop = false;
-            groupBox2.Text = "Patron Information";
-            // 
-            // bpTextBox
-            // 
-            bpTextBox.AccessibleName = "SIP BP Field";
-            bpTextBox.Location = new Point(70, 69);
-            bpTextBox.Margin = new Padding(4, 3, 4, 3);
-            bpTextBox.Name = "bpTextBox";
-            bpTextBox.Size = new Size(46, 23);
-            bpTextBox.TabIndex = 2;
-            bpTextBox.Text = "1";
-            // 
-            // label13
-            // 
-            label13.AutoSize = true;
-            label13.Location = new Point(37, 74);
-            label13.Margin = new Padding(4, 0, 4, 0);
-            label13.Name = "label13";
-            label13.Size = new Size(21, 15);
-            label13.TabIndex = 3;
-            label13.Text = "BP";
-            // 
-            // patronBarcodeTextBox
-            // 
-            patronBarcodeTextBox.AccessibleName = "Patron Barcode";
-            patronBarcodeTextBox.Location = new Point(70, 20);
-            patronBarcodeTextBox.Margin = new Padding(4, 3, 4, 3);
-            patronBarcodeTextBox.Name = "patronBarcodeTextBox";
-            patronBarcodeTextBox.Size = new Size(124, 23);
-            patronBarcodeTextBox.TabIndex = 0;
-            // 
-            // label12
-            // 
-            label12.AutoSize = true;
-            label12.Location = new Point(117, 73);
-            label12.Margin = new Padding(4, 0, 4, 0);
-            label12.Name = "label12";
-            label12.Size = new Size(23, 15);
-            label12.TabIndex = 2;
-            label12.Text = "BQ";
-            // 
-            // label5
-            // 
-            label5.AutoSize = true;
-            label5.Location = new Point(7, 23);
-            label5.Margin = new Padding(4, 0, 4, 0);
-            label5.Name = "label5";
-            label5.Size = new Size(50, 15);
-            label5.TabIndex = 3;
-            label5.Text = "Barcode";
-            // 
-            // bqTextBox
-            // 
-            bqTextBox.AccessibleName = "SIP BQ Field";
-            bqTextBox.Location = new Point(148, 69);
-            bqTextBox.Margin = new Padding(4, 3, 4, 3);
-            bqTextBox.Name = "bqTextBox";
-            bqTextBox.Size = new Size(46, 23);
-            bqTextBox.TabIndex = 3;
-            bqTextBox.Text = "5";
-            // 
-            // label6
-            // 
-            label6.AutoSize = true;
-            label6.Location = new Point(33, 47);
-            label6.Margin = new Padding(4, 0, 4, 0);
-            label6.Name = "label6";
-            label6.Size = new Size(26, 15);
-            label6.TabIndex = 3;
-            label6.Text = "PIN";
-            // 
-            // patronPinTextBox
-            // 
-            patronPinTextBox.AccessibleName = "Patron PIN";
-            patronPinTextBox.Location = new Point(70, 44);
-            patronPinTextBox.Margin = new Padding(4, 3, 4, 3);
-            patronPinTextBox.Name = "patronPinTextBox";
-            patronPinTextBox.Size = new Size(124, 23);
-            patronPinTextBox.TabIndex = 1;
-            // 
-            // checkoutButton
-            // 
-            checkoutButton.AccessibleName = "Item Checkout";
-            checkoutButton.Location = new Point(1015, 25);
-            checkoutButton.Margin = new Padding(4, 3, 4, 3);
-            checkoutButton.Name = "checkoutButton";
-            checkoutButton.Size = new Size(88, 39);
-            checkoutButton.TabIndex = 5;
-            checkoutButton.Text = "Item Checkout";
-            checkoutButton.UseVisualStyleBackColor = true;
-            checkoutButton.Click += checkoutButton_Click;
-            // 
-            // patronStatusButton
-            // 
-            patronStatusButton.AccessibleName = "Patron Status";
-            patronStatusButton.Location = new Point(920, 69);
-            patronStatusButton.Margin = new Padding(4, 3, 4, 3);
-            patronStatusButton.Name = "patronStatusButton";
-            patronStatusButton.Size = new Size(88, 39);
-            patronStatusButton.TabIndex = 7;
-            patronStatusButton.Text = "Patron Status";
-            patronStatusButton.UseVisualStyleBackColor = true;
-            patronStatusButton.Click += patronStatusButton_Click;
-            // 
-            // checkInButton
-            // 
-            checkInButton.AccessibleName = "Item Check-in";
-            checkInButton.Location = new Point(1015, 69);
-            checkInButton.Margin = new Padding(4, 3, 4, 3);
-            checkInButton.Name = "checkInButton";
-            checkInButton.Size = new Size(88, 39);
-            checkInButton.TabIndex = 8;
-            checkInButton.Text = "Item Check-in";
-            checkInButton.UseVisualStyleBackColor = true;
-            checkInButton.Click += checkInButton_Click;
-            // 
-            // groupBox3
-            // 
-            groupBox3.Controls.Add(label8);
-            groupBox3.Controls.Add(itemBarcodeTextBox);
-            groupBox3.Location = new Point(486, 120);
-            groupBox3.Margin = new Padding(4, 3, 4, 3);
-            groupBox3.Name = "groupBox3";
-            groupBox3.Padding = new Padding(4, 3, 4, 3);
-            groupBox3.Size = new Size(208, 58);
-            groupBox3.TabIndex = 3;
-            groupBox3.TabStop = false;
-            groupBox3.Text = "Item Information";
-            // 
-            // label8
-            // 
-            label8.AutoSize = true;
-            label8.Location = new Point(13, 25);
-            label8.Margin = new Padding(4, 0, 4, 0);
-            label8.Name = "label8";
-            label8.Size = new Size(50, 15);
-            label8.TabIndex = 4;
-            label8.Text = "Barcode";
-            // 
-            // itemBarcodeTextBox
-            // 
-            itemBarcodeTextBox.AccessibleName = "Item Barcode";
-            itemBarcodeTextBox.Location = new Point(70, 22);
-            itemBarcodeTextBox.Margin = new Padding(4, 3, 4, 3);
-            itemBarcodeTextBox.Name = "itemBarcodeTextBox";
-            itemBarcodeTextBox.Size = new Size(124, 23);
-            itemBarcodeTextBox.TabIndex = 0;
-            // 
-            // endSessionButton
-            // 
-            endSessionButton.AccessibleName = "End Session";
-            endSessionButton.Location = new Point(920, 113);
-            endSessionButton.Margin = new Padding(4, 3, 4, 3);
-            endSessionButton.Name = "endSessionButton";
-            endSessionButton.Size = new Size(88, 39);
-            endSessionButton.TabIndex = 10;
-            endSessionButton.Text = "End  Session";
-            endSessionButton.UseVisualStyleBackColor = true;
-            endSessionButton.Click += endSessionButton_Click;
-            // 
-            // itemInformationButton
-            // 
-            itemInformationButton.AccessibleName = "Item Information";
-            itemInformationButton.Location = new Point(1110, 113);
-            itemInformationButton.Margin = new Padding(4, 3, 4, 3);
-            itemInformationButton.Name = "itemInformationButton";
-            itemInformationButton.Size = new Size(88, 39);
-            itemInformationButton.TabIndex = 12;
-            itemInformationButton.Text = "Item Information";
-            itemInformationButton.UseVisualStyleBackColor = true;
-            itemInformationButton.Click += itemInformationButton_Click;
-            // 
-            // patronInformationButton
-            // 
-            patronInformationButton.AccessibleName = "Patron Information";
-            patronInformationButton.Location = new Point(920, 25);
-            patronInformationButton.Margin = new Padding(4, 3, 4, 3);
-            patronInformationButton.Name = "patronInformationButton";
-            patronInformationButton.Size = new Size(88, 39);
-            patronInformationButton.TabIndex = 4;
-            patronInformationButton.Text = "Patron Information";
-            patronInformationButton.UseVisualStyleBackColor = true;
-            patronInformationButton.Click += patronInformationButton_Click;
-            // 
-            // statusStrip1
-            // 
-            statusStrip1.Items.AddRange(new ToolStripItem[] { toolStripStatusLabel1 });
-            statusStrip1.Location = new Point(0, 628);
-            statusStrip1.Name = "statusStrip1";
-            statusStrip1.Padding = new Padding(1, 0, 16, 0);
-            statusStrip1.Size = new Size(1224, 22);
-            statusStrip1.TabIndex = 28;
-            statusStrip1.Text = "statusStrip1";
-            // 
-            // toolStripStatusLabel1
-            // 
-            toolStripStatusLabel1.Name = "toolStripStatusLabel1";
-            toolStripStatusLabel1.Size = new Size(88, 17);
-            toolStripStatusLabel1.Text = "Not Connected";
-            // 
-            // splitContainer1
-            // 
+            loginButton.Text = "Login";
+            loginButton.AutoSize = true;
+            loginButton.MinimumSize = new Size(88, 29);
+            loginButton.Margin = new Padding(0, 0, 8, 0);
+            loginButton.TabIndex = 4;
+            loginButton.UseVisualStyleBackColor = true;
+            loginButton.Click += loginButton_Click;
+            connectionLayout.Controls.Add(connectButton, 0, 5);
+            loginLayout.Controls.Add(loginButton, 0, 5);
+            rootLayout.Controls.Add(ribbonLayout, 0, 1);
             splitContainer1.Dock = DockStyle.Fill;
+            splitContainer1.Margin = new Padding(6, 0, 6, 6);
+            splitContainer1.Size = new Size(1268, 576);
+            splitContainer1.Orientation = Orientation.Vertical;
             splitContainer1.FixedPanel = FixedPanel.Panel1;
-            splitContainer1.Location = new Point(0, 0);
-            splitContainer1.Margin = new Padding(4, 3, 4, 3);
-            splitContainer1.Name = "splitContainer1";
-            splitContainer1.Orientation = Orientation.Horizontal;
-            // 
-            // splitContainer1.Panel1
-            // 
-            splitContainer1.Panel1.Controls.Add(btnAcsStatus);
-            splitContainer1.Panel1.Controls.Add(noticeUpdateButton);
-            splitContainer1.Panel1.Controls.Add(feePaidButton);
-            splitContainer1.Panel1.Controls.Add(groupBox4);
-            splitContainer1.Panel1.Controls.Add(label14);
-            splitContainer1.Panel1.Controls.Add(label9);
-            splitContainer1.Panel1.Controls.Add(importSettingsButton);
-            splitContainer1.Panel1.Controls.Add(exportSettingsButton);
-            splitContainer1.Panel1.Controls.Add(exportLogButton);
-            splitContainer1.Panel1.Controls.Add(clearLogButton);
-            splitContainer1.Panel1.Controls.Add(reloadDefaultSettingsButton);
-            splitContainer1.Panel1.Controls.Add(changeDefaultSettingsButton);
-            splitContainer1.Panel1.Controls.Add(groupBox1);
-            splitContainer1.Panel1.Controls.Add(groupBox5);
-            splitContainer1.Panel1.Controls.Add(renewAllButton);
-            splitContainer1.Panel1.Controls.Add(patronInformationButton);
-            splitContainer1.Panel1.Controls.Add(renewButton);
-            splitContainer1.Panel1.Controls.Add(itemInformationButton);
-            splitContainer1.Panel1.Controls.Add(groupBox2);
-            splitContainer1.Panel1.Controls.Add(checkoutButton);
-            splitContainer1.Panel1.Controls.Add(endSessionButton);
-            splitContainer1.Panel1.Controls.Add(patronStatusButton);
-            splitContainer1.Panel1.Controls.Add(groupBox3);
-            splitContainer1.Panel1.Controls.Add(checkInButton);
-            // 
-            // splitContainer1.Panel2
-            // 
-            splitContainer1.Panel2.Controls.Add(logRichTextBox);
-            splitContainer1.Size = new Size(1224, 628);
-            splitContainer1.SplitterDistance = 213;
-            splitContainer1.SplitterWidth = 5;
-            splitContainer1.TabIndex = 1;
-            splitContainer1.TabStop = false;
-            // 
-            // noticeUpdateButton
-            // 
-            noticeUpdateButton.AccessibleName = "Update Notice";
-            noticeUpdateButton.Location = new Point(1015, 159);
-            noticeUpdateButton.Margin = new Padding(4, 3, 4, 3);
-            noticeUpdateButton.Name = "noticeUpdateButton";
-            noticeUpdateButton.Size = new Size(88, 40);
-            noticeUpdateButton.TabIndex = 13;
-            noticeUpdateButton.Text = "Update Notice";
-            noticeUpdateButton.UseVisualStyleBackColor = true;
-            noticeUpdateButton.Click += noticeUpdateButton_Click;
-            // 
-            // feePaidButton
-            // 
-            feePaidButton.AccessibleName = "Fee Paid";
-            feePaidButton.Location = new Point(1110, 25);
-            feePaidButton.Margin = new Padding(4, 3, 4, 3);
-            feePaidButton.Name = "feePaidButton";
-            feePaidButton.Size = new Size(88, 39);
-            feePaidButton.TabIndex = 6;
-            feePaidButton.Text = "Fee Paid";
-            feePaidButton.UseVisualStyleBackColor = true;
-            feePaidButton.Click += feePaidButton_Click;
-            // 
-            // groupBox4
-            // 
-            groupBox4.Controls.Add(amountTextBox);
-            groupBox4.Controls.Add(transactionIdTextBox);
-            groupBox4.Controls.Add(label17);
-            groupBox4.Controls.Add(feeIdentifierTextBox);
-            groupBox4.Controls.Add(label19);
-            groupBox4.Controls.Add(paymentTypeTextBox);
-            groupBox4.Controls.Add(label18);
-            groupBox4.Controls.Add(label16);
-            groupBox4.Controls.Add(feeTypeTextBox);
-            groupBox4.Controls.Add(label15);
-            groupBox4.Location = new Point(702, 10);
-            groupBox4.Margin = new Padding(4, 3, 4, 3);
-            groupBox4.Name = "groupBox4";
-            groupBox4.Padding = new Padding(4, 3, 4, 3);
-            groupBox4.Size = new Size(201, 168);
-            groupBox4.TabIndex = 4;
-            groupBox4.TabStop = false;
-            groupBox4.Text = "Fee Information";
-            // 
-            // amountTextBox
-            // 
-            amountTextBox.AccessibleName = "Payment Amount";
-            amountTextBox.Location = new Point(99, 129);
-            amountTextBox.Margin = new Padding(4, 3, 4, 3);
-            amountTextBox.Name = "amountTextBox";
-            amountTextBox.Size = new Size(94, 23);
-            amountTextBox.TabIndex = 4;
-            // 
-            // transactionIdTextBox
-            // 
-            transactionIdTextBox.AccessibleName = "Transaction ID";
-            transactionIdTextBox.Location = new Point(99, 103);
-            transactionIdTextBox.Margin = new Padding(4, 3, 4, 3);
-            transactionIdTextBox.Name = "transactionIdTextBox";
-            transactionIdTextBox.Size = new Size(94, 23);
-            transactionIdTextBox.TabIndex = 3;
-            // 
-            // label17
-            // 
-            label17.AutoSize = true;
-            label17.Location = new Point(14, 133);
-            label17.Margin = new Padding(4, 0, 4, 0);
-            label17.Name = "label17";
-            label17.Size = new Size(80, 15);
-            label17.TabIndex = 5;
-            label17.Text = "Payment Amt";
-            // 
-            // feeIdentifierTextBox
-            // 
-            feeIdentifierTextBox.AccessibleName = "Fee Identifier";
-            feeIdentifierTextBox.Location = new Point(99, 76);
-            feeIdentifierTextBox.Margin = new Padding(4, 3, 4, 3);
-            feeIdentifierTextBox.Name = "feeIdentifierTextBox";
-            feeIdentifierTextBox.Size = new Size(94, 23);
-            feeIdentifierTextBox.TabIndex = 2;
-            // 
-            // label19
-            // 
-            label19.AutoSize = true;
-            label19.Location = new Point(5, 106);
-            label19.Margin = new Padding(4, 0, 4, 0);
-            label19.Name = "label19";
-            label19.Size = new Size(81, 15);
-            label19.TabIndex = 5;
-            label19.Text = "Transaction ID";
-            // 
-            // paymentTypeTextBox
-            // 
-            paymentTypeTextBox.AccessibleName = "Payment Type";
-            paymentTypeTextBox.Location = new Point(99, 50);
-            paymentTypeTextBox.Margin = new Padding(4, 3, 4, 3);
-            paymentTypeTextBox.Name = "paymentTypeTextBox";
-            paymentTypeTextBox.Size = new Size(94, 23);
-            paymentTypeTextBox.TabIndex = 1;
-            // 
-            // label18
-            // 
-            label18.AutoSize = true;
-            label18.Location = new Point(15, 80);
-            label18.Margin = new Padding(4, 0, 4, 0);
-            label18.Name = "label18";
-            label18.Size = new Size(75, 15);
-            label18.TabIndex = 5;
-            label18.Text = "Fee Identifier";
-            // 
-            // label16
-            // 
-            label16.AutoSize = true;
-            label16.Location = new Point(7, 53);
-            label16.Margin = new Padding(4, 0, 4, 0);
-            label16.Name = "label16";
-            label16.Size = new Size(81, 15);
-            label16.TabIndex = 5;
-            label16.Text = "Payment Type";
-            // 
-            // feeTypeTextBox
-            // 
-            feeTypeTextBox.AccessibleName = "Fee Type";
-            feeTypeTextBox.Location = new Point(99, 22);
-            feeTypeTextBox.Margin = new Padding(4, 3, 4, 3);
-            feeTypeTextBox.Name = "feeTypeTextBox";
-            feeTypeTextBox.Size = new Size(94, 23);
+            splitContainer1.Panel1MinSize = 280;
+            splitContainer1.Panel2MinSize = 440;
+            splitContainer1.SplitterWidth = 6;
+            splitContainer1.SplitterDistance = 312;
+            splitContainer1.TabIndex = 2;
+            workbenchLayout.Dock = DockStyle.Fill;
+            workbenchLayout.Margin = new Padding(0);
+            workbenchLayout.Padding = new Padding(12);
+            workbenchLayout.ColumnCount = 1;
+            workbenchLayout.RowCount = 4;
+            workbenchLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            workbenchLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            workbenchLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            workbenchLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            workbenchLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 44F));
+            workbenchHeading.Text = "Command workbench";
+            workbenchHeading.AutoSize = true;
+            workbenchHeading.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            workbenchHeading.Margin = new Padding(0, 0, 0, 4);
+            workbenchHeading.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold);
+            workbenchHeading.Margin = new Padding(0, 0, 0, 10);
+            workbenchLayout.Controls.Add(workbenchHeading, 0, 0);
+            commandComboBox.AccessibleName = "SIP Command";
+            commandComboBox.Dock = DockStyle.Fill;
+            commandComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            commandComboBox.Margin = new Padding(0, 0, 0, 12);
+            commandComboBox.TabIndex = 0;
+            commandComboBox.Items.AddRange(new object[] { "Checkout", "Checkin", "Renew", "Renew all", "Item information", "Patron information", "Patron status", "End session", "Fee paid", "Notice update", "Login", "ACS Status" });
+            commandComboBox.SelectedIndexChanged += commandComboBox_SelectedIndexChanged;
+            commandComboBox.SelectedIndex = 0;
+            workbenchLayout.Controls.Add(commandComboBox, 0, 1);
+            commandDetailsPanel.Dock = DockStyle.Fill;
+            commandDetailsPanel.AutoScroll = true;
+            commandDetailsPanel.Margin = new Padding(0);
+            commandDetailsPanel.TabIndex = 1;
+            commandDetailsLayout.Dock = DockStyle.Fill;
+            commandDetailsLayout.Margin = new Padding(0);
+            commandDetailsLayout.Padding = new Padding(0);
+            commandDetailsLayout.ColumnCount = 1;
+            commandDetailsLayout.RowCount = 5;
+            commandDetailsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            commandDetailsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            commandDetailsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            commandDetailsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            commandDetailsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            commandDetailsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            commandDetailsLayout.Dock = DockStyle.Top;
+            commandDetailsLayout.AutoSize = true;
+            commandDetailsLayout.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            selectedCommandLabel.Text = "Checkout";
+            selectedCommandLabel.AutoSize = true;
+            selectedCommandLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            selectedCommandLabel.Margin = new Padding(0, 0, 0, 4);
+            selectedCommandLabel.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold);
+            selectedCommandLabel.Margin = new Padding(0, 0, 0, 7);
+            commandHintLabel.Text = "Uses the shared patron and item values.";
+            commandHintLabel.AutoSize = true;
+            commandHintLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            commandHintLabel.Margin = new Padding(0, 0, 0, 4);
+            commandHintLabel.Dock = DockStyle.Fill;
+            commandHintLabel.Margin = new Padding(0, 0, 0, 16);
+            commandDetailsLayout.Controls.Add(selectedCommandLabel, 0, 0);
+            commandDetailsLayout.Controls.Add(commandHintLabel, 0, 1);
+            checkoutFieldsLayout.Dock = DockStyle.Top;
+            checkoutFieldsLayout.AutoSize = true;
+            checkoutFieldsLayout.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            checkoutFieldsLayout.Margin = new Padding(0);
+            checkoutFieldsLayout.ColumnCount = 2;
+            checkoutFieldsLayout.RowCount = 10;
+            checkoutFieldsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            checkoutFieldsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            checkoutFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            checkoutFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            checkoutFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            checkoutFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            checkoutFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            checkoutFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            checkoutFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            checkoutFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            checkoutFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            checkoutFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            checkoutRenewalCheckBox.Text = "Allow renewals";
+            checkoutRenewalCheckBox.AccessibleName = "Checkout renewal policy";
+            checkoutRenewalCheckBox.AutoSize = true;
+            checkoutRenewalCheckBox.Anchor = AnchorStyles.Left;
+            checkoutRenewalCheckBox.Margin = new Padding(0, 0, 8, 12);
+            checkoutRenewalCheckBox.TabIndex = 0;
+            checkoutToolTip.SetToolTip(checkoutRenewalCheckBox, "Send renewal policy Y when checked, N when unchecked.");
+            checkoutNoBlockCheckBox.Text = "No block";
+            checkoutNoBlockCheckBox.AccessibleName = "Checkout no block";
+            checkoutNoBlockCheckBox.AutoSize = true;
+            checkoutNoBlockCheckBox.Anchor = AnchorStyles.Left;
+            checkoutNoBlockCheckBox.Margin = new Padding(0, 0, 0, 12);
+            checkoutNoBlockCheckBox.TabIndex = 1;
+            checkoutToolTip.SetToolTip(checkoutNoBlockCheckBox, "Send no block Y for an already completed offline checkout; unchecked sends N.");
+            checkoutFieldsLayout.Controls.Add(checkoutRenewalCheckBox, 0, 0);
+            checkoutFieldsLayout.Controls.Add(checkoutNoBlockCheckBox, 1, 0);
+            checkoutDueDateLabel.Text = "No-block due date/time";
+            checkoutDueDateLabel.AutoSize = true;
+            checkoutDueDateLabel.Margin = new Padding(0, 0, 0, 4);
+            checkoutDueDatePicker.AccessibleName = "Checkout no-block due date and time";
+            checkoutDueDatePicker.Dock = DockStyle.Fill;
+            checkoutDueDatePicker.Margin = new Padding(0, 0, 0, 12);
+            checkoutDueDatePicker.TabIndex = 2;
+            checkoutToolTip.SetToolTip(checkoutDueDatePicker, "Check to send a no-block due date and time. Leave unchecked to send a blank date.");
+            checkoutFieldsLayout.Controls.Add(checkoutDueDateLabel, 0, 1);
+            checkoutFieldsLayout.SetColumnSpan(checkoutDueDateLabel, 2);
+            checkoutFieldsLayout.Controls.Add(checkoutDueDatePicker, 0, 2);
+            checkoutFieldsLayout.SetColumnSpan(checkoutDueDatePicker, 2);
+            checkoutItemPropertiesLabel.Text = "Item properties (CH)";
+            checkoutItemPropertiesLabel.AutoSize = true;
+            checkoutItemPropertiesLabel.Margin = new Padding(0, 0, 0, 4);
+            checkoutItemPropertiesTextBox.AccessibleName = "Checkout item properties CH";
+            checkoutItemPropertiesTextBox.Dock = DockStyle.Fill;
+            checkoutItemPropertiesTextBox.Margin = new Padding(0, 0, 0, 12);
+            checkoutItemPropertiesTextBox.TabIndex = 3;
+            checkoutToolTip.SetToolTip(checkoutItemPropertiesTextBox, "Leave blank to omit the CH field.");
+            checkoutFieldsLayout.Controls.Add(checkoutItemPropertiesLabel, 0, 3);
+            checkoutFieldsLayout.SetColumnSpan(checkoutItemPropertiesLabel, 2);
+            checkoutFieldsLayout.Controls.Add(checkoutItemPropertiesTextBox, 0, 4);
+            checkoutFieldsLayout.SetColumnSpan(checkoutItemPropertiesTextBox, 2);
+            checkoutTerminalPasswordLabel.Text = "Terminal password (AC)";
+            checkoutTerminalPasswordLabel.AutoSize = true;
+            checkoutTerminalPasswordLabel.Margin = new Padding(0, 0, 0, 4);
+            checkoutTerminalPasswordTextBox.AccessibleName = "Checkout terminal password AC";
+            checkoutTerminalPasswordTextBox.Dock = DockStyle.Fill;
+            checkoutTerminalPasswordTextBox.Margin = new Padding(0, 0, 0, 12);
+            checkoutTerminalPasswordTextBox.TabIndex = 4;
+            checkoutToolTip.SetToolTip(checkoutTerminalPasswordTextBox, "Checkout terminal password (AC), separate from the login password (CO) and patron PIN (AD).");
+            checkoutFieldsLayout.Controls.Add(checkoutTerminalPasswordLabel, 0, 5);
+            checkoutFieldsLayout.SetColumnSpan(checkoutTerminalPasswordLabel, 2);
+            checkoutFieldsLayout.Controls.Add(checkoutTerminalPasswordTextBox, 0, 6);
+            checkoutFieldsLayout.SetColumnSpan(checkoutTerminalPasswordTextBox, 2);
+            checkoutFeeAcknowledgedLabel.Text = "Fee acknowledged (BO)";
+            checkoutFeeAcknowledgedLabel.AutoSize = true;
+            checkoutFeeAcknowledgedLabel.Dock = DockStyle.Fill;
+            checkoutFeeAcknowledgedLabel.Margin = new Padding(0, 0, 8, 4);
+            checkoutFeeAcknowledgedComboBox.AccessibleName = "Checkout fee acknowledged BO";
+            checkoutFeeAcknowledgedComboBox.Dock = DockStyle.Fill;
+            checkoutFeeAcknowledgedComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            checkoutFeeAcknowledgedComboBox.Items.AddRange(new object[] { "Omit field", "No (N)", "Yes (Y)" });
+            checkoutFeeAcknowledgedComboBox.Margin = new Padding(0, 0, 8, 0);
+            checkoutFeeAcknowledgedComboBox.TabIndex = 5;
+            checkoutToolTip.SetToolTip(checkoutFeeAcknowledgedComboBox, "Choose whether to acknowledge a checkout fee, or omit BO entirely.");
+            checkoutCancelLabel.Text = "Cancel (BI)";
+            checkoutCancelLabel.AutoSize = true;
+            checkoutCancelLabel.Dock = DockStyle.Fill;
+            checkoutCancelLabel.Margin = new Padding(0, 0, 0, 4);
+            checkoutCancelComboBox.AccessibleName = "Checkout cancel BI";
+            checkoutCancelComboBox.Dock = DockStyle.Fill;
+            checkoutCancelComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            checkoutCancelComboBox.Items.AddRange(new object[] { "Omit field", "No (N)", "Yes (Y)" });
+            checkoutCancelComboBox.Margin = new Padding(0);
+            checkoutCancelComboBox.TabIndex = 6;
+            checkoutToolTip.SetToolTip(checkoutCancelComboBox, "Send BI Y to cancel a checkout, N explicitly, or omit the field.");
+            checkoutFieldsLayout.Controls.Add(checkoutFeeAcknowledgedLabel, 0, 7);
+            checkoutFieldsLayout.Controls.Add(checkoutCancelLabel, 1, 7);
+            checkoutFieldsLayout.Controls.Add(checkoutFeeAcknowledgedComboBox, 0, 8);
+            checkoutFieldsLayout.Controls.Add(checkoutCancelComboBox, 1, 8);
+            resetCheckoutOptionsButton.Text = "Reset checkout options";
+            resetCheckoutOptionsButton.AutoSize = true;
+            resetCheckoutOptionsButton.MinimumSize = new Size(88, 29);
+            resetCheckoutOptionsButton.Anchor = AnchorStyles.Left;
+            resetCheckoutOptionsButton.Margin = new Padding(0, 12, 0, 0);
+            resetCheckoutOptionsButton.TabIndex = 7;
+            resetCheckoutOptionsButton.UseVisualStyleBackColor = true;
+            resetCheckoutOptionsButton.Click += resetCheckoutOptionsButton_Click;
+            checkoutFieldsLayout.Controls.Add(resetCheckoutOptionsButton, 0, 9);
+            checkoutFieldsLayout.SetColumnSpan(resetCheckoutOptionsButton, 2);
+            commandDetailsLayout.Controls.Add(checkoutFieldsLayout, 0, 2);
+            patronQueryLayout.Dock = DockStyle.Fill;
+            patronQueryLayout.Margin = new Padding(0);
+            patronQueryLayout.Padding = new Padding(0);
+            patronQueryLayout.ColumnCount = 2;
+            patronQueryLayout.RowCount = 4;
+            patronQueryLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            patronQueryLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            patronQueryLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            patronQueryLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            patronQueryLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            patronQueryLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            patronQueryLayout.Dock = DockStyle.Top;
+            patronQueryLayout.AutoSize = true;
+            patronQueryLayout.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            patronQueryLayout.Visible = false;
+            summaryLabel.Text = "Summary";
+            summaryLabel.AutoSize = true;
+            summaryLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            summaryLabel.Margin = new Padding(0, 0, 0, 4);
+            patronSummaryComboBox.AccessibleName = "Patron Information Summary";
+            patronSummaryComboBox.Dock = DockStyle.Fill;
+            patronSummaryComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            patronSummaryComboBox.Margin = new Padding(0, 0, 0, 12);
+            patronSummaryComboBox.TabIndex = 0;
+            patronSummaryComboBox.Items.AddRange(new object[] { "None", "Hold items", "Overdue items", "Charged items", "Fine items", "Recall items", "Unavailable holds" });
+            patronSummaryComboBox.SelectedIndexChanged += patronSummaryComboBox_SelectedIndexChanged;
+            patronQueryLayout.Controls.Add(summaryLabel, 0, 0);
+            patronQueryLayout.SetColumnSpan(summaryLabel, 2);
+            patronQueryLayout.Controls.Add(patronSummaryComboBox, 0, 1);
+            patronQueryLayout.SetColumnSpan(patronSummaryComboBox, 2);
+            startItemLabel.Text = "Start item (BP)";
+            startItemLabel.AutoSize = true;
+            startItemLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            startItemLabel.Margin = new Padding(0, 0, 0, 4);
+            bpTextBox.AccessibleName = "Start item (BP)";
+            bpTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            bpTextBox.Margin = new Padding(0, 0, 8, 8);
+            bpTextBox.TabIndex = 1;
+            bpTextBox.Text = "1";
+            patronQueryLayout.Controls.Add(startItemLabel, 0, 2);
+            patronQueryLayout.Controls.Add(bpTextBox, 0, 3);
+            endItemLabel.Text = "End item (BQ)";
+            endItemLabel.AutoSize = true;
+            endItemLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            endItemLabel.Margin = new Padding(0, 0, 0, 4);
+            bqTextBox.AccessibleName = "End item (BQ)";
+            bqTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            bqTextBox.Margin = new Padding(0, 0, 8, 8);
+            bqTextBox.TabIndex = 2;
+            bqTextBox.Text = "5";
+            patronQueryLayout.Controls.Add(endItemLabel, 1, 2);
+            patronQueryLayout.Controls.Add(bqTextBox, 1, 3);
+            patronSummaryComboBox.SelectedIndex = 0;
+            commandDetailsLayout.Controls.Add(patronQueryLayout, 0, 3);
+            feeFieldsLayout.Dock = DockStyle.Fill;
+            feeFieldsLayout.Margin = new Padding(0);
+            feeFieldsLayout.Padding = new Padding(0);
+            feeFieldsLayout.ColumnCount = 1;
+            feeFieldsLayout.RowCount = 10;
+            feeFieldsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            feeFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            feeFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            feeFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            feeFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            feeFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            feeFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            feeFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            feeFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            feeFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            feeFieldsLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            feeFieldsLayout.Dock = DockStyle.Top;
+            feeFieldsLayout.AutoSize = true;
+            feeFieldsLayout.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            feeFieldsLayout.Visible = false;
+            feeTypeLabel.Text = "Fee type";
+            feeTypeLabel.AutoSize = true;
+            feeTypeLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            feeTypeLabel.Margin = new Padding(0, 0, 0, 4);
+            feeTypeTextBox.AccessibleName = "Fee type";
+            feeTypeTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            feeTypeTextBox.Margin = new Padding(0, 0, 8, 8);
             feeTypeTextBox.TabIndex = 0;
-            // 
-            // label15
-            // 
-            label15.AutoSize = true;
-            label15.Location = new Point(34, 25);
-            label15.Margin = new Padding(4, 0, 4, 0);
-            label15.Name = "label15";
-            label15.Size = new Size(52, 15);
-            label15.TabIndex = 5;
-            label15.Text = "Fee Type";
-            // 
-            // label14
-            // 
-            label14.AutoSize = true;
-            label14.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
-            label14.Location = new Point(598, 181);
-            label14.Margin = new Padding(4, 0, 4, 0);
-            label14.Name = "label14";
-            label14.Size = new Size(15, 20);
-            label14.TabIndex = 37;
-            label14.Text = "|";
-            // 
-            // label9
-            // 
-            label9.AutoSize = true;
-            label9.Font = new Font("Microsoft Sans Serif", 12F, FontStyle.Bold);
-            label9.Location = new Point(226, 181);
-            label9.Margin = new Padding(4, 0, 4, 0);
-            label9.Name = "label9";
-            label9.Size = new Size(15, 20);
-            label9.TabIndex = 36;
-            label9.Text = "|";
-            // 
-            // importSettingsButton
-            // 
-            importSettingsButton.AccessibleName = "Import Settings";
-            importSettingsButton.Location = new Point(737, 180);
-            importSettingsButton.Margin = new Padding(4, 3, 4, 3);
-            importSettingsButton.Name = "importSettingsButton";
-            importSettingsButton.Size = new Size(112, 27);
-            importSettingsButton.TabIndex = 19;
-            importSettingsButton.Text = "Import Settings";
-            importSettingsButton.UseVisualStyleBackColor = true;
-            importSettingsButton.Click += importSettingsButton_Click;
-            // 
-            // exportSettingsButton
-            // 
-            exportSettingsButton.AccessibleName = "Export Settings";
-            exportSettingsButton.Location = new Point(618, 180);
-            exportSettingsButton.Margin = new Padding(4, 3, 4, 3);
-            exportSettingsButton.Name = "exportSettingsButton";
-            exportSettingsButton.Size = new Size(112, 27);
-            exportSettingsButton.TabIndex = 18;
-            exportSettingsButton.Text = "Export Settings";
-            exportSettingsButton.UseVisualStyleBackColor = true;
-            exportSettingsButton.Click += exportSettingsButton_Click;
-            // 
-            // exportLogButton
-            // 
-            exportLogButton.AccessibleName = "Export Log";
-            exportLogButton.Location = new Point(125, 180);
-            exportLogButton.Margin = new Padding(4, 3, 4, 3);
-            exportLogButton.Name = "exportLogButton";
-            exportLogButton.Size = new Size(99, 27);
-            exportLogButton.TabIndex = 15;
-            exportLogButton.Text = "Export Log";
-            exportLogButton.UseVisualStyleBackColor = true;
-            exportLogButton.Click += exportLogButton_Click;
-            // 
-            // clearLogButton
-            // 
-            clearLogButton.AccessibleName = "Clear Log";
-            clearLogButton.Location = new Point(14, 180);
-            clearLogButton.Margin = new Padding(4, 3, 4, 3);
-            clearLogButton.Name = "clearLogButton";
-            clearLogButton.Size = new Size(99, 27);
-            clearLogButton.TabIndex = 14;
-            clearLogButton.Text = "Clear Log";
+            feeFieldsLayout.Controls.Add(feeTypeLabel, 0, 0);
+            feeFieldsLayout.Controls.Add(feeTypeTextBox, 0, 1);
+            paymentTypeLabel.Text = "Payment type";
+            paymentTypeLabel.AutoSize = true;
+            paymentTypeLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            paymentTypeLabel.Margin = new Padding(0, 0, 0, 4);
+            paymentTypeTextBox.AccessibleName = "Payment type";
+            paymentTypeTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            paymentTypeTextBox.Margin = new Padding(0, 0, 8, 8);
+            paymentTypeTextBox.TabIndex = 1;
+            feeFieldsLayout.Controls.Add(paymentTypeLabel, 0, 2);
+            feeFieldsLayout.Controls.Add(paymentTypeTextBox, 0, 3);
+            amountLabel.Text = "Payment amount";
+            amountLabel.AutoSize = true;
+            amountLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            amountLabel.Margin = new Padding(0, 0, 0, 4);
+            amountTextBox.AccessibleName = "Payment amount";
+            amountTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            amountTextBox.Margin = new Padding(0, 0, 8, 8);
+            amountTextBox.TabIndex = 2;
+            feeFieldsLayout.Controls.Add(amountLabel, 0, 4);
+            feeFieldsLayout.Controls.Add(amountTextBox, 0, 5);
+            feeIdentifierLabel.Text = "Fee identifier (CG)";
+            feeIdentifierLabel.AutoSize = true;
+            feeIdentifierLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            feeIdentifierLabel.Margin = new Padding(0, 0, 0, 4);
+            feeIdentifierTextBox.AccessibleName = "Fee identifier (CG)";
+            feeIdentifierTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            feeIdentifierTextBox.Margin = new Padding(0, 0, 8, 8);
+            feeIdentifierTextBox.TabIndex = 3;
+            feeFieldsLayout.Controls.Add(feeIdentifierLabel, 0, 6);
+            feeFieldsLayout.Controls.Add(feeIdentifierTextBox, 0, 7);
+            transactionIdLabel.Text = "Transaction ID (BK)";
+            transactionIdLabel.AutoSize = true;
+            transactionIdLabel.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            transactionIdLabel.Margin = new Padding(0, 0, 0, 4);
+            transactionIdTextBox.AccessibleName = "Transaction ID (BK)";
+            transactionIdTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+            transactionIdTextBox.Margin = new Padding(0, 0, 8, 8);
+            transactionIdTextBox.TabIndex = 4;
+            feeFieldsLayout.Controls.Add(transactionIdLabel, 0, 8);
+            feeFieldsLayout.Controls.Add(transactionIdTextBox, 0, 9);
+            commandDetailsLayout.Controls.Add(feeFieldsLayout, 0, 4);
+            commandDetailsPanel.Controls.Add(commandDetailsLayout);
+            workbenchLayout.Controls.Add(commandDetailsPanel, 0, 2);
+            executeCommandButton.Text = "Execute Checkout";
+            executeCommandButton.AutoSize = true;
+            executeCommandButton.MinimumSize = new Size(88, 29);
+            executeCommandButton.Margin = new Padding(0, 0, 8, 0);
+            executeCommandButton.TabIndex = 2;
+            executeCommandButton.UseVisualStyleBackColor = true;
+            executeCommandButton.Click += executeCommandButton_Click;
+            executeCommandButton.Dock = DockStyle.Fill;
+            executeCommandButton.Margin = new Padding(0, 10, 0, 0);
+            workbenchLayout.Controls.Add(executeCommandButton, 0, 3);
+            splitContainer1.Panel1.Controls.Add(workbenchLayout);
+            logLayout.Dock = DockStyle.Fill;
+            logLayout.Margin = new Padding(0);
+            logLayout.Padding = new Padding(1);
+            logLayout.ColumnCount = 1;
+            logLayout.RowCount = 2;
+            logLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            logLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            logLayout.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            logHeaderLayout.Dock = DockStyle.Fill;
+            logHeaderLayout.Margin = new Padding(0);
+            logHeaderLayout.Padding = new Padding(10, 7, 4, 7);
+            logHeaderLayout.ColumnCount = 2;
+            logHeaderLayout.RowCount = 1;
+            logHeaderLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            logHeaderLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize, 0F));
+            logHeaderLayout.RowStyles.Add(new RowStyle(SizeType.AutoSize, 0F));
+            logHeaderLayout.AutoSize = true;
+            logHeaderLayout.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            logHeading.Text = "Sent / received messages";
+            logHeading.AutoSize = true;
+            logHeading.Anchor = AnchorStyles.Left | AnchorStyles.Bottom;
+            logHeading.Margin = new Padding(0, 0, 0, 4);
+            logHeading.Font = new Font("Segoe UI", 9.75F, FontStyle.Bold);
+            logHeading.Anchor = AnchorStyles.Left;
+            logHeading.Margin = new Padding(0);
+            logHeaderLayout.Controls.Add(logHeading, 0, 0);
+            logActionsPanel.AutoSize = true;
+            logActionsPanel.AutoSizeMode = AutoSizeMode.GrowAndShrink;
+            logActionsPanel.Dock = DockStyle.Fill;
+            logActionsPanel.WrapContents = false;
+            logActionsPanel.Margin = new Padding(0);
+            clearLogButton.Text = "Clear log";
+            clearLogButton.AutoSize = true;
+            clearLogButton.MinimumSize = new Size(88, 29);
+            clearLogButton.Margin = new Padding(0, 0, 8, 0);
+            clearLogButton.TabIndex = 0;
             clearLogButton.UseVisualStyleBackColor = true;
             clearLogButton.Click += clearLogButton_Click;
-            // 
-            // reloadDefaultSettingsButton
-            // 
-            reloadDefaultSettingsButton.AccessibleName = "Reload Default Values";
-            reloadDefaultSettingsButton.Location = new Point(425, 180);
-            reloadDefaultSettingsButton.Margin = new Padding(4, 3, 4, 3);
-            reloadDefaultSettingsButton.Name = "reloadDefaultSettingsButton";
-            reloadDefaultSettingsButton.Size = new Size(172, 27);
-            reloadDefaultSettingsButton.TabIndex = 17;
-            reloadDefaultSettingsButton.Text = "Reload Default Values";
-            reloadDefaultSettingsButton.UseVisualStyleBackColor = true;
-            reloadDefaultSettingsButton.Click += reloadDefaultSettingsButton_Click;
-            // 
-            // changeDefaultSettingsButton
-            // 
-            changeDefaultSettingsButton.AccessibleName = "Change Default Settings";
-            changeDefaultSettingsButton.Location = new Point(246, 180);
-            changeDefaultSettingsButton.Margin = new Padding(4, 3, 4, 3);
-            changeDefaultSettingsButton.Name = "changeDefaultSettingsButton";
-            changeDefaultSettingsButton.Size = new Size(172, 27);
-            changeDefaultSettingsButton.TabIndex = 16;
-            changeDefaultSettingsButton.Text = "Change Default Settings";
-            changeDefaultSettingsButton.UseVisualStyleBackColor = true;
-            changeDefaultSettingsButton.Click += changeDefaultSettingsButton_Click;
-            // 
-            // logRichTextBox
-            // 
-            logRichTextBox.BackColor = Color.White;
+            exportLogButton.Text = "Export log…";
+            exportLogButton.AutoSize = true;
+            exportLogButton.MinimumSize = new Size(88, 29);
+            exportLogButton.Margin = new Padding(0, 0, 8, 0);
+            exportLogButton.TabIndex = 1;
+            exportLogButton.UseVisualStyleBackColor = true;
+            exportLogButton.Click += exportLogButton_Click;
+            logActionsPanel.Controls.Add(clearLogButton);
+            logActionsPanel.Controls.Add(exportLogButton);
+            logHeaderLayout.Controls.Add(logActionsPanel, 1, 0);
+            logLayout.Controls.Add(logHeaderLayout, 0, 0);
+            logRichTextBox.AccessibleName = "Sent and Received SIP Message Log";
+            logRichTextBox.BackColor = SystemColors.Window;
+            logRichTextBox.BorderStyle = BorderStyle.None;
             logRichTextBox.DetectUrls = false;
             logRichTextBox.Dock = DockStyle.Fill;
-            logRichTextBox.Font = new Font("Microsoft Sans Serif", 9.75F, FontStyle.Bold);
-            logRichTextBox.Location = new Point(0, 0);
-            logRichTextBox.Margin = new Padding(4, 3, 4, 3);
-            logRichTextBox.Name = "logRichTextBox";
+            logRichTextBox.Font = new Font("Consolas", 10F);
             logRichTextBox.ReadOnly = true;
-            logRichTextBox.Size = new Size(1224, 410);
+            logRichTextBox.HideSelection = false;
+            logRichTextBox.Margin = new Padding(0);
             logRichTextBox.TabIndex = 1;
-            logRichTextBox.TabStop = false;
-            logRichTextBox.Text = "";
-            //
-            // btnAcsStatus
-            //
-            btnAcsStatus.AccessibleName = "ACS Status";
-            btnAcsStatus.Location = new Point(915, 159);
-            btnAcsStatus.Margin = new Padding(4, 3, 4, 3);
-            btnAcsStatus.Name = "btnAcsStatus";
-            btnAcsStatus.Size = new Size(88, 40);
-            btnAcsStatus.TabIndex = 18;
-            btnAcsStatus.Text = "ACS Status";
-            btnAcsStatus.UseVisualStyleBackColor = true;
-            btnAcsStatus.Click += btnAcsStatus_Click;
-            //
-            // MainForm
-            // 
+            logRichTextBox.WordWrap = true;
+            logLayout.Controls.Add(logRichTextBox, 0, 1);
+            splitContainer1.Panel2.Controls.Add(logLayout);
+            rootLayout.Controls.Add(splitContainer1, 0, 2);
+            toolStripStatusLabel1.Text = "Not connected";
+            toolStripStatusLabel1.Spring = true;
+            toolStripStatusLabel1.TextAlign = ContentAlignment.MiddleLeft;
+            statusStrip1.Items.Add(toolStripStatusLabel1);
+            statusStrip1.SizingGrip = false;
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(1224, 650);
-            Controls.Add(splitContainer1);
+            Font = new Font("Segoe UI", 9F);
+            ClientSize = new Size(1280, 820);
+            MinimumSize = new Size(1060, 720);
+            StartPosition = FormStartPosition.CenterScreen;
+            MainMenuStrip = appMenuStrip;
+            Controls.Add(rootLayout);
             Controls.Add(statusStrip1);
             Icon = (Icon)resources.GetObject("$this.Icon");
-            Margin = new Padding(4, 3, 4, 3);
             Name = "MainForm";
             Text = "SIP Testing Tool";
             Load += MainForm_Load;
-            groupBox1.ResumeLayout(false);
-            groupBox1.PerformLayout();
-            patronInformationContextMenu.ResumeLayout(false);
-            groupBox5.ResumeLayout(false);
-            groupBox5.PerformLayout();
-            groupBox2.ResumeLayout(false);
-            groupBox2.PerformLayout();
-            groupBox3.ResumeLayout(false);
-            groupBox3.PerformLayout();
             statusStrip1.ResumeLayout(false);
             statusStrip1.PerformLayout();
+            logActionsPanel.ResumeLayout(false);
+            logActionsPanel.PerformLayout();
+            logHeaderLayout.ResumeLayout(false);
+            logHeaderLayout.PerformLayout();
+            logLayout.ResumeLayout(false);
+            logLayout.PerformLayout();
+            feeFieldsLayout.ResumeLayout(false);
+            feeFieldsLayout.PerformLayout();
+            patronQueryLayout.ResumeLayout(false);
+            patronQueryLayout.PerformLayout();
+            checkoutFieldsLayout.ResumeLayout(false);
+            checkoutFieldsLayout.PerformLayout();
+            commandDetailsLayout.ResumeLayout(false);
+            commandDetailsLayout.PerformLayout();
+            commandDetailsPanel.ResumeLayout(false);
+            commandDetailsPanel.PerformLayout();
+            workbenchLayout.ResumeLayout(false);
+            workbenchLayout.PerformLayout();
+            itemLayout.ResumeLayout(false);
+            itemLayout.PerformLayout();
+            patronLayout.ResumeLayout(false);
+            patronLayout.PerformLayout();
+            loginLayout.ResumeLayout(false);
+            loginLayout.PerformLayout();
+            connectionLayout.ResumeLayout(false);
+            connectionLayout.PerformLayout();
+            ribbonLayout.ResumeLayout(false);
+            ribbonLayout.PerformLayout();
+            appMenuStrip.ResumeLayout(false);
+            appMenuStrip.PerformLayout();
+            rootLayout.ResumeLayout(false);
+            rootLayout.PerformLayout();
             splitContainer1.Panel1.ResumeLayout(false);
-            splitContainer1.Panel1.PerformLayout();
             splitContainer1.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)splitContainer1).EndInit();
             splitContainer1.ResumeLayout(false);
-            groupBox4.ResumeLayout(false);
-            groupBox4.PerformLayout();
             ResumeLayout(false);
             PerformLayout();
         }
 
         #endregion
 
-        private System.Windows.Forms.TextBox usernameTextBox;
-        private System.Windows.Forms.TextBox passwordTextBox;
-        private System.Windows.Forms.Label label1;
-        private System.Windows.Forms.Label label2;
-        private System.Windows.Forms.Button loginButton;
-        private System.Windows.Forms.TextBox serverTextBox;
-        private System.Windows.Forms.TextBox portTextBox;
-        private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.Label label7;
-        private System.Windows.Forms.ContextMenuStrip patronInformationContextMenu;
-        private System.Windows.Forms.ToolStripMenuItem noneMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem holdItemsMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem overdueItemsMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem chargedItemsMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem fineItemsMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem recallItemsMenuItem;
-        private System.Windows.Forms.ToolStripMenuItem unavailableHoldsMenuItem;
-        private System.Windows.Forms.GroupBox groupBox5;
-        private System.Windows.Forms.Button renewAllButton;
-        private System.Windows.Forms.Button renewButton;
-        private System.Windows.Forms.GroupBox groupBox2;
-        private System.Windows.Forms.TextBox patronBarcodeTextBox;
-        private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.Label label6;
-        private System.Windows.Forms.TextBox patronPinTextBox;
-        private System.Windows.Forms.Button checkoutButton;
-        private System.Windows.Forms.Button patronStatusButton;
-        private System.Windows.Forms.Button checkInButton;
-        private System.Windows.Forms.GroupBox groupBox3;
-        private System.Windows.Forms.Label label8;
-        private System.Windows.Forms.TextBox itemBarcodeTextBox;
-        private System.Windows.Forms.Button endSessionButton;
-        private System.Windows.Forms.Button itemInformationButton;
-        private System.Windows.Forms.Button patronInformationButton;
-        private System.Windows.Forms.Button connectButton;
-        private System.Windows.Forms.TextBox aoTextBox;
-        private System.Windows.Forms.Label label10;
-        private System.Windows.Forms.Label label11;
-        private System.Windows.Forms.TextBox apTextBox;
-        private System.Windows.Forms.StatusStrip statusStrip1;
-        private System.Windows.Forms.ToolStripStatusLabel toolStripStatusLabel1;
-        private System.Windows.Forms.SplitContainer splitContainer1;
-        private System.Windows.Forms.ComboBox vendorProfileComboBox;
-        private System.Windows.Forms.Button changeDefaultSettingsButton;
-        private System.Windows.Forms.Button reloadDefaultSettingsButton;
-        private System.Windows.Forms.RichTextBox logRichTextBox;
-        private System.Windows.Forms.Button clearLogButton;
-        private System.Windows.Forms.TextBox bpTextBox;
-        private System.Windows.Forms.Label label13;
-        private System.Windows.Forms.Label label12;
-        private System.Windows.Forms.TextBox bqTextBox;
-        private System.Windows.Forms.Button exportLogButton;
-        private System.Windows.Forms.Button exportSettingsButton;
-        private System.Windows.Forms.Button importSettingsButton;
-        private System.Windows.Forms.Label label14;
-        private System.Windows.Forms.Label label9;
-        private System.Windows.Forms.Button feePaidButton;
-        private System.Windows.Forms.GroupBox groupBox4;
-        private System.Windows.Forms.TextBox transactionIdTextBox;
-        private System.Windows.Forms.TextBox feeIdentifierTextBox;
-        private System.Windows.Forms.Label label19;
-        private System.Windows.Forms.TextBox paymentTypeTextBox;
-        private System.Windows.Forms.Label label18;
-        private System.Windows.Forms.Label label16;
-        private System.Windows.Forms.TextBox feeTypeTextBox;
-        private System.Windows.Forms.Label label15;
-        private System.Windows.Forms.TextBox amountTextBox;
-        private System.Windows.Forms.Label label17;
-        private System.Windows.Forms.TextBox locationCodeTextBox;
-        private System.Windows.Forms.Label label20;
-        private System.Windows.Forms.Button noticeUpdateButton;
-        private System.Windows.Forms.Button btnAcsStatus;
+        private TableLayoutPanel rootLayout;
+        private MenuStrip appMenuStrip;
+        private ToolStripMenuItem settingsMenuItem;
+        private ToolStripMenuItem viewMenuItem;
+        private ToolStripMenuItem darkModeMenuItem;
+        private ToolStripMenuItem importSettingsMenuItem;
+        private ToolStripMenuItem exportSettingsMenuItem;
+        private ToolStripMenuItem changeDefaultSettingsMenuItem;
+        private ToolStripMenuItem reloadDefaultSettingsMenuItem;
+        private TableLayoutPanel ribbonLayout;
+        private TableLayoutPanel connectionLayout;
+        private Label connectionLayoutHeading;
+        private TableLayoutPanel loginLayout;
+        private Label loginLayoutHeading;
+        private TableLayoutPanel patronLayout;
+        private Label patronLayoutHeading;
+        private TableLayoutPanel itemLayout;
+        private Label itemLayoutHeading;
+        private Label serverLabel;
+        private TextBox serverTextBox;
+        private Label portLabel;
+        private TextBox portTextBox;
+        private Label institutionLabel;
+        private TextBox aoTextBox;
+        private Label terminalLabel;
+        private TextBox apTextBox;
+        private Label usernameLabel;
+        private TextBox usernameTextBox;
+        private Label passwordLabel;
+        private TextBox passwordTextBox;
+        private Label locationLabel;
+        private TextBox locationCodeTextBox;
+        private Label patronBarcodeLabel;
+        private TextBox patronBarcodeTextBox;
+        private Label patronPinLabel;
+        private TextBox patronPinTextBox;
+        private Label itemBarcodeLabel;
+        private TextBox itemBarcodeTextBox;
+        private Label vendorProfileLabel;
+        private ComboBox vendorProfileComboBox;
+        private Button connectButton;
+        private Button loginButton;
+        private SplitContainer splitContainer1;
+        private TableLayoutPanel workbenchLayout;
+        private Label workbenchHeading;
+        private ComboBox commandComboBox;
+        private Panel commandDetailsPanel;
+        private TableLayoutPanel commandDetailsLayout;
+        private Label selectedCommandLabel;
+        private Label commandHintLabel;
+        private TableLayoutPanel checkoutFieldsLayout;
+        private CheckBox checkoutRenewalCheckBox;
+        private CheckBox checkoutNoBlockCheckBox;
+        private Label checkoutDueDateLabel;
+        private Helpers.ThemedDateTimePicker checkoutDueDatePicker;
+        private Label checkoutItemPropertiesLabel;
+        private TextBox checkoutItemPropertiesTextBox;
+        private Label checkoutTerminalPasswordLabel;
+        private TextBox checkoutTerminalPasswordTextBox;
+        private Label checkoutFeeAcknowledgedLabel;
+        private ComboBox checkoutFeeAcknowledgedComboBox;
+        private Label checkoutCancelLabel;
+        private ComboBox checkoutCancelComboBox;
+        private Button resetCheckoutOptionsButton;
+        private ToolTip checkoutToolTip;
+        private TableLayoutPanel patronQueryLayout;
+        private Label summaryLabel;
+        private ComboBox patronSummaryComboBox;
+        private Label startItemLabel;
+        private TextBox bpTextBox;
+        private Label endItemLabel;
+        private TextBox bqTextBox;
+        private TableLayoutPanel feeFieldsLayout;
+        private Label feeTypeLabel;
+        private TextBox feeTypeTextBox;
+        private Label paymentTypeLabel;
+        private TextBox paymentTypeTextBox;
+        private Label amountLabel;
+        private TextBox amountTextBox;
+        private Label feeIdentifierLabel;
+        private TextBox feeIdentifierTextBox;
+        private Label transactionIdLabel;
+        private TextBox transactionIdTextBox;
+        private Button executeCommandButton;
+        private TableLayoutPanel logLayout;
+        private TableLayoutPanel logHeaderLayout;
+        private Label logHeading;
+        private FlowLayoutPanel logActionsPanel;
+        private Button clearLogButton;
+        private Button exportLogButton;
+        private RichTextBox logRichTextBox;
+        private StatusStrip statusStrip1;
+        private ToolStripStatusLabel toolStripStatusLabel1;
     }
 }
-
