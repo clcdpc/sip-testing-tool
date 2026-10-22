@@ -1,0 +1,147 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:vm="using:Clc.Sip.Desktop.ViewModels"
+        xmlns:editor="using:AvaloniaEdit"
+        x:Class="Clc.Sip.Desktop.Views.MainWindow" x:DataType="vm:MainWindowViewModel"
+        Title="SIP Testing Tool" Width="1320" Height="860" MinWidth="1060" MinHeight="720"
+        Icon="/Assets/app.ico" Background="{DynamicResource SurfaceBrush}"
+        Topmost="{Binding AlwaysOnTop}" WindowStartupLocation="CenterScreen">
+  <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
+    <Menu Grid.Row="0" Background="{DynamicResource RibbonBrush}">
+      <MenuItem Header="_Settings">
+        <MenuItem Header="_Import settings…" Click="ImportSettings_Click" />
+        <MenuItem Header="_Export settings…" Click="ExportSettings_Click" />
+        <Separator />
+        <MenuItem Header="_Change default settings…" Click="Settings_Click" />
+        <MenuItem Header="_Reload default values" Click="ReloadDefaults_Click" />
+      </MenuItem>
+      <MenuItem Header="_View">
+        <MenuItem Header="Always on top" ToggleType="CheckBox" IsChecked="{Binding AlwaysOnTop}" />
+      </MenuItem>
+      <MenuItem Header="_Updates">
+        <MenuItem Header="_Check for updates" Command="{Binding CheckUpdatesCommand}" />
+        <MenuItem Header="_Restart to update" Command="{Binding RestartUpdateCommand}" />
+      </MenuItem>
+    </Menu>
+
+    <Border Grid.Row="1" Background="{DynamicResource RibbonBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,0,1">
+      <Grid x:Name="SharedRibbon" ColumnDefinitions="3.1*,2.9*,2.2*,1.8*" IsEnabled="{Binding !IsBusy}">
+        <Border Padding="14,12" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,1,0">
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto">
+            <TextBlock Classes="groupTitle" Text="Connection" />
+            <Grid Grid.Row="1" ColumnDefinitions="*,78">
+              <StackPanel Classes="field" Margin="0,0,8,0"><TextBlock Classes="fieldLabel" Text="Server" /><TextBox x:Name="ServerField" Text="{Binding Fields.Server}" AutomationProperties.Name="SIP Server" /></StackPanel>
+              <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Port" /><TextBox x:Name="PortField" Text="{Binding Fields.Port}" AutomationProperties.Name="SIP Server Port" /></StackPanel>
+            </Grid>
+            <Grid Grid.Row="2" ColumnDefinitions="*,78" Margin="0,10,0,0">
+              <StackPanel Classes="field" Margin="0,0,8,0"><TextBlock Classes="fieldLabel" Text="Institution (AO)" /><TextBox Text="{Binding Fields.Ao}" AutomationProperties.Name="Institution AO" /></StackPanel>
+              <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Terminal (AP)" /><TextBox Text="{Binding Fields.Ap}" AutomationProperties.Name="Terminal AP" /></StackPanel>
+            </Grid>
+            <Button Grid.Row="3" Content="{Binding ConnectLabel}" Command="{Binding ConnectCommand}" Margin="0,10,0,0" />
+          </Grid>
+        </Border>
+        <Border Grid.Column="1" Padding="14,12" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,1,0">
+          <Grid RowDefinitions="Auto,Auto,Auto,Auto">
+            <TextBlock Classes="groupTitle" Text="Login" />
+            <Grid Grid.Row="1" ColumnDefinitions="*,*">
+              <StackPanel Classes="field" Margin="0,0,8,0"><TextBlock Classes="fieldLabel" Text="Username" /><TextBox x:Name="UsernameField" Text="{Binding Fields.Username}" AutomationProperties.Name="SIP Username" /></StackPanel>
+              <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Password" /><TextBox Text="{Binding Fields.Password}" PasswordChar="●" AutomationProperties.Name="SIP Password" /></StackPanel>
+            </Grid>
+            <Grid Grid.Row="2" ColumnDefinitions="*,*" Margin="0,10,0,0">
+              <StackPanel Classes="field" Margin="0,0,8,0"><TextBlock Classes="fieldLabel" Text="Location code (CP)" /><TextBox Text="{Binding Fields.LocationCode}" AutomationProperties.Name="Location Code" /></StackPanel>
+              <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Vendor profile (VP)" /><AutoCompleteBox Text="{Binding Fields.VendorProfile}" ItemsSource="{Binding VendorProfiles}" AutomationProperties.Name="Vendor Profile" /></StackPanel>
+            </Grid>
+            <Button Grid.Row="3" Content="Login" Command="{Binding LoginCommand}" Margin="0,10,0,0" />
+          </Grid>
+        </Border>
+        <Border Grid.Column="2" Padding="14,12" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,1,0">
+          <Grid RowDefinitions="Auto,Auto,Auto,*">
+            <TextBlock Classes="groupTitle" Text="Patron" />
+            <StackPanel Grid.Row="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Barcode (AA)" /><TextBox x:Name="PatronField" Text="{Binding Fields.PatronBarcode}" AutomationProperties.Name="Patron Barcode" /></StackPanel>
+            <StackPanel Grid.Row="2" Classes="field" Margin="0,10,0,0"><TextBlock Classes="fieldLabel" Text="PIN (AD)" /><TextBox Text="{Binding Fields.PatronPin}" PasswordChar="●" AutomationProperties.Name="Patron PIN" /></StackPanel>
+          </Grid>
+        </Border>
+        <Border Grid.Column="3" Padding="14,12">
+          <Grid RowDefinitions="Auto,Auto,*">
+            <TextBlock Classes="groupTitle" Text="Item" />
+            <StackPanel Grid.Row="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Barcode (AB)" /><TextBox x:Name="ItemField" Text="{Binding Fields.ItemBarcode}" AutomationProperties.Name="Item Barcode" /></StackPanel>
+          </Grid>
+        </Border>
+      </Grid>
+    </Border>
+
+    <Border Grid.Row="2" IsVisible="{Binding HasError}" Background="{DynamicResource ErrorBrush}" Padding="14,7">
+      <DockPanel>
+        <Button DockPanel.Dock="Right" Content="Dismiss" Command="{Binding DismissErrorCommand}" Margin="10,0,0,0" />
+        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="{DynamicResource ErrorTextBrush}" VerticalAlignment="Center" />
+      </DockPanel>
+    </Border>
+
+    <Grid Grid.Row="3" Margin="8,0,8,8">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="322" MinWidth="280" MaxWidth="500" />
+        <ColumnDefinition Width="6" />
+        <ColumnDefinition Width="*" MinWidth="440" />
+      </Grid.ColumnDefinitions>
+      <Border Grid.Column="0" Background="{DynamicResource RibbonBrush}" Padding="14">
+        <Grid RowDefinitions="Auto,Auto,*,Auto">
+          <TextBlock Classes="groupTitle" Text="Command workbench" Margin="0,0,0,12" />
+          <ComboBox Grid.Row="1" x:Name="CommandPicker" ItemsSource="{Binding Commands}" SelectedItem="{Binding SelectedCommand}" HorizontalAlignment="Stretch" Margin="0,0,0,14" AutomationProperties.Name="SIP Command" />
+          <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+            <StackPanel Spacing="12">
+              <TextBlock Text="{Binding SelectedCommand.Name}" FontWeight="SemiBold" />
+              <TextBlock Classes="hint" Text="{Binding CommandHint}" />
+              <StackPanel x:Name="PatronQueryPanel" IsVisible="{Binding IsPatronQuery}" Spacing="12">
+                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Summary" /><ComboBox ItemsSource="{Binding Summaries}" SelectedItem="{Binding SelectedSummary}" HorizontalAlignment="Stretch" /></StackPanel>
+                <Grid ColumnDefinitions="*,*" IsEnabled="{Binding UsesRange}">
+                  <StackPanel Classes="field" Margin="0,0,8,0"><TextBlock Classes="fieldLabel" Text="Start item (BP)" /><TextBox Text="{Binding Fields.Bp}" AutomationProperties.Name="Start Item BP" /></StackPanel>
+                  <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="End item (BQ)" /><TextBox Text="{Binding Fields.Bq}" AutomationProperties.Name="End Item BQ" /></StackPanel>
+                </Grid>
+              </StackPanel>
+              <StackPanel x:Name="FeePanel" IsVisible="{Binding IsFeePaid}" Spacing="12">
+                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Fee type" /><TextBox Text="{Binding FeeType}" /></StackPanel>
+                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Payment type" /><TextBox Text="{Binding PaymentType}" /></StackPanel>
+                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Payment amount" /><TextBox Text="{Binding Amount}" /></StackPanel>
+                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Fee identifier (CG)" /><TextBox Text="{Binding FeeIdentifier}" /></StackPanel>
+                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Transaction ID (BK)" /><TextBox Text="{Binding TransactionId}" /></StackPanel>
+              </StackPanel>
+              <StackPanel x:Name="NoticePanel" IsVisible="{Binding IsNotice}" Spacing="12">
+                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Notice status" /><ComboBox ItemsSource="{Binding NoticeStatuses}" SelectedItem="{Binding SelectedNoticeStatus}" HorizontalAlignment="Stretch" /></StackPanel>
+                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Delivery date" /><TextBox Text="{Binding DeliveryDate}" /></StackPanel>
+                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Notice medium" /><ComboBox ItemsSource="{Binding NoticeMedia}" SelectedItem="{Binding SelectedNoticeMedium}" HorizontalAlignment="Stretch" /></StackPanel>
+                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Notification type" /><ComboBox ItemsSource="{Binding NoticeTypes}" SelectedItem="{Binding SelectedNoticeType}" HorizontalAlignment="Stretch" /></StackPanel>
+                <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Comment" /><TextBox Text="{Binding NoticeComment}" AcceptsReturn="True" TextWrapping="Wrap" MinHeight="64" /></StackPanel>
+              </StackPanel>
+            </StackPanel>
+          </ScrollViewer>
+          <Button Grid.Row="3" x:Name="ExecuteButton" Content="{Binding ExecuteLabel}" Command="{Binding ExecuteCommand}" HorizontalAlignment="Stretch" Classes="accent" Margin="0,14,0,0" MinHeight="36" />
+        </Grid>
+      </Border>
+      <GridSplitter Grid.Column="1" ResizeDirection="Columns" HorizontalAlignment="Stretch" Background="{DynamicResource LineBrush}" />
+      <Grid Grid.Column="2" RowDefinitions="Auto,*">
+        <Grid ColumnDefinitions="*,Auto" Background="{DynamicResource RibbonBrush}" Margin="0,0,0,0">
+          <TextBlock Classes="groupTitle" Text="Sent / received messages" Margin="12,0" VerticalAlignment="Center" />
+          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="8">
+            <Button Content="Clear log" Command="{Binding ClearLogCommand}" />
+            <Button Content="Export log…" Click="ExportLog_Click" />
+          </StackPanel>
+        </Grid>
+        <Border Grid.Row="1" BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" Background="{DynamicResource SurfaceBrush}">
+          <editor:TextEditor x:Name="MessageLog" Document="{Binding LogDocument}" IsReadOnly="True" ShowLineNumbers="False" WordWrap="True" FontFamily="Cascadia Mono,Consolas,DejaVu Sans Mono,monospace" FontSize="13" Padding="8" Background="{DynamicResource SurfaceBrush}" AutomationProperties.Name="Sent and Received SIP Message Log">
+            <editor:TextEditor.ContextMenu>
+              <ContextMenu><MenuItem Header="Copy" Click="CopyLog_Click" /><MenuItem Header="Select all" Click="SelectLog_Click" /></ContextMenu>
+            </editor:TextEditor.ContextMenu>
+          </editor:TextEditor>
+        </Border>
+      </Grid>
+    </Grid>
+
+    <Border Grid.Row="4" Background="{DynamicResource RibbonBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,1,0,0" Padding="12,5">
+      <Grid ColumnDefinitions="*,Auto,Auto">
+        <TextBlock Text="{Binding Status}" TextTrimming="CharacterEllipsis" FontSize="12" VerticalAlignment="Center" />
+        <TextBlock Grid.Column="1" Text="{Binding UpdateStatus}" MaxWidth="420" TextTrimming="CharacterEllipsis" FontSize="12" VerticalAlignment="Center" Opacity="0.7" Margin="12,0" />
+        <Button Grid.Column="2" IsVisible="{Binding UpdateReady}" Content="Restart to update" Command="{Binding RestartUpdateCommand}" />
+      </Grid>
+    </Border>
+  </Grid>
+</Window>

@@ -1,0 +1,280 @@
+using System.Text;
+using AvaloniaEdit.Document;
+using Clc.Sip.Desktop.Models;
+using Clc.Sip.Desktop.Services;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+
+namespace Clc.Sip.Desktop.ViewModels;
+
+public partial class MainWindowViewModel : ObservableObject, IDisposable
+{
+    private readonly SipSession session;
+    private readonly SettingsStore settingsStore;
+    private readonly UpdateService updates;
+
+    [ObservableProperty] private SessionFields fields = new();
+    [ObservableProperty] private AppPreferences preferences = new();
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsPatronQuery), nameof(IsFeePaid), nameof(IsNotice), nameof(ExecuteLabel), nameof(CommandHint))]
+    private CommandChoice selectedCommand = CommandChoice.All[0];
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(UsesRange))]
+    private SummaryChoice selectedSummary = SummaryChoice.All[0];
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanRun), nameof(CanConnect), nameof(ConnectLabel), nameof(CanRestartUpdate))]
+    [NotifyCanExecuteChangedFor(nameof(ConnectCommand), nameof(ExecuteCommand), nameof(LoginCommand), nameof(RestartUpdateCommand))]
+    private bool isBusy;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanRun), nameof(CanConnect), nameof(ConnectLabel))]
+    [NotifyCanExecuteChangedFor(nameof(ConnectCommand), nameof(ExecuteCommand), nameof(LoginCommand))]
+    private bool isConnected;
+    [ObservableProperty] private string status = "Not connected";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasError))]
+    private string? errorMessage;
+    [ObservableProperty] private bool alwaysOnTop;
+    [ObservableProperty] private string feeType = "";
+    [ObservableProperty] private string paymentType = "";
+    [ObservableProperty] private string amount = "";
+    [ObservableProperty] private string feeIdentifier = "";
+    [ObservableProperty] private string transactionId = "";
+    [ObservableProperty] private NoticeStatus selectedNoticeStatus;
+    [ObservableProperty] private NoticeMedium selectedNoticeMedium;
+    [ObservableProperty] private NotificationType selectedNoticeType;
+    [ObservableProperty] private string deliveryDate = DateTime.Now.ToString();
+    [ObservableProperty] private string noticeComment = "";
+    [ObservableProperty] private string updateStatus = "";
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanRestartUpdate))]
+    [NotifyCanExecuteChangedFor(nameof(RestartUpdateCommand))]
+    private bool updateReady;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CheckUpdatesCommand))]
+    private bool checkingUpdates;
+
+    public IReadOnlyList<CommandChoice> Commands => CommandChoice.All;
+    public IReadOnlyList<SummaryChoice> Summaries => SummaryChoice.All;
+    public IReadOnlyList<string> VendorProfiles { get; } = ["Envisionware", "Comprise", "3M", "ITG"];
+    public IReadOnlyList<NoticeStatus> NoticeStatuses { get; } = Enum.GetValues<NoticeStatus>();
+    public IReadOnlyList<NoticeMedium> NoticeMedia { get; } = Enum.GetValues<NoticeMedium>();
+    public IReadOnlyList<NotificationType> NoticeTypes { get; } = Enum.GetValues<NotificationType>();
+    public TextDocument LogDocument { get; } = new();
+    public bool IsPatronQuery => SelectedCommand.Command == SipCommand.PatronInformation;
+    public bool IsFeePaid => SelectedCommand.Command == SipCommand.FeePaid;
+    public bool IsNotice => SelectedCommand.Command == SipCommand.NoticeUpdate;
+    public bool UsesRange => SelectedSummary.Key != "none";
+    public bool CanRun => IsConnected && !IsBusy;
+    public bool CanConnect => !IsBusy;
+    public bool CanRestartUpdate => UpdateReady && !IsBusy;
+    public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
+    public string ConnectLabel => IsConnected ? "Disconnect" : "Connect";
+    public string ExecuteLabel => "Execute " + SelectedCommand.Name;
+    public string CommandHint => SelectedCommand.Command switch
+    {
+        SipCommand.Checkin or SipCommand.ItemInformation => "Uses the shared item barcode.",
+        SipCommand.PatronInformation or SipCommand.PatronStatus or SipCommand.RenewAll
+            or SipCommand.EndSession or SipCommand.FeePaid => "Uses the shared patron barcode and PIN.",
+        SipCommand.Login => "Uses the shared login settings.",
+        SipCommand.AcsStatus => "Uses the current connection.",
+        _ => "Uses the shared patron and item values."
+    };
+
+    public event Action? TransactionAppended;
+    public event Action? ThemeChanged;
+
+    public MainWindowViewModel(SipSession? session = null, SettingsStore? settingsStore = null, UpdateService? updates = null)
+    {
+        this.session = session ?? new SipSession();
+        this.settingsStore = settingsStore ?? new SettingsStore();
+        this.updates = updates ?? new UpdateService();
+    }
+
+    public async Task InitializeAsync()
+    {
+        await ReloadDefaultsAsync();
+        if (Preferences.ConnectOnStartup)
+        {
+            await ConnectAsync();
+        }
+
+        if (Preferences.CheckUpdatesOnStartup)
+        {
+            await CheckUpdatesAsync();
+        }
+    }
+
+    public async Task ReloadDefaultsAsync()
+    {
+        try
+        {
+            var defaults = await settingsStore.LoadAsync();
+            ApplyPreferences(defaults, true);
+        }
+        catch (Exception ex) { ErrorMessage = "Could not load defaults: " + ex.Message; }
+    }
+
+    public async Task SavePreferencesAsync(AppPreferences value)
+    {
+        _ = Encoding.GetEncoding(value.EncodingName);
+        if (!string.IsNullOrWhiteSpace(value.UpdateFeedUrl))
+        {
+            _ = UpdateService.GetFeedUrl(value.UpdateFeedUrl);
+        }
+
+        await settingsStore.SaveAsync(value);
+        ApplyPreferences(value, true);
+    }
+
+    private void ApplyPreferences(AppPreferences value, bool reloadFields)
+    {
+        Preferences = value;
+        if (reloadFields)
+        {
+            Fields = value.Defaults.Copy();
+        }
+
+        ThemeChanged?.Invoke();
+    }
+
+    [RelayCommand(CanExecute = nameof(CanConnect))]
+    private async Task ConnectAsync()
+    {
+        if (IsConnected)
+        {
+            session.Disconnect();
+            IsConnected = false;
+            Status = "Not connected";
+            return;
+        }
+        await RunAsync(async () =>
+        {
+            Status = "Connecting…";
+            await session.ConnectAsync(Fields.Copy(), Preferences.EncodingName, Preferences.ValidateChecksums);
+            Status = "Connected to " + session.Endpoint;
+        });
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRun))]
+    private Task ExecuteAsync() => ExecuteSipAsync(SelectedCommand.Command);
+
+    [RelayCommand(CanExecute = nameof(CanRun))]
+    private Task LoginAsync() => ExecuteSipAsync(SipCommand.Login);
+
+    private Task ExecuteSipAsync(SipCommand command) => RunAsync(async () =>
+    {
+        var date = DateTime.Now;
+        if (command == SipCommand.NoticeUpdate && !DateTime.TryParse(DeliveryDate, out date))
+        {
+            throw new ArgumentException("Enter a valid delivery date and time.");
+        }
+
+        var inputs = new CommandFields
+        {
+            Summary = SelectedSummary.Key,
+            FeeType = FeeType,
+            PaymentType = PaymentType,
+            Amount = Amount,
+            FeeIdentifier = FeeIdentifier,
+            TransactionId = TransactionId,
+            NoticeStatus = SelectedNoticeStatus,
+            NoticeMedium = SelectedNoticeMedium,
+            NoticeType = SelectedNoticeType,
+            NoticeComment = NoticeComment,
+            DeliveryDate = date
+        };
+        var transaction = await session.ExecuteAsync(command, Fields.Copy(), inputs,
+            Preferences.EncodingName, Preferences.ValidateChecksums);
+        AppendTransaction(transaction);
+        Status = transaction.ConnectionReset ? "Connection closed — reconnect to continue" : "Connected to " + session.Endpoint;
+        if (transaction.ConnectionReset)
+        {
+            ErrorMessage = "The connection was closed or the request timed out.";
+        }
+        else if (!transaction.ChecksumValid)
+        {
+            ErrorMessage = "The response checksum is invalid.";
+        }
+    });
+
+    private async Task RunAsync(Func<Task> operation)
+    {
+        if (IsBusy)
+        {
+            return;
+        }
+
+        IsBusy = true;
+        ErrorMessage = null;
+        try
+        {
+            await operation();
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage = ex.Message;
+            if (!session.IsConnected)
+            {
+                Status = "Not connected";
+            }
+        }
+        finally
+        {
+            IsConnected = session.IsConnected;
+            IsBusy = false;
+        }
+    }
+
+    public void AppendTransaction(SipTransaction transaction)
+    {
+        static string Line(string? value) => (value ?? "").Replace("\r", "").Replace("\n", "");
+        var text = (LogDocument.TextLength > 0 ? "\n\n" : "")
+            + "--> " + Line(transaction.Message) + "\n<-- " + Line(transaction.Response);
+        LogDocument.Insert(LogDocument.TextLength, text);
+        TransactionAppended?.Invoke();
+    }
+
+    [RelayCommand]
+    private void ClearLog() => LogDocument.Text = "";
+
+    [RelayCommand]
+    private void DismissError() => ErrorMessage = null;
+
+    private bool CanCheckUpdates() => !CheckingUpdates;
+
+    [RelayCommand(CanExecute = nameof(CanCheckUpdates))]
+    private async Task CheckUpdatesAsync()
+    {
+        if (CheckingUpdates)
+        {
+            return;
+        }
+
+        CheckingUpdates = true;
+        UpdateStatus = "Checking for updates…";
+        try
+        {
+            UpdateStatus = await updates.CheckAndDownloadAsync(Preferences.UpdateFeedUrl);
+        }
+        catch { UpdateStatus = "Update check unavailable. Try again later."; }
+        finally
+        {
+            UpdateReady = updates.IsReady;
+            CheckingUpdates = false;
+        }
+    }
+
+    [RelayCommand(CanExecute = nameof(CanRestartUpdate))]
+    private void RestartUpdate()
+    {
+        try
+        {
+            session.Disconnect();
+            IsConnected = false;
+            updates.ApplyAndRestart();
+        }
+        catch (Exception ex) { ErrorMessage = "Could not install the update: " + ex.Message; }
+    }
+
+    public void Dispose() => session.Dispose();
+}
