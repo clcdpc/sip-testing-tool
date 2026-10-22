@@ -56,6 +56,28 @@ namespace Clc.Sip
             DisableButtons();
         }
 
+        protected override bool ProcessCmdKey(ref Message message, Keys keyData)
+        {
+            if (keyData == Keys.Enter)
+            {
+                if (connectionLayout.ContainsFocus)
+                {
+                    connectButton.PerformClick();
+                    return true;
+                }
+
+                // An open profile list uses Enter to accept the highlighted choice.
+                if ((loginLayout.ContainsFocus && !vendorProfileComboBox.DroppedDown)
+                    || loginUidAlgorithmTextBox.ContainsFocus || loginPwdAlgorithmTextBox.ContainsFocus)
+                {
+                    loginButton.PerformClick();
+                    return true;
+                }
+            }
+
+            return base.ProcessCmdKey(ref message, keyData);
+        }
+
         private void commandComboBox_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (commandComboBox.SelectedIndex < 0)

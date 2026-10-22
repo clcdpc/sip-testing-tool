@@ -452,7 +452,7 @@ namespace Clc.Sip
             vendorProfileComboBox.Margin = new Padding(0, 0, 8, 8);
             vendorProfileComboBox.FormattingEnabled = true;
             vendorProfileComboBox.TabIndex = 3;
-            vendorProfileComboBox.Items.AddRange(new object[] { "Envisionware", "Comprise", "3M", "ITG" });
+            vendorProfileComboBox.Items.AddRange(new object[] { "SIP", "ENVISIONWARE", "COMPRISE", "3M", "ITG" });
             loginLayout.Controls.Add(vendorProfileLabel, 1, 3);
             loginLayout.Controls.Add(vendorProfileComboBox, 1, 4);
             connectButton.Text = "Connect";
