@@ -19,7 +19,7 @@ public sealed class UpdateService
         this.testSource = testSource;
     }
 
-    public static string RuntimeFolder => (OperatingSystem.IsWindows() ? "win" : "linux")
+    public static string RuntimeFolder => (OperatingSystem.IsWindows() ? "win" : OperatingSystem.IsMacOS() ? "osx" : "linux")
         + "-" + RuntimeInformation.ProcessArchitecture.ToString().ToLowerInvariant();
 
     public static string GetFeedUrl(string baseUrl)

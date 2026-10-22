@@ -60,6 +60,8 @@
       <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/Velopack-Windows.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/publish/win-x64" />
       <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/Velopack-Linux.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/publish/linux-x64" />
       <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/Windows-SingleFile.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/publish/win-x64-single-file" />
+      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/macOS-arm64.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/publish/osx-arm64" />
+      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/macOS-x64.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/publish/osx-x64" />
     </ItemGroup>
     <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="VerifyProfile" Properties="ProfileFile=%(ProfileCheck.Identity);ApplicationProject=%(ProfileCheck.ApplicationProject);ExpectedSubdirectory=%(ProfileCheck.Subdirectory)" />
   </Target>

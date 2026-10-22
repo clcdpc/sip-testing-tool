@@ -3,6 +3,7 @@
 **/bin/
 **/obj/
 artifacts/
+sip-testing-tool-macos/
 *.user
 *.suo
 *.pfx

@@ -1,12 +1,12 @@
 # SIP Testing Tool
 
-Open **`src/sip-testing-tool.sln`** in Visual Studio with .NET 10 and Windows desktop development support. Set **sip-testing-tool** as the startup project for the Windows Forms app. The **sip-testing-tool-avalonia** project is also available for Windows/Linux testing. Use **Build Solution** and **Start Debugging**; NuGet restores the dependencies. The Avalonia extension for Visual Studio is optional for XAML previewing.
+Open **`src/sip-testing-tool.sln`** in Visual Studio with .NET 10 and Windows desktop development support. Set **sip-testing-tool** as the startup project for the Windows Forms app. The **sip-testing-tool-avalonia** project is also available for Windows, Linux and macOS. Use **Build Solution** and **Start Debugging**; NuGet restores the dependencies. The Avalonia extension for Visual Studio is optional for XAML previewing.
 
 ## Projects
 
 | Project | Purpose |
 | --- | --- |
-| `src/sip-testing-tool-avalonia` | Avalonia desktop app for Windows and Linux, with Velopack updates. |
+| `src/sip-testing-tool-avalonia` | Avalonia desktop app for Windows, Linux and macOS; Velopack updates on Windows/Linux. |
 | `src/sip-testing-tool` | Windows Forms app with folder, single-file and ClickOnce publishing profiles. |
 | `src/sip-core` | Shared SIP client used by both apps and the console. |
 | `src/sip-console` | JSON command runner that emits PRTG XML. |
@@ -82,6 +82,8 @@ Right-click **sip-testing-tool-avalonia → Publish**, select one of its checked
 | `Velopack-Windows` | `artifacts/avalonia/publish/win-x64` | `artifacts/velopack/win-x64` |
 | `Velopack-Linux` | `artifacts/avalonia/publish/linux-x64` | `artifacts/velopack/linux-x64` |
 | `Windows-SingleFile` | `artifacts/avalonia/publish/win-x64-single-file/sip-testing-tool-avalonia.exe` | — |
+| `macOS-arm64` | `artifacts/avalonia/publish/osx-arm64` | — |
+| `macOS-x64` | `artifacts/avalonia/publish/osx-x64` | — |
 
 The paths above are relative to the consolidated repository root. Publish profiles store plain folder paths relative to each application's `.csproj`, which both Visual Studio and command-line publishing resolve into that root's `artifacts` folder. Visual Studio also reads profiles from XML streams without their file location, so profile values must not depend on `MSBuildProjectDirectory`, `MSBuildThisFileDirectory`, or imports that use those properties. `PublishPaths.props` supplies the absolute root for Velopack packaging during the application build.
 
@@ -91,7 +93,7 @@ The two **Velopack** profiles publish self-contained .NET applications and then 
 
 If publishing reports an **equal or greater version**, that version already exists in the selected release directory, including packages created during local testing. Increase `<Version>` in `src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj` (for example, `2.1.0` to `2.1.1`) and publish again. The application file version follows that value automatically. Validation publishes can use a separate `VelopackOutputDir` to avoid occupying the next release version in the normal output directory.
 
-The app checks for updates at startup when enabled in **Settings → Change default settings**, and from **Updates → Check for updates**. Available updates download in the background. **Restart to update** applies an update only when the user chooses to restart and no SIP operation is running. Development builds skip feed requests. User defaults remain outside the replaced application files.
+The app checks for updates at startup when enabled in **Settings → Change default settings**, and from **Updates → Check for updates**. Available updates download in the background. **Restart to update** applies an update only when the user chooses to restart and no SIP operation is running. Builds outside a Velopack installation skip feed requests. User defaults remain outside the replaced application files.
 
 The proposed feed base is `https://siptool.clcohio.org/updates/desktop/`. The updater appends the current OS and architecture, selecting `win-x64/` or `linux-x64/`. To activate a feed, copy the **contents of each Velopack release directory**, including its release index and packages, into the matching directory on the web server. Host these files unchanged over HTTPS and allow the package/index/AppImage file extensions to be downloaded. This setup does not upload files to the server or replace the existing ClickOnce deployment.
 
@@ -104,6 +106,23 @@ dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=Velopa
 dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=Velopack-Linux
 dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=Windows-SingleFile
 ```
+
+## Build on a Mac
+
+Download [build-macos.command](https://raw.githubusercontent.com/clcdpc/sip-testing-tool/master/build-macos.command) to a Mac running macOS 14 or later. In Terminal, change to the folder where you want the build files, then run the downloaded script. For example, if it is in Downloads:
+
+```bash
+cd ~/Downloads
+bash ./build-macos.command
+```
+
+The script downloads **master** from the public repository, detects Intel or Apple Silicon (including Terminal running under Rosetta), downloads a private [.NET 10 SDK](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-install-script), and builds the Avalonia app. Internet access is required. Git, Homebrew, Xcode and a preinstalled .NET SDK/runtime are unnecessary; the SDK stays in the build folder and the resulting app includes its .NET runtime. The macOS changes must be merged into `master` before sharing this script.
+
+Everything downloaded or built stays under **`sip-testing-tool-macos` in the working directory**. Each run gets a new `build-…` subfolder containing the source, `build.log` and **`SIP Testing Tool.app`**. The script creates its icon, signs the local build with an ad-hoc signature, verifies the bundle and reveals it in Finder. Open the app there, or copy it to Applications. `sip-testing-tool-macos/latest-app.txt` records the latest successful app path.
+
+Run the same script again to build the latest `master`; the private SDK and NuGet cache are reused, and previous builds are preserved. These locally built Mac apps update by rerunning the script. They are not Velopack releases or Developer ID/notarized downloads.
+
+The `macOS-arm64` and `macOS-x64` publish profiles also support direct `dotnet publish` commands with an existing .NET 10 SDK. They produce self-contained application folders under the repository's `artifacts/avalonia/publish` directory. The standalone script adds the [macOS `.app` packaging](https://docs.avaloniaui.net/docs/deployment/macos), icon and local signing on the Mac.
 
 ## Windows Forms publishing
 
@@ -131,7 +150,9 @@ From the repository root, the equivalent command is:
 dotnet test src/sip-testing-tool.sln
 ```
 
-Run `dotnet msbuild build/VerifyPublishPaths.proj` to check all six publish profiles, including Visual Studio's XML-stream reader that has no profile file location. This checks their output destinations without building, signing or packaging a release.
+Run `dotnet msbuild build/VerifyPublishPaths.proj` to check all eight publish profiles, including Visual Studio's XML-stream reader that has no profile file location. This checks their output destinations without building, signing or packaging a release.
+
+Run `bash build/TestMacBuild.sh` on macOS, Linux or Git Bash to exercise the standalone Mac bootstrap with local tool/download fixtures. These checks cover architecture selection, paths with spaces, app packaging, preserving previous builds and failure handling. They use no network or installed SDK and leave diagnostics under `artifacts/mac build tests-…`; actual macOS launch and code-signing verification still require a Mac.
 
 Tests are ordinary MSTest methods grouped by behavior: checksums, connections, console output, workbench behavior, checkout, themes, command-option state, settings, updates and desktop sessions. Test classes use MSTest lifecycle methods; the shared test support is limited to UI setup, test data and loopback SIP peers. Both projects use MSTest assertions directly.
 
