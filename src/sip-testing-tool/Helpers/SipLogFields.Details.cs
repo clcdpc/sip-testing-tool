@@ -3,9 +3,9 @@ namespace Clc.Sip.Helpers;
 public enum SipLogValueState { Normal, Set, Invalid }
 
 public sealed record SipLogDetail(int Offset, int Length, string Name, string Description, string Value,
-    string Meaning = null, IReadOnlyList<SipLogDetail> Children = null, SipLogValueState State = SipLogValueState.Normal)
+    string Meaning = null, IReadOnlyList<SipLogDetail> Children = null, SipLogValueState State = SipLogValueState.Normal, bool IsFlag = false)
 {
-    public string DisplayValue => (Value.Length == 0 ? "(empty)" : Value.All(c => c == ' ') ? $"({Value.Length} spaces)" : Value) +
+    public string DisplayValue => IsFlag ? Meaning : (Value.Length == 0 ? "(empty)" : Value.All(c => c == ' ') ? $"({Value.Length} spaces)" : Value) +
         (Meaning == null ? "" : "\n" + Meaning);
 }
 
@@ -40,41 +40,58 @@ public static partial class SipLogFields
 
         while (offset < message.Length)
         {
-            var end = message.IndexOf('|', offset);
-            if (end < 0)
-            {
-                end = message.Length;
-            }
-            // The sequence digit is followed directly by the checksum identifier.
-            if (message.AsSpan(offset).StartsWith("AY", StringComparison.Ordinal) &&
-                offset + 5 <= end && message.AsSpan(offset + 3, 2).SequenceEqual("AZ"))
-            {
-                end = offset + 3;
-            }
+            var end = VariableFieldEnd(message, offset);
             if (end > offset)
             {
-                if (end - offset < 2 || !char.IsAsciiLetterUpper(message[offset]) || !char.IsAsciiLetterUpper(message[offset + 1]))
+                if (end - offset < 2 || !IsFieldIdentifier(message.AsSpan(offset, 2)))
                 {
-                    fields.Add(new(offset, end - offset, "Unrecognized data", "Expected a two-letter field identifier.", message[offset..end],
+                    fields.Add(new(offset, end - offset, "Unrecognized data", "Expected a field identifier: a letter followed by a letter or digit.", message[offset..end],
                         State: SipLogValueState.Invalid));
                 }
                 else
                 {
                     var identifier = message.Substring(offset, 2);
                     var value = message[(offset + 2)..end];
-                    var detail = SipFixedFields.ReadIdentifiedDetail(identifier, value, offset);
-                    if (detail == null)
-                    {
-                        var description = descriptions.GetValueOrDefault(identifier,
-                            "Unrecognized field\nThis code is not in the built-in SIP2 reference; it may be a server-specific extension.");
-                        var parts = description.Split('\n', 2);
-                        detail = new(offset, end - offset, identifier + " · " + parts[0], parts[1], value);
-                    }
-                    fields.Add(detail);
+                    fields.Add(ReadVariableDetail(message[..2], identifier, value, offset));
                 }
             }
             offset = end < message.Length && message[end] == '|' ? end + 1 : end;
         }
         return new(name, fields);
+    }
+
+    private static bool IsFieldIdentifier(ReadOnlySpan<char> identifier) => identifier.Length == 2 && char.IsAsciiLetterUpper(identifier[0]) &&
+        (char.IsAsciiLetterUpper(identifier[1]) || char.IsAsciiDigit(identifier[1]));
+
+    private static int VariableFieldEnd(ReadOnlySpan<char> message, int offset)
+    {
+        var delimiter = message[offset..].IndexOf('|');
+        var end = delimiter < 0 ? message.Length : offset + delimiter;
+        // AY's single sequence digit runs directly into AZ, without a '|'.
+        return message[offset..].StartsWith("AY", StringComparison.Ordinal) && offset + 5 <= end && message.Slice(offset + 3, 2).SequenceEqual("AZ")
+            ? offset + 3 : end;
+    }
+
+    private static SipLogDetail ReadVariableDetail(string messageId, string identifier, string value, int offset)
+    {
+        var detail = ReadPolarisDetail(messageId, identifier, value, offset) ?? SipFixedFields.ReadIdentifiedDetail(identifier, value, offset, messageId);
+        if (detail != null)
+        {
+            return detail;
+        }
+        var reference = descriptions.GetValueOrDefault(identifier,
+            "Unrecognized field\nNo built-in definition; this may be a server-specific extension.");
+        var parts = reference.Split('\n', 2);
+        return new(offset, value.Length + 2, identifier + " · " + parts[0], parts.Length > 1 ? parts[1] : "", value);
+    }
+
+    private static string VariableHelp(SipLogDetail detail)
+    {
+        var lines = new List<string> { detail.Name.Replace(" · ", " — ", StringComparison.Ordinal), detail.Description, detail.Meaning };
+        if (detail.Children != null)
+        {
+            lines.AddRange(detail.Children.Select(child => child.Name + ": " + child.DisplayValue.Replace("\n", " — ", StringComparison.Ordinal)));
+        }
+        return string.Join("\n", lines.Where(line => !string.IsNullOrWhiteSpace(line)));
     }
 }

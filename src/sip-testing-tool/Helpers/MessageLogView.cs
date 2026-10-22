@@ -295,9 +295,9 @@ public sealed class MessageLogView : UserControl
                 rows.Add(CreateRow(field));
                 if (field.Children != null)
                 {
-                    foreach (var flag in field.Children)
+                    foreach (var child in field.Children)
                     {
-                        rows.Add(CreateRow(flag, child: true));
+                        rows.Add(CreateRow(child, child: true));
                     }
                 }
             }
@@ -339,7 +339,7 @@ public sealed class MessageLogView : UserControl
     private DataGridViewRow CreateRow(SipLogDetail field, bool child = false)
     {
         var row = new DataGridViewRow();
-        row.CreateCells(grid, field.Name, field.Description, child ? field.Meaning : field.DisplayValue);
+        row.CreateCells(grid, field.Name, field.Description, field.DisplayValue);
         row.Tag = field;
         if (child)
         {

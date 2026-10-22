@@ -38,6 +38,22 @@ internal static class SipFixedFields
     private static readonly Definition uidAlgorithm = new(1, "UID algorithm", "Encoding agreed with the server for the login user ID. The tool sends the entered value without encrypting it.", AlgorithmValue);
     private static readonly Definition pwdAlgorithm = new(1, "PWD algorithm", "Encoding agreed with the server for the login password. The tool sends the entered value without encrypting it.", AlgorithmValue);
     private static readonly Definition holdMode = new(1, "Hold mode", "The operation requested on the patron's hold.", value => value switch { "+" => "Add a hold.", "-" => "Delete a hold.", "*" => "Change a hold.", _ => "Unrecognized hold mode." });
+    private static readonly Definition polarisBirthDate = new(18, "Birth date (Polaris)", "", value =>
+        string.IsNullOrWhiteSpace(value) ? "No birth date supplied." : DateTime.TryParseExact(value[..8], "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+            ? date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "Unrecognized birth date.");
+    private static readonly Definition polarisExpiration = new(18, "Patron expiration date (Polaris)", "", DateValue);
+    private static readonly Definition polarisExpired = Flag("Patron expired (Polaris)", "", "Registration expired.", "Registration not expired.");
+    private static readonly Definition polarisAlert = new(2, "Checkin alert type (Polaris)", "", value => value switch
+    {
+        "  " => "Normal checkin; no alert.",
+        "00" => "Unknown alert.",
+        "01" => "Hold for another library.",
+        "02" => "Hold for this library.",
+        "04" => "Send to another library.",
+        "03" => "Hold for interlibrary loan; listed as unused in the Polaris reference.",
+        "99" => "Other alert; listed as unused in the Polaris reference.",
+        _ => "Unrecognized Polaris alert type."
+    });
 
     // Required fixed fields only. Identified optional fields are parsed separately
     // by SipLogFields, even when their value has a fixed width (for example BH).
@@ -131,7 +147,7 @@ internal static class SipFixedFields
             return -1;
         }
         name = layout.Name;
-        fields.Add(new(0, 2, "Message ID", "Identifies the SIP command or response.", message[..2], name));
+        fields.Add(new(0, 2, "Message ID", "", message[..2], name));
         var offset = 2;
         foreach (var definition in layout.Fields)
         {
@@ -148,14 +164,34 @@ internal static class SipFixedFields
         return offset;
     }
 
-    public static SipLogDetail ReadIdentifiedDetail(string identifier, string value, int offset)
+    public static SipLogDetail ReadIdentifiedDetail(string identifier, string value, int offset, string messageId)
     {
         if (identifier == "BX")
         {
             return ReadFlagDetail("BX · Supported messages", "Y means supported; N means not supported.", supportedMessageNames,
                 value, offset, 2, 'N', reservedRemainder: false);
         }
-        return identifiedFields.TryGetValue(identifier, out var definition) ? ReadDetail(definition, value, offset, identifier) : null;
+        var definition = GetIdentifiedDefinition(identifier, messageId);
+        // The references name BC without fixing its width. Decode the SIP date
+        // shape used by Polaris, while retaining other representations as text.
+        return definition == null || identifier == "BC" && value.Length != definition.Length ? null : ReadDetail(definition, value, offset, identifier);
+    }
+
+    private static Definition GetIdentifiedDefinition(string identifier, ReadOnlySpan<char> messageId)
+    {
+        if (messageId.SequenceEqual("64"))
+        {
+            var polaris = identifier switch { "BC" => polarisBirthDate, "PX" => polarisExpiration, "PY" => polarisExpired, _ => null };
+            if (polaris != null)
+            {
+                return polaris;
+            }
+        }
+        if (identifier == "CV" && messageId.SequenceEqual("10"))
+        {
+            return polarisAlert;
+        }
+        return identifiedFields.GetValueOrDefault(identifier);
     }
 
     private static SipLogDetail ReadDetail(Definition definition, string value, int offset, string identifier = null)
@@ -189,7 +225,7 @@ internal static class SipFixedFields
             var meaning = !defined && !reservedRemainder ? $"Unrecognized extension value '{value[index]}'" : set ? "SET (Y)" : clear ?
                 (!defined ? "Reserved; blank as expected" : clearValue == ' ' ? "Not set (space)" : "Not set (N)") :
                 $"INVALID ('{value[index]}'); expected " + (defined ? clearValue == ' ' ? "Y or space" : "Y or N" : "a space");
-            flags.Add(new(offset + prefixLength + index, 1, $"Flag {index + 1} (position {index})", label, value[index].ToString(), meaning, State: state));
+            flags.Add(new(offset + prefixLength + index, 1, $"Flag {index + 1} (position {index})", label, value[index].ToString(), meaning, State: state, IsFlag: true));
             if (set)
             {
                 activeCount++;
@@ -250,7 +286,8 @@ internal static class SipFixedFields
                     index - fieldStart - 2, messageOffset, fieldStart + 2, 'N', reservedRemainder: false);
             }
         }
-        if (index >= fieldStart + 20 || !identifiedFields.TryGetValue(identifier, out var definition))
+        var definition = GetIdentifiedDefinition(identifier, message[..2]);
+        if (index >= fieldStart + 20 || definition == null)
         {
             return null;
         }
@@ -274,14 +311,14 @@ internal static class SipFixedFields
         var rawValue = string.IsNullOrWhiteSpace(value) ? $"({value.Length} spaces)" : '"' + value.Replace(' ', '·') + '"';
         var decoded = definition.Decode?.Invoke(value);
         var unit = definition.Length == 1 ? "value character" : "value characters";
-        return $"{definition.Name} — fixed field ({definition.Length} {unit})\n" + definition.Description +
-            $"\nValue: {rawValue}" + (decoded == null ? "" : "\n" + decoded) + $"\nMessage characters {offset + 1}–{offset + length}.";
+        return string.Join("\n", new[] { $"{definition.Name} — fixed field ({definition.Length} {unit})", definition.Description,
+            $"Value: {rawValue}", decoded, $"Message characters {offset + 1}–{offset + length}." }.Where(line => !string.IsNullOrEmpty(line)));
     }
 
     private static Definition Flag(string name, string description, string yes, string no, string unknown = null) =>
         new(1, name, description, value => value switch { "Y" => yes, "N" => no, "U" when unknown != null => unknown, _ => "Unrecognized flag; expected Y or N" + (unknown == null ? "." : " or U.") });
 
-    private static Definition Count(string name) => new(4, name, "Number of items in this category. Four spaces mean the count is unavailable.", value =>
+    private static Definition Count(string name) => new(4, name, "", value =>
         string.IsNullOrWhiteSpace(value) ? "Count unavailable." : int.TryParse(value, NumberStyles.None, CultureInfo.InvariantCulture, out var count) ? count.ToString(CultureInfo.InvariantCulture) + (count == 1 ? " item." : " items.") : "Unrecognized count.");
 
     private static string Code(string value, string[] labels, int firstCode = 0) =>

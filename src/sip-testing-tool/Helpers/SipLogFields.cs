@@ -18,13 +18,13 @@ public static partial class SipLogFields
         ["AB"] = "Item identifier\nThe item's barcode or other library identifier.",
         ["AC"] = "Terminal password\nPassword for the self-check terminal, separate from the login and patron passwords.",
         ["AD"] = "Patron password\nThe patron's PIN or password.",
-        ["AE"] = "Personal name\nThe patron's name as supplied by the library system.",
+        ["AE"] = "Personal name",
         ["AF"] = "Screen message\nText from the library system to display to the user.",
         ["AG"] = "Print line\nText from the library system to print on a receipt.",
         ["AH"] = "Due date\nWhen the checked-out item is due back.",
         ["AJ"] = "Title identifier\nA title or bibliographic identifier, or the item's title text.",
         ["AL"] = "Blocked card message\nThe reason supplied when blocking a patron's card.",
-        ["AM"] = "Library name\nThe library's display name.",
+        ["AM"] = "Library name",
         ["AN"] = "Terminal location\nThe self-check terminal's location supplied by the library system.",
         ["AO"] = "Institution ID\nIdentifies the library or institution for this transaction.",
         ["AP"] = "Current location\nThe item's current location or the location handling the transaction.",
@@ -32,12 +32,12 @@ public static partial class SipLogFields
         ["AS"] = "Hold items\nAn entry in the patron's list of holds; may repeat for multiple items.",
         ["AT"] = "Overdue items\nAn entry in the patron's list of overdue items.",
         ["AU"] = "Charged items\nAn entry in the patron's list of checked-out items.",
-        ["AV"] = "Fine items\nAn entry describing an item associated with a patron fine.",
+        ["AV"] = "Fine item details\nPolaris formats can include a transaction ID, outstanding amount, fine type, fee description and related item details.",
         ["AY"] = "Sequence number\nA digit from 0 to 9 used to match messages for SIP error detection.",
         ["AZ"] = "Checksum\nFour hexadecimal characters used to detect transmission errors.",
-        ["BD"] = "Home address\nThe patron's postal address.",
-        ["BE"] = "Email address\nThe patron's email address.",
-        ["BF"] = "Home phone number\nThe patron's telephone number.",
+        ["BD"] = "Home address",
+        ["BE"] = "Email address",
+        ["BF"] = "Home phone number",
         ["BG"] = "Owner\nThe institution that owns the item.",
         ["BH"] = "Currency type\nThe three-letter currency code for a monetary amount, such as USD.",
         ["BI"] = "Cancel\nY cancels the earlier transaction; N does not request cancellation.",
@@ -46,8 +46,8 @@ public static partial class SipLogFields
         ["BM"] = "Renewed items\nAn entry identifying an item successfully renewed by Renew all.",
         ["BN"] = "Unrenewed items\nAn entry for an item that Renew all could not renew; may include a reason.",
         ["BO"] = "Fee acknowledged\nY accepts the fee associated with the requested transaction.",
-        ["BP"] = "Start item\nThe first list entry requested by Patron information, counting from 1.",
-        ["BQ"] = "End item\nThe last list entry requested by Patron information, counting from 1.",
+        ["BP"] = "Start item\nFirst detail entry, counting from 1. Polaris requires both BP and BQ to return details.",
+        ["BQ"] = "End item\nLast detail entry, inclusive. Polaris requires both BP and BQ to return details.",
         ["BR"] = "Queue position\nThe patron's position in the hold queue.",
         ["BS"] = "Pickup location\nThe location where a hold should be collected.",
         ["BT"] = "Fee type\nA code identifying the kind of fee associated with the transaction.",
@@ -74,7 +74,28 @@ public static partial class SipLogFields
         ["CP"] = "Location code\nThe self-check location supplied during login.",
         ["CQ"] = "Valid patron password\nY means the supplied patron PIN or password is valid; N means it is not.",
         ["DE"] = "Notice comment (extension)\nComment sent by this tool's server-specific Notice update command.",
-        ["VP"] = "Vendor profile (extension)\nThe server-specific vendor profile supplied during login."
+        ["VP"] = "Vendor profile (extension)\nPolaris response format selected at login, such as SIP, 3M, ENVISIONWARE, COMPRISE or ITG.",
+        // Polaris: SIP Message Documentation (2010), pages 2-4, and
+        // RPA via SIP for Vendors 2012, Patron Information Response extensions.
+        ["BC"] = "Birth date (Polaris)",
+        ["PA"] = "Patron code (Polaris)",
+        ["PE"] = "Home branch (Polaris)\nAbbreviation of the patron's registered organization or home branch.",
+        ["PS"] = "Patron statistical class (Polaris)",
+        ["PX"] = "Patron expiration date (Polaris)\nExpiration of the patron's registration, in SIP date/time format.",
+        ["PY"] = "Patron expired (Polaris)\nY means the patron's registration has expired; N means it has not.",
+        ["PZ"] = "Postal code (Polaris)",
+        // U1-U3 use the same library-defined convention as U4/U5, confirmed by
+        // the user; only U4/U5 are listed in the supplied Polaris documents.
+        ["U1"] = "User1 (Polaris)\nPatron attribute configured by the library.",
+        ["U2"] = "User2 (Polaris)\nPatron attribute configured by the library.",
+        ["U3"] = "User3 (Polaris)\nPatron attribute configured by the library.",
+        ["U4"] = "User4 (Polaris)\nPatron attribute configured by the library.",
+        ["U5"] = "User5 (Polaris)\nPatron attribute configured by the library.",
+        ["CR"] = "Collection abbreviation (Polaris)",
+        ["CS"] = "Call number (Polaris)",
+        ["CT"] = "Hold pickup branch (Polaris)",
+        ["CY"] = "Next hold patron barcode (Polaris)\nThe next patron in the item's hold queue.",
+        ["DA"] = "Next hold patron name (Polaris)"
     };
 
     public static SipLogField Find(string transcript, int characterIndex)
@@ -128,28 +149,16 @@ public static partial class SipLogFields
             {
                 return identifiedFixedField;
             }
-            if (index < fieldStart + 2 && char.IsAsciiLetterUpper(message[fieldStart]) && char.IsAsciiLetterUpper(message[fieldStart + 1]))
+            if (index < fieldStart + 2 && IsFieldIdentifier(message.Slice(fieldStart, 2)))
             {
                 var identifier = message.Slice(fieldStart, 2).ToString();
-                var description = descriptions.GetValueOrDefault(identifier,
-                    "Unrecognized field\nThis code is not in the built-in SIP2 reference; it may be a server-specific extension.");
-                return new SipLogField(lineStart + 4 + fieldStart, identifier, identifier + " — " + description);
+                var end = VariableFieldEnd(message, fieldStart);
+                var detail = ReadVariableDetail(message[..2].ToString(), identifier, message.Slice(fieldStart + 2, end - fieldStart - 2).ToString(), fieldStart);
+                return new SipLogField(lineStart + 4 + fieldStart, identifier, VariableHelp(detail));
             }
 
-            // AY's single sequence digit runs directly into AZ, without a '|'.
-            if (message[fieldStart..].StartsWith("AY", StringComparison.Ordinal) && fieldStart + 5 <= message.Length &&
-                message.Slice(fieldStart + 3, 2).SequenceEqual("AZ"))
-            {
-                fieldStart += 3;
-                continue;
-            }
-
-            var delimiter = message[fieldStart..].IndexOf('|');
-            if (delimiter < 0)
-            {
-                break;
-            }
-            fieldStart += delimiter + 1;
+            var fieldEnd = VariableFieldEnd(message, fieldStart);
+            fieldStart = fieldEnd < message.Length && message[fieldEnd] == '|' ? fieldEnd + 1 : fieldEnd;
         }
         return null;
     }
