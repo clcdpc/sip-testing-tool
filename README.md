@@ -81,8 +81,11 @@ Right-click **sip-testing-tool-avalonia → Publish**, select one of its checked
 | --- | --- | --- |
 | `Velopack-Windows` | `artifacts/avalonia/publish/win-x64` | `artifacts/velopack/win-x64` |
 | `Velopack-Linux` | `artifacts/avalonia/publish/linux-x64` | `artifacts/velopack/linux-x64` |
+| `Windows-SingleFile` | `artifacts/avalonia/publish/win-x64-single-file/sip-testing-tool-avalonia.exe` | — |
 
-The profiles publish self-contained .NET applications and then run the pinned local Velopack CLI. Windows produces an installer, portable ZIP and update package; Linux produces an AppImage and update package. Both profiles can be packaged on Windows. Increase **Version** in the Avalonia `.csproj` for every release; a release version must identify the same application contents whenever it is served to users. Keep old release packages when publishing subsequent versions so Velopack can generate deltas.
+The two **Velopack** profiles publish self-contained .NET applications and then run the pinned local Velopack CLI. Windows produces an installer, portable ZIP and update package; Linux produces an AppImage and update package. Both Velopack profiles can be packaged on Windows. Increase **Version** in the Avalonia `.csproj` for every release; a release version must identify the same application contents whenever it is served to users. Keep old release packages when publishing subsequent versions so Velopack can generate deltas.
+
+**Windows-SingleFile** produces one portable Windows x64 EXE containing the application and its Avalonia dependencies. Users install the [x64 .NET 10 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) separately; the .NET 10 Desktop Runtime or SDK also satisfies that requirement. The .NET runtime is excluded from the EXE. Debug symbol files are omitted from the publish output, and Avalonia's native graphics/text libraries unpack into .NET's temporary cache at startup. Settings retain their existing per-user location. Update this portable build by replacing the EXE; use **Velopack-Windows** for the installer and automatic update workflow. See Microsoft's [single-file deployment documentation](https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview) for bundling and native extraction behavior.
 
 If publishing reports an **equal or greater version**, that version already exists in the selected release directory, including packages created during local testing. Increase `<Version>` in `src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj` (for example, `2.1.0` to `2.1.1`) and publish again. The application file version follows that value automatically. Validation publishes can use a separate `VelopackOutputDir` to avoid occupying the next release version in the normal output directory.
 
@@ -97,6 +100,7 @@ Equivalent local commands from the repository root are:
 ```text
 dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=Velopack-Windows
 dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=Velopack-Linux
+dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=Windows-SingleFile
 ```
 
 ## Windows Forms publishing
