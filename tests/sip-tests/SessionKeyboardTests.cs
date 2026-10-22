@@ -191,6 +191,11 @@ public sealed class SessionKeyboardTests
         var message = Message.Create(button.Handle, 0x0100, (IntPtr)Keys.Tab, IntPtr.Zero); // WM_KEYDOWN
         Assert.IsTrue(button.PreProcessMessage(ref message));
         Assert.IsTrue(nextField.ContainsFocus, "Tab should advance directly to " + nextField.Name + ".");
+        if (nextField is TextBox text)
+        {
+            Assert.AreEqual(0, text.SelectionStart);
+            Assert.AreEqual(text.TextLength, text.SelectionLength, "Tab should select the next field's value.");
+        }
     }
 
     private static bool PressEnter(Control field)

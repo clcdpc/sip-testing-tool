@@ -20,6 +20,16 @@ public class ThemedTextBox : TextBox
         }
     }
 
+    protected override void Select(bool directed, bool forward)
+    {
+        base.Select(directed, forward);
+        // Directed selection is keyboard traversal; clicks retain native caret placement.
+        if (directed)
+        {
+            SelectAll();
+        }
+    }
+
     protected override void OnGotFocus(EventArgs e)
     {
         base.OnGotFocus(e);
