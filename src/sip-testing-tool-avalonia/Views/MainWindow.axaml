@@ -89,13 +89,10 @@
         <ColumnDefinition Width="*" MinWidth="440" />
       </Grid.ColumnDefinitions>
       <Border Grid.Column="0" Background="{DynamicResource RibbonBrush}" Padding="14">
-        <Grid RowDefinitions="Auto,Auto,*,Auto">
-          <TextBlock Classes="groupTitle" Text="Command workbench" Margin="0,0,0,12" />
-          <ComboBox Grid.Row="1" x:Name="CommandPicker" ItemsSource="{Binding Commands}" SelectedItem="{Binding SelectedCommand}" HorizontalAlignment="Stretch" Margin="0,0,0,14" AutomationProperties.Name="SIP Command" />
-          <ScrollViewer Grid.Row="2" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
+        <Grid RowDefinitions="Auto,*,Auto">
+          <ComboBox x:Name="CommandPicker" ItemsSource="{Binding Commands}" SelectedItem="{Binding SelectedCommand}" HorizontalAlignment="Stretch" Margin="0,0,0,14" AutomationProperties.Name="SIP Command" />
+          <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="12">
-              <TextBlock Text="{Binding SelectedCommand.Name}" FontWeight="SemiBold" />
-              <TextBlock Classes="hint" Text="{Binding CommandHint}" />
               <StackPanel x:Name="PatronQueryPanel" IsVisible="{Binding IsPatronQuery}" Spacing="12">
                 <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Summary" /><ComboBox ItemsSource="{Binding Summaries}" SelectedItem="{Binding SelectedSummary}" HorizontalAlignment="Stretch" /></StackPanel>
                 <Grid ColumnDefinitions="*,*">
@@ -120,7 +117,7 @@
               <views:CommandOptionsView x:Name="CommandOptionsHost" />
             </StackPanel>
           </ScrollViewer>
-          <Button Grid.Row="3" x:Name="ExecuteButton" Content="{Binding ExecuteLabel}" Command="{Binding ExecuteCommand}" HorizontalAlignment="Stretch" Classes="accent" Margin="0,14,0,0" MinHeight="36" />
+          <Button Grid.Row="2" x:Name="ExecuteButton" Content="{Binding ExecuteLabel}" Command="{Binding ExecuteCommand}" HorizontalAlignment="Stretch" Classes="accent" Margin="0,14,0,0" MinHeight="36" />
         </Grid>
       </Border>
       <GridSplitter Grid.Column="1" ResizeDirection="Columns" HorizontalAlignment="Stretch" Background="{DynamicResource LineBrush}" />

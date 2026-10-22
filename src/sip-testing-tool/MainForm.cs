@@ -97,19 +97,7 @@ namespace Clc.Sip
                 option.Value.Visible = option.Key == command;
             }
 
-            selectedCommandLabel.Text = commandComboBox.Text;
             executeCommandButton.Text = "Execute " + commandComboBox.Text;
-            commandHintLabel.Text = command switch
-            {
-                WorkbenchCommand.Checkin or WorkbenchCommand.ItemInformation => "Uses the shared item barcode.",
-                WorkbenchCommand.PatronInformation or WorkbenchCommand.PatronStatus or
-                    WorkbenchCommand.EndSession or WorkbenchCommand.RenewAll or WorkbenchCommand.FeePaid
-                    => "Uses the shared patron barcode and PIN.",
-                WorkbenchCommand.Login => "Uses the shared login settings.",
-                WorkbenchCommand.AcsStatus => "Uses the current connection.",
-                WorkbenchCommand.NoticeUpdate => "Uses the shared patron and item barcodes.",
-                _ => "Uses the shared patron and item values."
-            };
             commandDetailsLayout.ResumeLayout(true);
             commandDetailsPanel.AutoScrollPosition = Point.Empty;
         }

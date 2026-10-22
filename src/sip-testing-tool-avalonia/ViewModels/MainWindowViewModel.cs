@@ -18,7 +18,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [ObservableProperty] private SessionFields fields = new();
     [ObservableProperty] private AppPreferences preferences = new();
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsPatronQuery), nameof(IsFeePaid), nameof(IsNotice), nameof(ExecuteLabel), nameof(CommandHint), nameof(Options))]
+    [NotifyPropertyChangedFor(nameof(IsPatronQuery), nameof(IsFeePaid), nameof(IsNotice), nameof(ExecuteLabel), nameof(Options))]
     private CommandChoice selectedCommand = CommandChoice.All[0];
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(UsesRange))]
@@ -71,16 +71,6 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     public bool CanRestartUpdate => UpdateReady && !IsBusy;
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
     public string ExecuteLabel => "Execute " + SelectedCommand.Name;
-    public string CommandHint => SelectedCommand.Command switch
-    {
-        SipCommand.Checkin or SipCommand.ItemInformation => "Uses the shared item barcode.",
-        SipCommand.PatronInformation or SipCommand.PatronStatus or SipCommand.RenewAll
-            or SipCommand.EndSession or SipCommand.FeePaid => "Uses the shared patron barcode and PIN.",
-        SipCommand.Login => "Uses the shared login settings.",
-        SipCommand.AcsStatus => "Uses the current connection.",
-        SipCommand.NoticeUpdate => "Uses the shared patron and item barcodes.",
-        _ => "Uses the shared patron and item values."
-    };
 
     public event Action? TransactionAppended;
     public event Action? ThemeChanged;
