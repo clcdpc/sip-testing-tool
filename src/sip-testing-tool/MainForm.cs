@@ -35,6 +35,7 @@ namespace Clc.Sip
         {
             AppTheme.Initialize();
             InitializeComponent();
+            _ = new MessageLogToolTips(logRichTextBox, components);
             ResetCheckoutOptions();
             InitializeCommandOptions();
 

@@ -15,6 +15,12 @@ Open **`src/sip-testing-tool.sln`** in Visual Studio with .NET 10 and Windows de
 
 Both interfaces keep connection, login, patron and item values in the top ribbon. Select a command in the left workbench and use **Execute**; the colored, selectable raw sent/received log remains on the right. The split between workbench and log is resizable. Notice update fields are inline in the workbench in both interfaces.
 
+In the Windows Forms message log, hover over either letter of a field identifier such as **AO**, **AA**, or **AB** to see its name and description. Help covers sent and received SIP2 fields, the **AY** sequence number and **AZ** checksum, and this tool's **VP** and **DE** extensions. Unrecognized field codes are labeled as possible server-specific extensions. Descriptions follow the [SIP2 protocol definition](https://developers.exlibrisgroup.com/wp-content/uploads/2020/01/3M-Standard-Interchange-Protocol-Version-2.00.pdf). The raw transcript remains selectable, copyable and exportable.
+
+Hover over a fixed field value to see its name, decoded value and exact character range within the message. This includes message IDs, date/time values, policy/status flags, language and payment codes, patron status/summary flags, item counts, fixed-length optional fields, and the **AY**/**AZ** values. A subtle dotted outline marks the whole field, including blank spaces and wrapped rows; identified fixed fields include their code in the outline. Click a fixed field to keep a solid outline after moving the pointer away; click elsewhere, select text, or press **Escape** to clear it. Outlines follow scrolling, resizing and themes without changing the raw transcript or its formatting. Unknown message headers and incomplete fixed values are left uninterpreted; identifier help is still available at recognized variable-field boundaries.
+
+Patron status, summary and supported-message (**BX**) flags can be inspected individually, including blank flags. Each tooltip names the hovered flag, shows its position and set/not-set state, and includes a checklist of the whole group. While inspecting a group, faint cell borders separate its positions and an underline marks each set flag; the hovered or clicked flag has its own outline. Reserved positions and unexpected values are labeled explicitly. Patron status and summary use a space for not set; BX uses **N**. These visual guides leave the raw log and copied/exported text unchanged.
+
 Windows Forms **Checkout** includes renewal policy, no-block mode, an optional no-block due date/time, item properties (CH), terminal password (AC), fee acknowledgement (BO), and cancel (BI). Check the date picker to include its date/time; an unchecked picker sends a blank date. Blank item properties omit CH. BO and BI each offer **Omit field**, **No (N)** and **Yes (Y)**. The AC terminal password is separate from the shared login password (CO) and patron PIN (AD).
 
 Windows Forms uses ordinary, unmasked textboxes for passwords and PINs, including default settings. Dark mode uses muted textbox borders and a subdued focus outline.
@@ -89,7 +95,7 @@ ClickOnce signing uses DigiCert KeyLocker through the Windows current-user Perso
 
 ## Verification
 
-Both test projects use MSTest.Sdk 4.5.1. Open `src/sip-testing-tool.sln`, build the solution, then use **Test > Test Explorer > Run All**. The Windows Forms project exposes 31 regression tests, 24 focused command-option tests and 116 individually named form-to-submission cases; the Avalonia project exposes 13 tests. UI tests run on an STA thread. Each assembly runs sequentially because its checks share UI and process state.
+Both test projects use MSTest.Sdk 4.5.1. Open `src/sip-testing-tool.sln`, build the solution, then use **Test > Test Explorer > Run All**. The Windows Forms project exposes 122 regression tests, 24 focused command-option tests and 116 individually named form-to-submission cases; the Avalonia project exposes 13 tests. UI tests run on an STA thread. Each assembly runs sequentially because its checks share UI and process state.
 
 From the repository root, the equivalent command is:
 
