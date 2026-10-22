@@ -83,6 +83,8 @@ Right-click **sip-testing-tool-avalonia → Publish**, select one of its checked
 | `Velopack-Linux` | `artifacts/avalonia/publish/linux-x64` | `artifacts/velopack/linux-x64` |
 | `Windows-SingleFile` | `artifacts/avalonia/publish/win-x64-single-file/sip-testing-tool-avalonia.exe` | — |
 
+The paths above are relative to the consolidated repository root. `PublishPaths.props` calculates the absolute `artifacts` path from its location in that root. All Avalonia and Windows Forms profiles use it, so Visual Studio and command-line publishing share the same destination in any checkout.
+
 The two **Velopack** profiles publish self-contained .NET applications and then run the pinned local Velopack CLI. Windows produces an installer, portable ZIP and update package; Linux produces an AppImage and update package. Both Velopack profiles can be packaged on Windows. Increase **Version** in the Avalonia `.csproj` for every release; a release version must identify the same application contents whenever it is served to users. Keep old release packages when publishing subsequent versions so Velopack can generate deltas.
 
 **Windows-SingleFile** produces one portable Windows x64 EXE containing the application and its Avalonia dependencies. Users install the [x64 .NET 10 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) separately; the .NET 10 Desktop Runtime or SDK also satisfies that requirement. The .NET runtime is excluded from the EXE. Debug symbol files are omitted from the publish output, and Avalonia's native graphics/text libraries unpack into .NET's temporary cache at startup. Settings retain their existing per-user location. Update this portable build by replacing the EXE; use **Velopack-Windows** for the installer and automatic update workflow. See Microsoft's [single-file deployment documentation](https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview) for bundling and native extraction behavior.
@@ -118,6 +120,8 @@ From the repository root, the equivalent command is:
 ```text
 dotnet test src/sip-testing-tool.sln
 ```
+
+Run `dotnet msbuild build/VerifyPublishPaths.proj` to check all five publish profiles from a publishing-helper context outside the application projects. This checks their output destinations without building, signing or packaging a release.
 
 Tests are ordinary MSTest methods grouped by behavior: checksums, connections, console output, workbench behavior, checkout, themes, command-option state, settings, updates and desktop sessions. Test classes use MSTest lifecycle methods; the shared test support is limited to UI setup, test data and loopback SIP peers. Both projects use MSTest assertions directly.
 

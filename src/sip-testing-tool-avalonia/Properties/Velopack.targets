@@ -1,13 +1,19 @@
 <Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('PublishPaths.props', '$(MSBuildThisFileDirectory)'))" Condition="'$(SipRepositoryDirectory)' == ''" />
   <PropertyGroup>
     <VelopackPackId>Clc.SipTestingTool.Desktop</VelopackPackId>
   </PropertyGroup>
 
-  <Target Name="PackageWithVelopack" AfterTargets="Publish" Condition="'$(CreateVelopackPackage)' == 'true'">
+  <Target Name="ResolveVelopackPublishPaths" Condition="'$(CreateVelopackPackage)' == 'true'">
+    <PropertyGroup>
+      <VelopackOutputDir Condition="'$(VelopackOutputDir)' == ''">$([System.IO.Path]::GetFullPath('$(SipArtifactsDirectory)velopack/$(RuntimeIdentifier)'))</VelopackOutputDir>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="PackageWithVelopack" AfterTargets="Publish" DependsOnTargets="ResolveVelopackPublishPaths" Condition="'$(CreateVelopackPackage)' == 'true'">
     <Error Condition="'$(Configuration)' != 'Release'" Text="Velopack releases must use the Release configuration." />
     <Error Condition="'$(RuntimeIdentifier)' != 'win-x64' and '$(RuntimeIdentifier)' != 'linux-x64'" Text="Choose the Velopack-Windows or Velopack-Linux publish profile." />
     <PropertyGroup>
-      <VelopackOutputDir Condition="'$(VelopackOutputDir)' == ''">$(MSBuildProjectDirectory)/../../artifacts/velopack/$(RuntimeIdentifier)</VelopackOutputDir>
       <VelopackPlatform Condition="'$(RuntimeIdentifier)' == 'win-x64'">win</VelopackPlatform>
       <VelopackPlatform Condition="'$(RuntimeIdentifier)' == 'linux-x64'">linux</VelopackPlatform>
       <VelopackMainExe>$(AssemblyName)</VelopackMainExe>

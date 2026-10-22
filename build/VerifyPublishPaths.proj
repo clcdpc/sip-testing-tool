@@ -1,0 +1,33 @@
+<Project DefaultTargets="VerifyPublishPaths">
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('PublishPaths.props', '$(MSBuildThisFileDirectory)'))" />
+  <PropertyGroup>
+    <RepositoryDirectory>$(SipRepositoryDirectory)</RepositoryDirectory>
+  </PropertyGroup>
+  <!-- Simulate a publishing helper importing a profile from outside its app project. -->
+  <Import Project="$(ProfileFile)" Condition="'$(ProfileFile)' != ''" />
+  <Import Project="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/Velopack.targets" Condition="'$(ProfileFile)' != ''" />
+
+  <Target Name="VerifyPublishPaths">
+    <ItemGroup>
+      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool/Properties/PublishProfiles/FolderProfile.pubxml" Subdirectory="app" />
+      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool/Properties/PublishProfiles/ClickOnceProfile.pubxml" Subdirectory="clickonce" />
+      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/Velopack-Windows.pubxml" Subdirectory="avalonia/publish/win-x64" />
+      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/Velopack-Linux.pubxml" Subdirectory="avalonia/publish/linux-x64" />
+      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/Windows-SingleFile.pubxml" Subdirectory="avalonia/publish/win-x64-single-file" />
+    </ItemGroup>
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="VerifyProfile" Properties="ProfileFile=%(ProfileCheck.Identity);ExpectedSubdirectory=%(ProfileCheck.Subdirectory)" />
+  </Target>
+
+  <Target Name="VerifyProfile" DependsOnTargets="ResolveVelopackPublishPaths">
+    <PropertyGroup>
+      <ExpectedPublishPath>$([System.IO.Path]::GetFullPath('$(RepositoryDirectory)artifacts/$(ExpectedSubdirectory)/'))</ExpectedPublishPath>
+      <ActualPublishPath>$([System.IO.Path]::GetFullPath('$(PublishDir)'))</ActualPublishPath>
+      <ActualPublishUrl Condition="'$(PublishUrl)' != ''">$([System.IO.Path]::GetFullPath('$(PublishUrl)'))</ActualPublishUrl>
+      <ExpectedVelopackPath>$([System.IO.Path]::GetFullPath('$(RepositoryDirectory)artifacts/velopack/$(RuntimeIdentifier)'))</ExpectedVelopackPath>
+    </PropertyGroup>
+    <Error Condition="'$(ActualPublishPath)' != '$(ExpectedPublishPath)'" Text="$(ProfileFile): PublishDir resolves to $(ActualPublishPath); expected $(ExpectedPublishPath)." />
+    <Error Condition="'$(ActualPublishUrl)' != '$(ExpectedPublishPath)'" Text="$(ProfileFile): PublishUrl resolves to $(ActualPublishUrl); expected $(ExpectedPublishPath)." />
+    <Error Condition="'$(CreateVelopackPackage)' == 'true' and '$(VelopackOutputDir)' != '$(ExpectedVelopackPath)'" Text="$(ProfileFile): VelopackOutputDir resolves to $(VelopackOutputDir); expected $(ExpectedVelopackPath)." />
+    <Message Importance="high" Text="$([System.IO.Path]::GetFileName('$(ProfileFile)')): $(ActualPublishPath)" />
+  </Target>
+</Project>

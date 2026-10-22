@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <SipRepositoryDirectory>$(MSBuildThisFileDirectory)</SipRepositoryDirectory>
+    <SipArtifactsDirectory Condition="'$(SipArtifactsDirectory)' == ''">$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)artifacts/'))</SipArtifactsDirectory>
+  </PropertyGroup>
+</Project>
