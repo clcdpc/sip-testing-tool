@@ -62,6 +62,7 @@ namespace Clc.Sip
             {
                 if (connectionLayout.ContainsFocus)
                 {
+                    connectButton.Focus();
                     connectButton.PerformClick();
                     return true;
                 }
@@ -70,6 +71,7 @@ namespace Clc.Sip
                 if ((loginLayout.ContainsFocus && !vendorProfileComboBox.DroppedDown)
                     || loginUidAlgorithmTextBox.ContainsFocus || loginPwdAlgorithmTextBox.ContainsFocus)
                 {
+                    loginButton.Focus();
                     loginButton.PerformClick();
                     return true;
                 }

@@ -15,7 +15,7 @@ Open **`src/sip-testing-tool.sln`** in Visual Studio with .NET 10 and Windows de
 
 Both interfaces keep connection, login, patron and item values in the top ribbon. Select a command in the left workbench and use **Execute**; the colored, selectable raw sent/received log remains on the right. The split between workbench and log is resizable. Notice update fields are inline in the workbench in both interfaces.
 
-In Windows Forms, press **Enter** in any connection field to **Connect**, or in any login field (including the algorithm options) to **Login**. Login becomes available after connecting. When the vendor profile list is open, Enter accepts the highlighted choice; press Enter again to log in. The profile list includes the documented Polaris values **SIP**, **ENVISIONWARE**, **COMPRISE**, **3M** and **ITG**. **SIP** selects the default profile; clearing the field omits VP. Custom profile values can still be typed.
+In Windows Forms, press **Enter** in any connection field to **Connect**, or in any login field (including the algorithm options) to **Login**. Enter focuses the corresponding button, so the next **Tab** moves directly to the next section: Login after Connect, or Patron after Login. Validation errors focus the field needing correction. Login becomes available after connecting. When the vendor profile list is open, Enter accepts the highlighted choice; press Enter again to log in. The profile list includes the documented Polaris values **SIP**, **ENVISIONWARE**, **COMPRISE**, **3M** and **ITG**. **SIP** selects the default profile; clearing the field omits VP. Custom profile values can still be typed.
 
 In the Windows Forms message log, hover over either character of a field identifier such as **AO**, **AA**, or **U4** to see its name and description. Help covers sent and received SIP2 fields, the **AY** sequence number and **AZ** checksum, and vendor extensions. Alphanumeric identifiers are recognized without treating their values as malformed data. Unknown field codes retain their original values and are labeled as possible server-specific extensions. Standard descriptions follow the [SIP2 protocol definition](https://developers.exlibrisgroup.com/wp-content/uploads/2020/01/3M-Standard-Interchange-Protocol-Version-2.00.pdf). The raw transcript remains selectable, copyable and exportable.
 
@@ -103,7 +103,7 @@ ClickOnce signing uses DigiCert KeyLocker through the Windows current-user Perso
 
 ## Verification
 
-Both test projects use MSTest.Sdk 4.5.1. Open `src/sip-testing-tool.sln`, build the solution, then use **Test > Test Explorer > Run All**. The Windows Forms project exposes 201 regression tests, 24 focused command-option tests and 116 individually named form-to-submission cases; the Avalonia project exposes 13 tests. UI tests run on an STA thread. Each assembly runs sequentially because its checks share UI and process state.
+Both test projects use MSTest.Sdk 4.5.1. Open `src/sip-testing-tool.sln`, build the solution, then use **Test > Test Explorer > Run All**. The Windows Forms project exposes 203 regression tests, 24 focused command-option tests and 116 individually named form-to-submission cases; the Avalonia project exposes 13 tests. UI tests run on an STA thread. Each assembly runs sequentially because its checks share UI and process state.
 
 From the repository root, the equivalent command is:
 

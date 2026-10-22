@@ -36,6 +36,7 @@ public sealed class SessionKeyboardTests
             Assert.AreEqual("current-terminal", form.SipClient.AP);
             Assert.IsTrue(form.GetButton("loginButton").Enabled);
             Assert.IsEmpty(probe.Messages, "Connecting should not also log in or execute a command.");
+            AssertTabMovesTo(form.GetButton("connectButton"), form.GetTextBox("usernameTextBox"));
         }
         finally { form.SipClient?.Dispose(); }
     }
@@ -66,6 +67,7 @@ public sealed class SessionKeyboardTests
             Assert.AreEqual("9300CNedited-user|COedited-password|CPedited-location|VPcustom-profile|",
                 SipRequest.Payload(probe.CaptureSingleRequest(form.SipClient)));
             Assert.AreEqual(1, form.GetRichTextBox("logRichTextBox").Text.Split("--> ").Length - 1);
+            AssertTabMovesTo(form.GetButton("loginButton"), form.GetTextBox("patronBarcodeTextBox"));
         }
         finally { form.SipClient.Dispose(); }
     }
@@ -81,11 +83,34 @@ public sealed class SessionKeyboardTests
         foreach (var name in new[] { "usernameTextBox", "passwordTextBox", "locationCodeTextBox",
             "vendorProfileComboBox", "loginUidAlgorithmTextBox", "loginPwdAlgorithmTextBox" })
         {
-            Assert.IsTrue(PressEnter(form.GetControl(name)));
+            var field = form.GetControl(name);
+            Assert.IsTrue(PressEnter(field));
+            Assert.IsTrue(field.ContainsFocus, "A disabled Login button should leave focus in the field.");
         }
         Assert.AreEqual(0, loginClicks);
         Assert.IsNull(form.SipClient);
         Assert.AreEqual("", form.GetRichTextBox("logRichTextBox").Text);
+    }
+
+    [TestMethod]
+    [DataRow("loginUidAlgorithmTextBox")]
+    [DataRow("loginPwdAlgorithmTextBox")]
+    public void EnterWithInvalidLoginOptionsFocusesTheFieldNeedingCorrection(string invalidFieldName)
+    {
+        using var probe = new CommandProbe();
+        using var form = WorkbenchFixture.CreateConnectedForm(probe);
+        var invalidField = form.GetTextBox(invalidFieldName);
+        invalidField.Text = "";
+        try
+        {
+            Assert.IsTrue(PressEnter(form.GetTextBox("usernameTextBox")));
+            Assert.IsTrue(invalidField.Focused, "Validation must retain focus on the invalid field.");
+            Assert.AreEqual("Login", form.GetComboBox("commandComboBox").SelectedItem);
+            Assert.IsTrue(PressEnter(invalidField));
+            Assert.IsTrue(invalidField.Focused);
+            Assert.IsEmpty(probe.Messages);
+        }
+        finally { form.SipClient.Dispose(); }
     }
 
     [TestMethod]
@@ -104,10 +129,12 @@ public sealed class SessionKeyboardTests
             // Leave the key available to the native list instead of submitting Login.
             Assert.IsFalse(profiles.PreProcessMessage(ref message));
             Assert.IsEmpty(probe.Messages);
+            Assert.IsTrue(profiles.ContainsFocus, "Accepting a profile should keep focus in the list.");
 
             profiles.DroppedDown = false;
             Assert.IsTrue(PressEnter(profiles));
             StringAssert.Contains(probe.CaptureSingleRequest(form.SipClient), "VPENVISIONWARE|");
+            AssertTabMovesTo(form.GetButton("loginButton"), form.GetTextBox("patronBarcodeTextBox"));
         }
         finally { form.SipClient.Dispose(); }
     }
@@ -156,6 +183,14 @@ public sealed class SessionKeyboardTests
             StringAssert.Contains(probe.CaptureSingleRequest(form.SipClient), "VP" + profile + "|");
         }
         finally { form.SipClient.Dispose(); }
+    }
+
+    private static void AssertTabMovesTo(Button button, Control nextField)
+    {
+        Assert.IsTrue(button.Focused, "Enter should focus " + button.Name + ".");
+        var message = Message.Create(button.Handle, 0x0100, (IntPtr)Keys.Tab, IntPtr.Zero); // WM_KEYDOWN
+        Assert.IsTrue(button.PreProcessMessage(ref message));
+        Assert.IsTrue(nextField.ContainsFocus, "Tab should advance directly to " + nextField.Name + ".");
     }
 
     private static bool PressEnter(Control field)
