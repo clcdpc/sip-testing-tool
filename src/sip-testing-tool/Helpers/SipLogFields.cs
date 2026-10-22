@@ -8,7 +8,7 @@ public sealed record SipLogFlagGroup(int Offset, string Name, string Value, int 
 
 public sealed record SipLogField(int Offset, string Identifier, string Description, int Length = 2, bool IsFixed = false, SipLogFlagGroup FlagGroup = null);
 
-public static class SipLogFields
+public static partial class SipLogFields
 {
     // SIP2 v2.00, field identifiers and message layouts:
     // https://developers.exlibrisgroup.com/wp-content/uploads/2020/01/3M-Standard-Interchange-Protocol-Version-2.00.pdf

@@ -9,6 +9,7 @@ internal static class ControlLookupExtensions
     public static ComboBox GetComboBox(this Control parent, string name) => GetRequiredControl<ComboBox>(parent, name);
     public static Button GetButton(this Control parent, string name) => GetRequiredControl<Button>(parent, name);
     public static RichTextBox GetRichTextBox(this Control parent, string name) => GetRequiredControl<RichTextBox>(parent, name);
+    public static DataGridView GetDataGridView(this Control parent, string name) => GetRequiredControl<DataGridView>(parent, name);
     public static MaskedTextBox GetMaskedTextBox(this Control parent, string name) => GetRequiredControl<MaskedTextBox>(parent, name);
     public static ThemedDateTimePicker GetDatePicker(this Control parent, string name) => GetRequiredControl<ThemedDateTimePicker>(parent, name);
     public static TableLayoutPanel GetTableLayoutPanel(this Control parent, string name) => GetRequiredControl<TableLayoutPanel>(parent, name);

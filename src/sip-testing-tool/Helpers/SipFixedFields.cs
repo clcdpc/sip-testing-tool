@@ -123,6 +123,85 @@ internal static class SipFixedFields
         ["CQ"] = Flag("Valid patron password", "Whether the supplied patron PIN or password is valid.", "Patron password valid.", "Patron password invalid.")
     };
 
+    public static int ReadDetails(string message, List<SipLogDetail> fields, out string name)
+    {
+        name = null;
+        if (!layouts.TryGetValue(message[..2], out var layout))
+        {
+            return -1;
+        }
+        name = layout.Name;
+        fields.Add(new(0, 2, "Message ID", "Identifies the SIP command or response.", message[..2], name));
+        var offset = 2;
+        foreach (var definition in layout.Fields)
+        {
+            if (offset + definition.Length > message.Length || message.AsSpan(offset, definition.Length).Contains('|'))
+            {
+                fields.Add(new(offset, message.Length - offset, "Incomplete fixed header", "Expected " + definition.Name +
+                    $" ({definition.Length} characters). The remaining data is shown without guessing field boundaries.", message[offset..],
+                    State: SipLogValueState.Invalid));
+                return message.Length;
+            }
+            fields.Add(ReadDetail(definition, message.Substring(offset, definition.Length), offset));
+            offset += definition.Length;
+        }
+        return offset;
+    }
+
+    public static SipLogDetail ReadIdentifiedDetail(string identifier, string value, int offset)
+    {
+        if (identifier == "BX")
+        {
+            return ReadFlagDetail("BX · Supported messages", "Y means supported; N means not supported.", supportedMessageNames,
+                value, offset, 2, 'N', reservedRemainder: false);
+        }
+        return identifiedFields.TryGetValue(identifier, out var definition) ? ReadDetail(definition, value, offset, identifier) : null;
+    }
+
+    private static SipLogDetail ReadDetail(Definition definition, string value, int offset, string identifier = null)
+    {
+        var name = identifier == null ? definition.Name : identifier + " · " + definition.Name;
+        var prefixLength = identifier == null ? 0 : 2;
+        if (value.Length != definition.Length)
+        {
+            return new(offset, value.Length + prefixLength, name, definition.Description, value,
+                $"Invalid width: expected {definition.Length} characters; received {value.Length}.", State: SipLogValueState.Invalid);
+        }
+        if (definition.FlagNames != null)
+        {
+            return ReadFlagDetail(name, definition.Description, definition.FlagNames, value, offset, prefixLength);
+        }
+        return new(offset, value.Length + prefixLength, name, definition.Description, value, definition.Decode?.Invoke(value));
+    }
+
+    private static SipLogDetail ReadFlagDetail(string name, string description, string[] labels, string value, int offset,
+        int prefixLength, char clearValue = ' ', bool reservedRemainder = true)
+    {
+        var flags = new List<SipLogDetail>();
+        var activeCount = 0;
+        for (var index = 0; index < value.Length; index++)
+        {
+            var defined = index < labels.Length;
+            var set = defined && value[index] == 'Y';
+            var clear = value[index] == clearValue;
+            var label = defined ? labels[index] : reservedRemainder ? "Reserved position" : "Unrecognized position (extension)";
+            var state = set ? SipLogValueState.Set : !clear && (defined || reservedRemainder) ? SipLogValueState.Invalid : SipLogValueState.Normal;
+            var meaning = !defined && !reservedRemainder ? $"Unrecognized extension value '{value[index]}'" : set ? "SET (Y)" : clear ?
+                (!defined ? "Reserved; blank as expected" : clearValue == ' ' ? "Not set (space)" : "Not set (N)") :
+                $"INVALID ('{value[index]}'); expected " + (defined ? clearValue == ' ' ? "Y or space" : "Y or N" : "a space");
+            flags.Add(new(offset + prefixLength + index, 1, $"Flag {index + 1} (position {index})", label, value[index].ToString(), meaning, State: state));
+            if (set)
+            {
+                activeCount++;
+            }
+        }
+        var incomplete = value.Length < labels.Length;
+        var summary = $"{activeCount} of {labels.Length} flags set." +
+            (incomplete ? $" Incomplete: expected at least {labels.Length} flags; received {value.Length}." : "");
+        return new(offset, prefixLength + value.Length, name, description, value, summary, flags,
+            incomplete || flags.Any(flag => flag.State == SipLogValueState.Invalid) ? SipLogValueState.Invalid : SipLogValueState.Normal);
+    }
+
     public static SipLogField Find(ReadOnlySpan<char> message, int index, int messageOffset, out int firstVariableOffset)
     {
         firstVariableOffset = -1;

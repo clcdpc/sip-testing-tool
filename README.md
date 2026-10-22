@@ -21,6 +21,8 @@ Hover over a fixed field value to see its name, decoded value and exact characte
 
 Patron status, summary and supported-message (**BX**) flags can be inspected individually, including blank flags. Each tooltip names the hovered flag, shows its position and set/not-set state, and includes a checklist of the whole group. While inspecting a group, faint cell borders separate its positions and an underline marks each set flag; the hovered or clicked flag has its own outline. Reserved positions and unexpected values are labeled explicitly. Patron status and summary use a space for not set; BX uses **N**. These visual guides leave the raw log and copied/exported text unchanged.
 
+Click **+** beside a Windows Forms log message to open its field table beneath the transcript. Each field has a name, brief description and value in message order, including repeated fields and the sequence/checksum trailer. Patron status, summary and supported-message fields have a parent row followed by an indented row for every flag, with explicit **SET**, **Not set**, reserved or invalid states. Unknown fields and incomplete data retain their original values. The table shows one message at a time; another **+** switches messages. Drag the divider to resize the table, click **−** or **Collapse** to close it, or press **Escape** while the table has focus. Table cells can be selected and copied, and raw log selection and export keep their existing behavior.
+
 Windows Forms **Checkout** includes renewal policy, no-block mode, an optional no-block due date/time, item properties (CH), terminal password (AC), fee acknowledgement (BO), and cancel (BI). Check the date picker to include its date/time; an unchecked picker sends a blank date. Blank item properties omit CH. BO and BI each offer **Omit field**, **No (N)** and **Yes (Y)**. The AC terminal password is separate from the shared login password (CO) and patron PIN (AD).
 
 Windows Forms uses ordinary, unmasked textboxes for passwords and PINs, including default settings. Dark mode uses muted textbox borders and a subdued focus outline.
@@ -95,7 +97,7 @@ ClickOnce signing uses DigiCert KeyLocker through the Windows current-user Perso
 
 ## Verification
 
-Both test projects use MSTest.Sdk 4.5.1. Open `src/sip-testing-tool.sln`, build the solution, then use **Test > Test Explorer > Run All**. The Windows Forms project exposes 122 regression tests, 24 focused command-option tests and 116 individually named form-to-submission cases; the Avalonia project exposes 13 tests. UI tests run on an STA thread. Each assembly runs sequentially because its checks share UI and process state.
+Both test projects use MSTest.Sdk 4.5.1. Open `src/sip-testing-tool.sln`, build the solution, then use **Test > Test Explorer > Run All**. The Windows Forms project exposes 132 regression tests, 24 focused command-option tests and 116 individually named form-to-submission cases; the Avalonia project exposes 13 tests. UI tests run on an STA thread. Each assembly runs sequentially because its checks share UI and process state.
 
 From the repository root, the equivalent command is:
 

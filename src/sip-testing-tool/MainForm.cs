@@ -30,11 +30,14 @@ namespace Clc.Sip
         private bool allowCmd = false;
         private bool syncingThemeMenu;
         private SettingsForm settingsForm;
+        private readonly MessageLogView messageLogView;
 
         public MainForm()
         {
             AppTheme.Initialize();
             InitializeComponent();
+            messageLogView = new MessageLogView(logRichTextBox) { Dock = DockStyle.Fill };
+            logLayout.Controls.Add(messageLogView, 0, 1);
             _ = new MessageLogToolTips(logRichTextBox, components);
             ResetCheckoutOptions();
             InitializeCommandOptions();
@@ -172,6 +175,7 @@ namespace Clc.Sip
             }
             finally { syncingThemeMenu = false; }
             logRichTextBox.RecolorTranscript();
+            messageLogView.RefreshTheme();
         }
 
         private void darkModeMenuItem_CheckedChanged(object sender, EventArgs e)
