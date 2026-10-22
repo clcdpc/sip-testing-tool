@@ -1,11 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="MSTest.Sdk/4.5.1">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <UseVSTest>true</UseVSTest>
     <TargetFramework>net10.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <AppConfig>..\..\src\sip-testing-tool\App.config</AppConfig>
-    <Version>2.1.0</Version>
-    <FileVersion>2.1.0.8</FileVersion>
     <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <Deterministic>true</Deterministic>

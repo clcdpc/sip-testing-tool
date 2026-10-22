@@ -9,7 +9,7 @@ Open **`src/sip-testing-tool.sln`** in Visual Studio with .NET 10 and Windows de
 | `src/sip-testing-tool` | Windows Forms app; the main form is `MainForm.cs`. |
 | `src/sip-core` | Shared SIP client used by the app and console. |
 | `src/sip-console` | JSON command runner that emits PRTG XML. |
-| `tests/sip-tests` | Regression checks; run as the startup project without debugging to see the results. |
+| `tests/sip-tests` | MSTest regression checks for SIP checksums, connections and console output. |
 
 The console project includes `Examples/acs-status.json`. Supply a JSON filename or inline JSON as its command-line argument. Existing field aliases, `{now}` placeholders, and success regular expressions are supported.
 
@@ -24,3 +24,7 @@ ClickOnce signing uses DigiCert KeyLocker through the Windows current-user Perso
 Generated output is ignored by Git.
 
 The original Git history is preserved. This version combines the .NET 10 app with ACS Status, Always On Top, configurable encoding/checksum validation, and connection-loss handling from the older project.
+
+## Verification
+
+Run `dotnet test tests/sip-tests/sip-tests.csproj`, or use Visual Studio's Test Explorer. The tests use MSTest.Sdk 4.5.1 and loopback SIP peers.
