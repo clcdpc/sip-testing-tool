@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Drawing;
+using System.Runtime.InteropServices;
 using Clc.Sip.Helpers;
 using Clc.Sip.Tests.TestSupport;
 using static Clc.Sip.Tests.TestSupport.WinFormsTestEnvironment;
@@ -523,8 +524,158 @@ public sealed class FixedFieldLogTests
         }
     }
 
+    [TestMethod(DisplayName = "Rapid hover changes repaint only outline regions without erasing the transcript")]
+    [DataRow(false)]
+    [DataRow(true)]
+    public void RapidHoverDoesNotFlashTheTranscript(bool darkMode)
+    {
+        var previousTheme = AppTheme.IsDarkMode;
+        try
+        {
+            AppTheme.SetDarkMode(darkMode);
+            using var form = new Form { ClientSize = new Size(740, 240) };
+            using var components = new Container();
+            using var log = new TestLog
+            {
+                Dock = DockStyle.Fill,
+                Font = new Font("Consolas", 11),
+                BorderStyle = BorderStyle.None,
+                ReadOnly = true,
+                DetectUrls = false,
+                BackColor = AppTheme.LogBackground,
+                ForeColor = AppTheme.Text
+            };
+            form.Controls.Add(log);
+            using var help = new MessageLogToolTips(log, components);
+            ShowOffscreen(form);
+            log.Text = "--> 11YN20261021    153000                  AOlibrary|AApatron|ABitem|AY0AZABCD\n" +
+                "<-- 24Y   Y         00120261021    153000AOlibrary|AApatron|AEReader|AY0AZABCD";
+            log.Select(4, 3);
+            Application.DoEvents();
+            var text = log.Text;
+            var rtf = log.Rtf;
+            var identifiers = new[] { text.IndexOf("AO", StringComparison.Ordinal), text.IndexOf("AA", StringComparison.Ordinal), text.IndexOf("AB", StringComparison.Ordinal) };
+            log.TrackPainting();
+            foreach (var index in Enumerable.Range(0, 10).SelectMany(_ => identifiers))
+            {
+                log.MoveTo(PointAt(log, index));
+                log.Update();
+            }
+            log.MoveAway();
+            log.Update();
+            Assert.AreEqual(0, log.PaintBounds.Count, $"Identifier-only hover should not repaint the transcript; observed {log.BackgroundErases} background erases.");
+
+            var response = text.IndexOf("<--", StringComparison.Ordinal);
+            var fixedValues = new[] { 8, 26, response + 6, response + 10, response + 23, text.LastIndexOf("AZ", StringComparison.Ordinal) };
+            foreach (var index in Enumerable.Range(0, 10).SelectMany(_ => fixedValues))
+            {
+                var previous = OutlineRows(help.OutlinedField);
+                var paints = log.PaintBounds.Count;
+                log.MoveTo(PointAt(log, index));
+                Assert.IsNotNull(help.OutlinedField);
+                var current = OutlineRows(help.OutlinedField);
+                log.Update();
+                foreach (var row in previous.Concat(current))
+                {
+                    Assert.IsTrue(log.PaintBounds.Skip(paints).Any(bounds => bounds.Contains(row)),
+                        "Repainting must cover both the previous and current outline, including the whole flag group, to avoid stale borders.");
+                }
+            }
+            Assert.IsTrue(log.PaintBounds.Count > 0, "The outlines must still update while hovering fixed fields.");
+            Assert.IsTrue(log.PaintBounds.All(bounds => bounds != log.ClientRectangle), "Hover changes must not repaint the entire log.");
+            Assert.AreEqual(0, log.BackgroundErases, "Hover painting must not blank the native RichEdit background before redrawing text.");
+            log.TrackPainting();
+            log.MoveTo(PointAt(log, fixedValues[^1] + 1));
+            log.Update();
+            Assert.AreEqual(0, log.PaintBounds.Count, "Moving within the same outlined field must not repaint it again.");
+            log.MoveAway();
+            log.Update();
+            Assert.IsNull(help.OutlinedField);
+            Assert.AreEqual(text, log.Text);
+            Assert.AreEqual(rtf, log.Rtf);
+            Assert.AreEqual(4, log.SelectionStart);
+            Assert.AreEqual(3, log.SelectionLength);
+
+            log.Select(0, 0);
+            log.ClickAt(PointAt(log, 8));
+            log.MoveAway();
+            log.Update();
+            var pinned = help.OutlinedField;
+            Assert.IsNotNull(pinned);
+            log.TrackPainting();
+            foreach (var index in identifiers)
+            {
+                log.MoveTo(PointAt(log, index));
+                log.Update();
+            }
+            Assert.AreEqual(pinned, help.OutlinedField);
+            Assert.AreEqual(0, log.PaintBounds.Count, "Unchanged pinned outlines must not trigger repaints while crossing field identifiers.");
+
+            log.Escape();
+            log.Text = string.Join('\n', Enumerable.Repeat("<-- 24Y   Y         00120261021    153000AOlibrary|AApatron|", 40));
+            log.Select(0, 0);
+            log.ScrollToCaret();
+            Application.DoEvents();
+            var secondGroup = log.Text.IndexOf('\n') + 1 + 6;
+            log.MoveTo(PointAt(log, secondGroup));
+            log.Update();
+            var scrolledField = help.OutlinedField;
+            var previousRows = OutlineRows(scrolledField);
+            Assert.IsNotNull(scrolledField?.FlagGroup);
+            log.TrackPainting();
+            log.ScrollOneLine();
+            log.Update();
+            var relocatedRows = OutlineRows(scrolledField);
+            Assert.AreNotEqual(previousRows[0].Y, relocatedRows[0].Y);
+            Assert.IsNull(help.OutlinedField, "Scrolling must dismiss hover.");
+            Assert.IsTrue(relocatedRows.All(row => log.PaintBounds.Any(bounds => bounds.Contains(row))),
+                "Scrolling must clear flag borders carried with the text to their new positions.");
+
+            IReadOnlyList<Rectangle> OutlineRows(SipLogField field) => help.GetOutlineBounds(field?.FlagGroup == null ? field :
+                field with { Offset = field.FlagGroup.Offset, Length = field.FlagGroup.Value.Length });
+        }
+        finally { AppTheme.SetDarkMode(previousTheme); }
+    }
+
     private sealed class TestLog : RichTextBox
     {
+        private bool trackPainting;
+        public List<Rectangle> PaintBounds { get; } = new();
+        public int BackgroundErases { get; private set; }
+        public void TrackPainting()
+        {
+            PaintBounds.Clear();
+            BackgroundErases = 0;
+            trackPainting = true;
+        }
+
+        protected override void WndProc(ref Message message)
+        {
+            if (trackPainting && message.Msg == 0x000F && GetUpdateRect(Handle, out var bounds, false))
+            {
+                PaintBounds.Add(Rectangle.FromLTRB(bounds.Left, bounds.Top, bounds.Right, bounds.Bottom));
+            }
+            if (trackPainting && message.Msg == 0x0014)
+            {
+                BackgroundErases++;
+            }
+            base.WndProc(ref message);
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct NativeRect
+        {
+            public int Left, Top, Right, Bottom;
+        }
+
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        private static extern bool GetUpdateRect(IntPtr window, out NativeRect bounds, [MarshalAs(UnmanagedType.Bool)] bool erase);
+
+        [DllImport("user32.dll", EntryPoint = "SendMessageW")]
+        private static extern IntPtr SendMessage(IntPtr window, int message, IntPtr wParam, IntPtr lParam);
+
+        public void ScrollOneLine() => SendMessage(Handle, 0x0115, new IntPtr(1), IntPtr.Zero); // WM_VSCROLL, SB_LINEDOWN
         public void MoveTo(Point point) => OnMouseMove(new MouseEventArgs(MouseButtons.None, 0, point.X, point.Y, 0));
         public void MoveAway() => OnMouseLeave(EventArgs.Empty);
         public void ClickAt(Point point)

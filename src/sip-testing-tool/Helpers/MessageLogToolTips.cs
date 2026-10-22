@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Drawing.Drawing2D;
+using System.Runtime.InteropServices;
 
 namespace Clc.Sip.Helpers;
 
@@ -15,6 +16,10 @@ public sealed class MessageLogToolTips : Component
     private SipLogField pinnedField;
     private SipLogField pendingClick;
     private Point hoverPoint;
+    private SipLogField lastOutline;
+    private Rectangle[] outlineBounds = Array.Empty<Rectangle>();
+    private bool lastWasPinned;
+    private bool toolTipVisible;
     private bool disposed;
 
     public SipLogField OutlinedField => hoveredField?.IsFixed == true ? hoveredField : pinnedField;
@@ -111,14 +116,14 @@ public sealed class MessageLogToolTips : Component
             return;
         }
 
-        DismissHover(sender, args);
+        HideToolTip();
         hoveredField = field;
         if (field != null)
         {
             hoverPoint = args.Location;
             hoverTimer.Start();
-            log.Invalidate();
         }
+        RefreshOutline();
     }
 
     private void Show(object sender, EventArgs args)
@@ -134,27 +139,36 @@ public sealed class MessageLogToolTips : Component
     {
         var lineHeight = (int)Math.Ceiling(log.Font.Height * log.ZoomFactor);
         toolTip.Show(field.Description, log, position.X + 12, position.Y + lineHeight + 4, 15000);
+        toolTipVisible = true;
+    }
+
+    private void HideToolTip()
+    {
+        hoverTimer.Stop();
+        if (toolTipVisible && log.IsHandleCreated && !log.IsDisposed)
+        {
+            toolTip.Hide(log);
+        }
+        toolTipVisible = false;
     }
 
     private void DismissHover(object sender, EventArgs args)
     {
-        hoverTimer.Stop();
+        HideToolTip();
         hoveredField = null;
-        if (log.IsHandleCreated && !log.IsDisposed)
-        {
-            toolTip.Hide(log);
-            log.Invalidate();
-        }
+        RefreshOutline(geometryChanged: true);
     }
 
     private void MouseDown(object sender, MouseEventArgs args)
     {
-        DismissHover(sender, args);
+        HideToolTip();
+        hoveredField = null;
         if (args.Button == MouseButtons.Left)
         {
             pinnedField = null;
             pendingClick = args.Clicks == 1 ? GetFieldAt(args.Location) : null;
         }
+        RefreshOutline();
     }
 
     private void MouseUp(object sender, MouseEventArgs args)
@@ -165,7 +179,7 @@ public sealed class MessageLogToolTips : Component
         {
             pinnedField = clicked;
             ShowField(clicked, args.Location);
-            log.Invalidate();
+            RefreshOutline();
         }
     }
 
@@ -194,10 +208,82 @@ public sealed class MessageLogToolTips : Component
         if (log.IsHandleCreated)
         {
             outline.AssignHandle(log.Handle);
+            lastOutline = null;
+            outlineBounds = Array.Empty<Rectangle>();
+            RefreshOutline(geometryChanged: true);
         }
     }
 
     private void DetachOutline(object sender, EventArgs args) => outline.ReleaseHandle();
+
+    private Rectangle[] GetPaintBounds(SipLogField field)
+    {
+        if (field?.IsFixed != true)
+        {
+            return Array.Empty<Rectangle>();
+        }
+        // Flag inspection also paints the rest of the group's cell borders and
+        // set markers. Include them when removing or moving the outline.
+        if (field.FlagGroup != null)
+        {
+            field = field with { Offset = field.FlagGroup.Offset, Length = field.FlagGroup.Value.Length };
+        }
+        var margin = (int)Math.Ceiling(Math.Max(1, log.DeviceDpi / 96f)) + 1;
+        return GetOutlineBounds(field).Select(bounds => Rectangle.Intersect(log.ClientRectangle, Rectangle.Inflate(bounds, margin, margin)))
+            .Where(bounds => !bounds.IsEmpty).ToArray();
+    }
+
+    private void RefreshOutline(bool geometryChanged = false)
+    {
+        if (!log.IsHandleCreated || log.IsDisposed)
+        {
+            return;
+        }
+        var field = OutlinedField;
+        var pinned = field != null && field == pinnedField;
+        var sameOutline = field == lastOutline && pinned == lastWasPinned;
+        if (sameOutline && !geometryChanged)
+        {
+            return;
+        }
+        var bounds = GetPaintBounds(field);
+        if (sameOutline && bounds.SequenceEqual(outlineBounds))
+        {
+            return;
+        }
+        // Native scrolling can move the painted outline along with the text.
+        // When hover is dismissed, clear that relocated footprint as well.
+        var relocated = geometryChanged && field != lastOutline ? GetPaintBounds(lastOutline) : Array.Empty<Rectangle>();
+        var dirty = outlineBounds.Concat(relocated).Concat(bounds).Distinct().ToArray();
+        lastOutline = field;
+        lastWasPinned = pinned;
+        outlineBounds = bounds;
+        foreach (var rectangle in dirty)
+        {
+            var clipped = Rectangle.Intersect(log.ClientRectangle, rectangle);
+            if (!clipped.IsEmpty)
+            {
+                var nativeBounds = new NativeRect(clipped);
+                // Full-client invalidation makes RichEdit redraw all its text on
+                // each mouse move. Repaint only the overlay footprints, without
+                // first erasing the background, and let Windows coalesce moves.
+                _ = InvalidateRect(log.Handle, in nativeBounds, false);
+            }
+        }
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private readonly struct NativeRect(Rectangle bounds)
+    {
+        public readonly int Left = bounds.Left;
+        public readonly int Top = bounds.Top;
+        public readonly int Right = bounds.Right;
+        public readonly int Bottom = bounds.Bottom;
+    }
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool InvalidateRect(IntPtr window, in NativeRect bounds, [MarshalAs(UnmanagedType.Bool)] bool erase);
 
     private void DrawOutline(Graphics graphics)
     {
@@ -207,7 +293,10 @@ public sealed class MessageLogToolTips : Component
             return;
         }
 
-        graphics.SetClip(log.ClientRectangle);
+        lastOutline = field;
+        lastWasPinned = field == pinnedField;
+        outlineBounds = GetPaintBounds(field);
+        graphics.SetClip(log.ClientRectangle, CombineMode.Intersect);
         if (field.FlagGroup != null)
         {
             DrawFlagGroup(graphics, field.FlagGroup);
