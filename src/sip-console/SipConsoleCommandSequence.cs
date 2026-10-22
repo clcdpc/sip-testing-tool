@@ -1,8 +1,5 @@
-using Clc.Sip;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
+using Clc.Sip;
 using Newtonsoft.Json;
 
 namespace sip_console
@@ -47,7 +44,10 @@ namespace sip_console
             var output = new List<SipResponse>();
 
             if (string.IsNullOrWhiteSpace(Host) || Port < 1 || Port > 65535)
+            {
                 throw new ArgumentException("Host and a port between 1 and 65535 are required.");
+            }
+
             using var sip = new sip2(Host, Port)
             {
                 TextEncoding = Encoding.GetEncoding(EncodingName),
@@ -59,7 +59,11 @@ namespace sip_console
             {
                 var cmdString = cmd.ToCommandString();
                 var txn = sip.Custom(cmdString);
-                if (txn.ConnectionReset) throw new System.IO.IOException("The SIP server closed the connection.");
+                if (txn.ConnectionReset)
+                {
+                    throw new System.IO.IOException("The SIP server closed the connection.");
+                }
+
                 output.Add(new SipResponse(cmd, txn.Response, txn.ResponseTime));
             }
 
