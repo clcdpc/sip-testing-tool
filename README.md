@@ -7,7 +7,7 @@ Open **`src/sip-testing-tool.sln`** in Visual Studio with .NET 10 and Windows de
 | Project | Purpose |
 | --- | --- |
 | `src/sip-testing-tool-avalonia` | Avalonia desktop app for Windows and Linux, with Velopack updates. |
-| `src/sip-testing-tool` | Windows Forms app with the existing ClickOnce publishing profiles. |
+| `src/sip-testing-tool` | Windows Forms app with folder, single-file and ClickOnce publishing profiles. |
 | `src/sip-core` | Shared SIP client used by both apps and the console. |
 | `src/sip-console` | JSON command runner that emits PRTG XML. |
 | `tests/sip-tests` | Windows Forms, console and SIP regression checks. |
@@ -107,7 +107,17 @@ dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=Window
 
 ## Windows Forms publishing
 
-The Windows Forms project's profiles are under `src/sip-testing-tool/Properties/PublishProfiles`. Folder publishing writes to `artifacts/app`; ClickOnce writes to `artifacts/clickonce` and retains the existing install URL and release sequence.
+Right-click **sip-testing-tool → Publish** and choose one of the profiles under `src/sip-testing-tool/Properties/PublishProfiles`:
+
+| Visual Studio profile | Output under the consolidated repository root |
+| --- | --- |
+| `FolderProfile` | `artifacts/app` |
+| `Windows-SingleFile` | `artifacts/app-single-file/sip-testing-tool.exe` |
+| `ClickOnceProfile` | `artifacts/clickonce` |
+
+**Windows-SingleFile** produces one portable Windows x64 EXE containing the application and its dependencies. Users install the [x64 .NET 10 Desktop Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) separately. Starting defaults are embedded in the EXE; the app creates `%LOCALAPPDATA%\Clc\SipTestingTool\winforms-single-file.config` on first launch, and **Change default settings** saves there. Existing saved values survive replacing the portable EXE. Folder and ClickOnce builds retain their existing configuration files. Publish from the command line with `dotnet publish src/sip-testing-tool -c Release -p:PublishProfile=Windows-SingleFile`.
+
+ClickOnce retains the existing install URL and release sequence.
 
 ClickOnce signing uses DigiCert KeyLocker through the Windows current-user Personal certificate store. The profile selects certificate `4DA4BD6078F452BB8F3B6CE766144B352F8D55EC`, valid through June 23, 2027, using the `DigiCert Software Trust Manager KSP` provider. Publishing requires the KeyLocker client and authentication for the publishing Windows account; no PFX file is referenced. See [DigiCert's ClickOnce signing instructions](https://docs.digicert.com/en/digicert-keylocker/code-signing/sign-with-third-party-signing-tools/windows-applications/sign-clickonce-manifests-with-visual-studio-using-ksp-library.html).
 
@@ -121,7 +131,7 @@ From the repository root, the equivalent command is:
 dotnet test src/sip-testing-tool.sln
 ```
 
-Run `dotnet msbuild build/VerifyPublishPaths.proj` to check all five publish profiles, including Visual Studio's XML-stream reader that has no profile file location. This checks their output destinations without building, signing or packaging a release.
+Run `dotnet msbuild build/VerifyPublishPaths.proj` to check all six publish profiles, including Visual Studio's XML-stream reader that has no profile file location. This checks their output destinations without building, signing or packaging a release.
 
 Tests are ordinary MSTest methods grouped by behavior: checksums, connections, console output, workbench behavior, checkout, themes, command-option state, settings, updates and desktop sessions. Test classes use MSTest lifecycle methods; the shared test support is limited to UI setup, test data and loopback SIP peers. Both projects use MSTest assertions directly.
 

@@ -55,6 +55,7 @@
   <Target Name="VerifyPublishPaths">
     <ItemGroup>
       <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool/Properties/PublishProfiles/FolderProfile.pubxml" ApplicationProject="sip-testing-tool" Subdirectory="app" />
+      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool/Properties/PublishProfiles/Windows-SingleFile.pubxml" ApplicationProject="sip-testing-tool" Subdirectory="app-single-file" />
       <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool/Properties/PublishProfiles/ClickOnceProfile.pubxml" ApplicationProject="sip-testing-tool" Subdirectory="clickonce" />
       <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/Velopack-Windows.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/publish/win-x64" />
       <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/Velopack-Linux.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/publish/linux-x64" />
