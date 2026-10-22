@@ -120,6 +120,8 @@ The script downloads **master** from the public repository, detects Intel or App
 
 Everything downloaded or built stays under **`sip-testing-tool-macos` in the working directory**. Each run gets a new `build-…` subfolder containing the source, `build.log` and **`SIP Testing Tool.app`**. The script creates its icon, signs the local build with an ad-hoc signature, verifies the bundle and reveals it in Finder. Open the app there, or copy it to Applications. `sip-testing-tool-macos/latest-app.txt` records the latest successful app path.
 
+The bundle keeps native executables in `Contents/MacOS`, native libraries in `Contents/Frameworks`, and managed DLLs and data in `Contents/Resources`. Relative links expose the publish layout from all three directories so .NET can resolve assemblies, native libraries and runtime helpers, including after moving or copying the app. This follows the [signed-bundle layout rules](https://docs.avaloniaui.net/docs/deployment/macos/#sandbox-and-bundle); copying managed DLLs directly into `MacOS` causes `codesign` to reject them as unsigned nested code. After updating the build script, download it again before rerunning it; an older downloaded copy retains its original packaging steps.
+
 Run the same script again to build the latest `master`; the private SDK and NuGet cache are reused, and previous builds are preserved. These locally built Mac apps update by rerunning the script. They are not Velopack releases or Developer ID/notarized downloads.
 
 The `macOS-arm64` and `macOS-x64` publish profiles also support direct `dotnet publish` commands with an existing .NET 10 SDK. They produce self-contained application folders under the repository's `artifacts/avalonia/publish` directory. The standalone script adds the [macOS `.app` packaging](https://docs.avaloniaui.net/docs/deployment/macos), icon and local signing on the Mac.
@@ -152,7 +154,7 @@ dotnet test src/sip-testing-tool.sln
 
 Run `dotnet msbuild build/VerifyPublishPaths.proj` to check all eight publish profiles, including Visual Studio's XML-stream reader that has no profile file location. This checks their output destinations without building, signing or packaging a release.
 
-Run `bash build/TestMacBuild.sh` on macOS, Linux or Git Bash to exercise the standalone Mac bootstrap with local tool/download fixtures. These checks cover architecture selection, paths with spaces, app packaging, preserving previous builds and failure handling. They use no network or installed SDK and leave diagnostics under `artifacts/mac build tests-…`; actual macOS launch and code-signing verification still require a Mac.
+Run `bash build/TestMacBuild.sh` on macOS, Linux or Git Bash to exercise the standalone Mac bootstrap with local tool/download fixtures. These checks cover architecture selection, paths with spaces, signed-bundle directory rules, relative links after copying the app, preserving previous builds and failure handling. Git Bash uses MSYS symbolic-link emulation for these fixtures. They use no network or installed SDK and leave diagnostics under `artifacts/mac build tests-…`; actual macOS launch and code-signing verification still require a Mac.
 
 Tests are ordinary MSTest methods grouped by behavior: checksums, connections, console output, workbench behavior, checkout, themes, command-option state, settings, updates and desktop sessions. Test classes use MSTest lifecycle methods; the shared test support is limited to UI setup, test data and loopback SIP peers. Both projects use MSTest assertions directly.
 

@@ -2,6 +2,15 @@
 # Exercise the standalone bootstrap without network access, an SDK or macOS tools.
 set -euo pipefail
 
+# Git Bash otherwise copies symlink targets, hiding the bundle layout being tested.
+case "$(uname -s)" in
+    MINGW*|MSYS*)
+        if [[ "${MSYS:-}" != *winsymlinks* ]]; then
+            export MSYS="${MSYS:+$MSYS }winsymlinks"
+            exec /bin/bash "$0" "$@"
+        fi ;;
+esac
+
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 mkdir -p "$repo_root/artifacts"
 test_root="$(mktemp -d "$repo_root/artifacts/mac build tests-XXXXXX")"
@@ -66,10 +75,20 @@ case "$tool" in
                 [[ "$*" == *"--configuration Release --artifacts-path "*" -p:PublishProfile=macOS-$MOCK_ARCH -p:UsedAvaloniaProducts=" ]]
                 source_root="${project%/src/*}"
                 output="$source_root/artifacts/avalonia/publish/osx-$MOCK_ARCH"
-                mkdir -p "$output"
+                mkdir -p "$output/zh-Hans"
                 printf '#!/bin/bash\nexit 0\n' > "$output/sip-testing-tool-avalonia"
+                printf '#!/bin/bash\nexit 0\n' > "$output/createdump"
+                chmod +x "$output/createdump"
                 printf 'native\n' > "$output/libcoreclr.dylib"
-                printf 'managed\n' > "$output/sip-testing-tool-avalonia.dll" ;;
+                printf 'native\n' > "$output/libhostfxr.dylib"
+                printf 'native\n' > "$output/libhostpolicy.dylib"
+                printf 'managed\n' > "$output/sip-testing-tool-avalonia.dll"
+                printf 'framework\n' > "$output/System.Xml.Linq.dll"
+                printf 'core library\n' > "$output/System.Private.CoreLib.dll"
+                printf '{}\n' > "$output/sip-testing-tool-avalonia.runtimeconfig.json"
+                printf '{}\n' > "$output/sip-testing-tool-avalonia.deps.json"
+                printf 'satellite\n' > "$output/zh-Hans/Avalonia.resources.dll"
+                printf 'hidden resource\n' > "$output/.app-data" ;;
             msbuild) printf '2.1.1-beta.1\n' ;;
             *) exit 91 ;;
         esac ;;
@@ -86,11 +105,30 @@ case "$tool" in
         ! grep -q '__APP_VERSION__' "$2" ;;
     file)
         case "$2" in
-            */sip-testing-tool-avalonia|*.dylib) printf 'Mach-O executable\n' ;;
+            */sip-testing-tool-avalonia|*/createdump|*.dylib) printf 'Mach-O executable\n' ;;
             *) printf 'data\n' ;;
         esac ;;
     codesign)
         [ "${MOCK_SIGN_FAIL:-0}" = "0" ] || exit 33
+        target="${!#}"
+        if [[ "$target" == *.app ]]; then
+            # Managed DLLs are resources; only native code may be a real file here.
+            shopt -s dotglob nullglob
+            for entry in "$target/Contents/MacOS"/* "$target/Contents/Frameworks"/*; do
+                if [ -L "$entry" ]; then
+                    [ -e "$entry" ]
+                    case "$(readlink "$entry")" in
+                        ../Resources/*|../Frameworks/*|../MacOS/*) ;;
+                        *) printf 'Invalid bundle link: %s\n' "$entry" >&2; exit 94 ;;
+                    esac
+                elif [ ! -f "$entry" ] || [[ "$(file -b "$entry")" != *Mach-O* ]] \
+                    || [[ "$entry" == */MacOS/*.dylib ]] \
+                    || { [[ "$entry" == */Frameworks/* ]] && [[ "$entry" != *.dylib ]]; }; then
+                    printf 'Unsigned or misplaced bundle entry: %s\n' "$entry" >&2
+                    exit 95
+                fi
+            done
+        fi
         printf '%s\n' "$*" >> "$MOCK_WORK_ROOT/signing.log"
         if [ "$1" = "--verify" ]; then
             [ "$2" = "--deep" ] && [ "$3" = "--strict" ]
@@ -124,18 +162,46 @@ assert_app() {
     app="$(cat "$folder/sip-testing-tool-macos/latest-app.txt")"
     [[ "$app" == "$folder/sip-testing-tool-macos/build-"*"/SIP Testing Tool.app" ]]
     [ -x "$app/Contents/MacOS/sip-testing-tool-avalonia" ]
+    [ -x "$app/Contents/MacOS/createdump" ]
+    [ -f "$app/Contents/Frameworks/libcoreclr.dylib" ]
+    [ -f "$app/Contents/Resources/sip-testing-tool-avalonia.dll" ]
+    [ -f "$app/Contents/Resources/System.Xml.Linq.dll" ]
+    [ -f "$app/Contents/Resources/zh-Hans/Avalonia.resources.dll" ]
+    [ -f "$app/Contents/Resources/.app-data" ]
+    for name in sip-testing-tool-avalonia.dll System.Xml.Linq.dll sip-testing-tool-avalonia.runtimeconfig.json sip-testing-tool-avalonia.deps.json zh-Hans .app-data; do
+        [ -L "$app/Contents/MacOS/$name" ]
+        [ "$(readlink "$app/Contents/MacOS/$name")" = "../Resources/$name" ]
+        [ -e "$app/Contents/MacOS/$name" ]
+    done
+    [ "$(readlink "$app/Contents/MacOS/libcoreclr.dylib")" = "../Frameworks/libcoreclr.dylib" ]
     [ -f "$app/Contents/MacOS/libcoreclr.dylib" ]
-    [ -f "$app/Contents/MacOS/sip-testing-tool-avalonia.dll" ]
+    # .NET resolves the main DLL to Resources, then probes for its native runtime.
+    for name in libhostfxr.dylib libhostpolicy.dylib libcoreclr.dylib; do
+        [ "$(readlink "$app/Contents/Resources/$name")" = "../Frameworks/$name" ]
+        [ -f "$app/Contents/Resources/$name" ]
+    done
+    # Native runtime code may probe relative to its own resolved Frameworks path.
+    [ -f "$app/Contents/Frameworks/System.Private.CoreLib.dll" ]
+    [ -x "$app/Contents/Frameworks/createdump" ]
     [ -f "$app/Contents/Resources/app.icns" ]
     [ -s "${app%/*}/build.log" ]
     [ -x "$folder/sip-testing-tool-macos/dotnet-$MOCK_ARCH/dotnet" ]
-    [ "$(wc -l < "$folder/sip-testing-tool-macos/signing.log" | tr -d ' ')" = "4" ]
+    [ "$(wc -l < "$folder/sip-testing-tool-macos/signing.log" | tr -d ' ')" = "7" ]
+    grep -Fq -- "$app/Contents/Frameworks/libcoreclr.dylib" "$folder/sip-testing-tool-macos/signing.log"
 }
 
 export MOCK_ARCH=arm64 MOCK_CPU=arm64 MOCK_ARM_HARDWARE=1
 run_build "$test_root/Apple Silicon"
 assert_app "$test_root/Apple Silicon"
 first_app="$(cat "$test_root/Apple Silicon/sip-testing-tool-macos/latest-app.txt")"
+cp -R "$first_app" "$test_root/Relocated.app"
+[ -L "$test_root/Relocated.app/Contents/MacOS/sip-testing-tool-avalonia.dll" ]
+[ -f "$test_root/Relocated.app/Contents/MacOS/sip-testing-tool-avalonia.dll" ]
+[ -f "$test_root/Relocated.app/Contents/MacOS/libcoreclr.dylib" ]
+[ -f "$test_root/Relocated.app/Contents/MacOS/zh-Hans/Avalonia.resources.dll" ]
+[ -f "$test_root/Relocated.app/Contents/Resources/libhostfxr.dylib" ]
+[ -f "$test_root/Relocated.app/Contents/Frameworks/System.Private.CoreLib.dll" ]
+[ -x "$test_root/Relocated.app/Contents/Frameworks/createdump" ]
 printf 'keep source edits\n' > "${first_app%/*}/source/sentinel.txt"
 printf 'keep work folder\n' > "$test_root/Apple Silicon/sip-testing-tool-macos/sentinel.txt"
 run_build "$test_root/Apple Silicon"

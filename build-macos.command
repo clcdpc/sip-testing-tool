@@ -94,8 +94,31 @@ publish_root="$source_root/artifacts/avalonia/publish/$runtime"
 app="$run_root/SIP Testing Tool.app"
 macos_root="$app/Contents/MacOS"
 resources="$app/Contents/Resources"
-mkdir -p "$macos_root" "$resources"
-cp -R "$publish_root/." "$macos_root/"
+frameworks="$app/Contents/Frameworks"
+mkdir -p "$macos_root" "$resources" "$frameworks"
+# Keep managed assemblies and data out of code-only directories. Relative links
+# preserve .NET's publish layout while allowing the whole app to be relocated.
+shopt -s dotglob nullglob
+for entry in "$publish_root"/*; do
+    name="${entry##*/}"
+    if [ -f "$entry" ] && [[ "$(file -b "$entry")" == *Mach-O* ]]; then
+        case "$name" in
+            *.dylib) destination="Frameworks" ;;
+            *) destination="MacOS" ;;
+        esac
+    else
+        destination="Resources"
+    fi
+    cp -R "$entry" "$app/Contents/$destination/$name"
+    # The .NET host resolves assembly links before looking for its runtime;
+    # native libraries also locate helpers relative to their own directory.
+    for directory in MacOS Resources Frameworks; do
+        if [ "$directory" != "$destination" ]; then
+            ln -s "../$destination/$name" "$app/Contents/$directory/$name"
+        fi
+    done
+done
+shopt -u dotglob nullglob
 chmod +x "$macos_root/sip-testing-tool-avalonia"
 sed "s/__APP_VERSION__/$version/g" "$macos_assets/Info.plist" > "$app/Contents/Info.plist"
 plutil -lint "$app/Contents/Info.plist"
@@ -117,7 +140,7 @@ while IFS= read -r -d '' binary; do
     if [[ "$(file -b "$binary")" == *Mach-O* ]]; then
         codesign --force --sign - --timestamp=none "$binary"
     fi
-done < <(find "$macos_root" -type f -print0)
+done < <(find "$macos_root" "$frameworks" -type f -print0)
 codesign --force --sign - --timestamp=none --entitlements "$macos_assets/Entitlements.plist" "$app"
 codesign --verify --deep --strict "$app"
 
