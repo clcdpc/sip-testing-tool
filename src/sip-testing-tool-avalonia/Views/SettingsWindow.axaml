@@ -1,53 +1,51 @@
 <Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:models="using:Clc.Sip.Desktop.Models"
+        xmlns:views="using:Clc.Sip.Desktop.Views"
         x:Class="Clc.Sip.Desktop.Views.SettingsWindow" x:DataType="models:AppPreferences"
-        Title="Default settings" Width="940" Height="640" MinWidth="800" MinHeight="580"
+        Title="Default settings" Width="900" Height="600" MinWidth="800" MinHeight="560"
         WindowStartupLocation="CenterOwner" Background="{DynamicResource SurfaceBrush}">
-  <Grid RowDefinitions="Auto,*,Auto" Margin="22">
-    <TextBlock Text="Default settings" FontSize="20" FontWeight="SemiBold" Margin="0,0,0,18" />
+  <Grid RowDefinitions="Auto,*,Auto" Margin="18">
+    <TextBlock Text="Default settings" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12" />
     <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
-      <Grid ColumnDefinitions="*,28,*">
-        <StackPanel Spacing="12">
+      <Grid ColumnDefinitions="*,24,*">
+        <StackPanel Spacing="10">
           <TextBlock Classes="groupTitle" Text="Connection and login" />
-          <Grid ColumnDefinitions="*,82">
-            <StackPanel Classes="field" Margin="0,0,10,0"><TextBlock Classes="fieldLabel" Text="Server" /><TextBox Text="{Binding Defaults.Server}" /></StackPanel>
-            <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Port" /><TextBox x:Name="DefaultPortField" Text="{Binding Defaults.Port}" /></StackPanel>
-          </Grid>
-          <Grid ColumnDefinitions="*,*">
-            <StackPanel Classes="field" Margin="0,0,10,0"><TextBlock Classes="fieldLabel" Text="Institution (AO)" /><TextBox Text="{Binding Defaults.Ao}" /></StackPanel>
-            <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Terminal (AP)" /><TextBox Text="{Binding Defaults.Ap}" /></StackPanel>
-          </Grid>
-          <Grid ColumnDefinitions="*,*">
-            <StackPanel Classes="field" Margin="0,0,10,0"><TextBlock Classes="fieldLabel" Text="Username" /><TextBox Text="{Binding Defaults.Username}" /></StackPanel>
-            <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Password" /><TextBox Text="{Binding Defaults.Password}" /></StackPanel>
-          </Grid>
-          <Grid ColumnDefinitions="*,*">
-            <StackPanel Classes="field" Margin="0,0,10,0"><TextBlock Classes="fieldLabel" Text="Location code (CP)" /><TextBox Text="{Binding Defaults.LocationCode}" /></StackPanel>
-            <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Vendor profile (VP)" /><TextBox Text="{Binding Defaults.VendorProfile}" /></StackPanel>
-          </Grid>
+          <views:OptionalFieldRow Label="Server"><TextBox Text="{Binding Defaults.Server}" /></views:OptionalFieldRow>
+          <views:OptionalFieldRow Label="Port"><TextBox x:Name="DefaultPortField" Text="{Binding Defaults.Port}" /></views:OptionalFieldRow>
+          <views:OptionalFieldRow Label="Institution (AO)"><TextBox Text="{Binding Defaults.Ao}" /></views:OptionalFieldRow>
+          <views:OptionalFieldRow Label="Terminal (AP)"><TextBox Text="{Binding Defaults.Ap}" /></views:OptionalFieldRow>
+          <views:OptionalFieldRow Label="Username"><TextBox Text="{Binding Defaults.Username}" /></views:OptionalFieldRow>
+          <views:OptionalFieldRow Label="Password"><TextBox Text="{Binding Defaults.Password}" /></views:OptionalFieldRow>
+          <views:OptionalFieldRow Label="Location code (CP)"><TextBox Text="{Binding Defaults.LocationCode}" /></views:OptionalFieldRow>
+          <views:OptionalFieldRow Label="Vendor profile (VP)"><TextBox Text="{Binding Defaults.VendorProfile}" /></views:OptionalFieldRow>
           <CheckBox Content="Connect on startup" IsChecked="{Binding ConnectOnStartup}" />
-          <CheckBox Content="Dark theme" IsChecked="{Binding DarkTheme}" />
-          <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Character encoding" /><TextBox Text="{Binding EncodingName}" PlaceholderText="UTF-8" /></StackPanel>
+          <views:OptionalFieldRow Label="Character encoding">
+            <Border BorderBrush="{DynamicResource LineBrush}" Background="{DynamicResource InputBrush}" BorderThickness="1" CornerRadius="3">
+              <Grid ColumnDefinitions="*,24">
+                <AutoCompleteBox x:Name="EncodingField" Classes="joinedInput" MinimumPrefixLength="0" FilterMode="None" Text="{Binding EncodingName}" AutomationProperties.Name="Character encoding" />
+                <Button x:Name="EncodingDropDownButton" Grid.Column="1" Content="▾" Padding="0" BorderThickness="0" Background="Transparent" MinWidth="0" MinHeight="24" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Focusable="False" Click="ChooseEncoding_Click" AutomationProperties.Name="Choose character encoding" />
+              </Grid>
+            </Border>
+          </views:OptionalFieldRow>
           <CheckBox Content="Validate response checksums" IsChecked="{Binding ValidateChecksums}" />
         </StackPanel>
-        <StackPanel Grid.Column="2" Spacing="12">
+        <StackPanel Grid.Column="2" Spacing="10">
           <TextBlock Classes="groupTitle" Text="Patron and item" />
-          <Grid ColumnDefinitions="*,100">
-            <StackPanel Classes="field" Margin="0,0,10,0"><TextBlock Classes="fieldLabel" Text="Patron barcode" /><TextBox Text="{Binding Defaults.PatronBarcode}" /></StackPanel>
-            <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Patron PIN" /><TextBox Text="{Binding Defaults.PatronPin}" /></StackPanel>
-          </Grid>
-          <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Item barcode" /><TextBox Text="{Binding Defaults.ItemBarcode}" /></StackPanel>
+          <views:OptionalFieldRow Label="Patron barcode"><TextBox Text="{Binding Defaults.PatronBarcode}" /></views:OptionalFieldRow>
+          <views:OptionalFieldRow Label="Patron PIN"><TextBox Text="{Binding Defaults.PatronPin}" /></views:OptionalFieldRow>
+          <views:OptionalFieldRow Label="Item barcode"><TextBox Text="{Binding Defaults.ItemBarcode}" /></views:OptionalFieldRow>
           <Separator Margin="0,8" />
+          <CheckBox Content="Dark theme" IsChecked="{Binding DarkTheme}" />
           <TextBlock Classes="groupTitle" Text="Application updates" />
-          <StackPanel Classes="field"><TextBlock Classes="fieldLabel" Text="Update feed base URL" /><TextBox Text="{Binding UpdateFeedUrl}" PlaceholderText="https://…/updates/desktop/" /></StackPanel>
+          <views:OptionalFieldRow Label="Update feed base URL"><TextBox Text="{Binding UpdateFeedUrl}" PlaceholderText="https://…/updates/desktop/" /></views:OptionalFieldRow>
           <CheckBox Content="Check and download updates on startup" IsChecked="{Binding CheckUpdatesOnStartup}" />
           <TextBlock Classes="hint" Text="Downloaded updates are installed when you choose Restart to update." />
           <TextBlock x:Name="SettingsError" TextWrapping="Wrap" Foreground="{DynamicResource ErrorTextBrush}" />
         </StackPanel>
       </Grid>
     </ScrollViewer>
-    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,18,0,0">
+    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,12,0,0">
       <Button Content="Cancel" Click="Cancel_Click" />
       <Button x:Name="SaveDefaultsButton" Content="Save defaults" Classes="accent" Click="Save_Click" />
     </StackPanel>

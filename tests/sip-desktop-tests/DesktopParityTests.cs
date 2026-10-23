@@ -19,7 +19,7 @@ namespace Clc.Sip.Desktop.Tests;
 
 [TestClass]
 [TestCategory("Avalonia")]
-public sealed class DesktopParityTests
+public sealed partial class DesktopParityTests
 {
     private static HeadlessUnitTestSession ui = null!;
     private const string response = "64YYYY      Y   00120261022    083815000100000000000600000000AO145|AA21870002169440|AECARD, CLC TEST|BZ0060|CA0112|CB0117|BLY|CQY|BHUSD|BV20.89|CC10.00|U1|U2NONE or UNUSED|U3NONE or UNUSED|U4YES Computer Access|U5|AV25116288 $5.00|AV25116287 $15.89 \"04 Overdue\" 1234567 A library book|AFPatron has too many fines.|AY1AZ81AC";

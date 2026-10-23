@@ -1,6 +1,8 @@
 using System.Text;
+using System.Text.RegularExpressions;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Templates;
 using Avalonia.Interactivity;
 using Avalonia.Input;
 using Avalonia.VisualTree;
@@ -23,6 +25,8 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        NoticeStatusField.ItemTemplate = NoticeMediumField.ItemTemplate = NoticeTypeField.ItemTemplate =
+            new FuncDataTemplate<Enum>((value, _) => new TextBlock { Text = Regex.Replace(value.ToString(), "(?<!^)([A-Z][a-z])", " $1") });
         AddHandler(KeyDownEvent, SessionKeyDown, RoutingStrategies.Tunnel);
         LogInspection = new SipLogInspector(MessageLog, MessageFields);
         PropertyChanged += (_, args) =>
@@ -78,6 +82,13 @@ public partial class MainWindow : Window
     }
 
     private void ScrollLog() => MessageLog.ScrollToEnd();
+
+    private void VendorProfiles_Click(object? sender, RoutedEventArgs args)
+    {
+        var open = !VendorProfileField.IsDropDownOpen;
+        VendorProfileField.Focus();
+        VendorProfileField.IsDropDownOpen = open;
+    }
 
     private async void SessionKeyDown(object? sender, KeyEventArgs args)
     {

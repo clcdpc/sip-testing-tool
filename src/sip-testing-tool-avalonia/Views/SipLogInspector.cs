@@ -76,7 +76,9 @@ public sealed class SipLogInspector : IDisposable
         if (expandedLine == line && expandedText == text) { Collapse(); return; }
         expandedLine = line;
         expandedText = text;
-        panel.ShowMessage(SipLogFields.DescribeMessage(text[4..]));
+        var number = document.Lines.Take(line.LineNumber).Count(candidate => candidate.Length >= 4 && IsMessage(document.GetText(candidate.Offset, 4)));
+        panel.ShowMessage(SipLogFields.DescribeMessage(text[4..]),
+            $"{(text.StartsWith("--> ", StringComparison.Ordinal) ? "Sent" : "Received")} message {number}");
         ExpansionChanged?.Invoke(true);
         margin.InvalidateVisual();
     }

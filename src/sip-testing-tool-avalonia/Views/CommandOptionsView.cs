@@ -14,7 +14,7 @@ namespace Clc.Sip.Desktop.Views;
 public sealed class CommandOptionsView : UserControl
 {
     private MainWindowViewModel? model;
-    private readonly StackPanel fields = new() { Spacing = 12 };
+    private readonly StackPanel fields = new() { Spacing = 10 };
 
     public CommandOptionsView()
     {
@@ -83,7 +83,8 @@ public sealed class CommandOptionsView : UserControl
             SipCommand.Login =>
             [
                 Text("User ID algorithm", nameof(CommandOptions.UidAlgorithm), "0 sends plain text; other identifiers describe already encoded values agreed with the server.", 1),
-                Text("Password algorithm", nameof(CommandOptions.PwdAlgorithm), "Choosing an algorithm does not encrypt the visible credentials.", 1)
+                Text("Password algorithm", nameof(CommandOptions.PwdAlgorithm), "Choosing an algorithm does not encrypt the visible credentials.", 1),
+                new TextBlock { Classes = { "hint" }, Text = "Credentials come from the ribbon and are sent as entered. Choosing an algorithm identifier does not encrypt them." }
             ],
             SipCommand.AcsStatus =>
             [
@@ -94,7 +95,8 @@ public sealed class CommandOptionsView : UserControl
             _ => [TerminalPassword()]
         };
         fields.Children.AddRange(controls);
-        var reset = new Button { Content = "Reset " + model.SelectedCommand.Name.ToLowerInvariant() + " options", HorizontalAlignment = HorizontalAlignment.Stretch };
+        var caption = command == SipCommand.AcsStatus ? "ACS status" : model.SelectedCommand.Name.ToLowerInvariant();
+        var reset = new Button { Content = "Reset " + caption + " options", HorizontalAlignment = HorizontalAlignment.Left };
         reset.Bind(Button.CommandProperty, new Binding(nameof(MainWindowViewModel.ResetOptionsCommand)));
         fields.Children.Add(reset);
     }

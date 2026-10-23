@@ -5,8 +5,11 @@
     <ResourceDictionary>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
-          <SolidColorBrush x:Key="RibbonBrush" Color="#F3F3F3" />
-          <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="RibbonBrush" Color="#F0F0F0" />
+          <SolidColorBrush x:Key="SurfaceBrush" Color="#F0F0F0" />
+          <SolidColorBrush x:Key="LogBrush" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="InputBrush" Color="#FFFFFF" />
+          <SolidColorBrush x:Key="InspectorGroupBrush" Color="#F0F0F0" />
           <SolidColorBrush x:Key="LineBrush" Color="#D6D6D6" />
           <SolidColorBrush x:Key="ErrorBrush" Color="#FFF0F0" />
           <SolidColorBrush x:Key="ErrorTextBrush" Color="#A62929" />
@@ -14,9 +17,12 @@
           <SolidColorBrush x:Key="InspectorInvalidBrush" Color="#8B4B0E" />
         </ResourceDictionary>
         <ResourceDictionary x:Key="Dark">
-          <SolidColorBrush x:Key="RibbonBrush" Color="#202020" />
-          <SolidColorBrush x:Key="SurfaceBrush" Color="#292929" />
-          <SolidColorBrush x:Key="LineBrush" Color="#454545" />
+          <SolidColorBrush x:Key="RibbonBrush" Color="#1E2024" />
+          <SolidColorBrush x:Key="SurfaceBrush" Color="#1E2024" />
+          <SolidColorBrush x:Key="LogBrush" Color="#17191D" />
+          <SolidColorBrush x:Key="InputBrush" Color="#2F333A" />
+          <SolidColorBrush x:Key="InspectorGroupBrush" Color="#26292E" />
+          <SolidColorBrush x:Key="LineBrush" Color="#474E59" />
           <SolidColorBrush x:Key="ErrorBrush" Color="#452C2C" />
           <SolidColorBrush x:Key="ErrorTextBrush" Color="#FFB5B5" />
           <SolidColorBrush x:Key="InspectorSetBrush" Color="#80D6A0" />
@@ -26,16 +32,20 @@
     </ResourceDictionary>
   </Application.Resources>
   <Application.Styles>
-    <FluentTheme />
+    <FluentTheme DensityStyle="Compact" />
     <StyleInclude Source="avares://AvaloniaEdit/Themes/Fluent/AvaloniaEdit.xaml" />
     <Style Selector="Window"><Setter Property="FontSize" Value="13" /></Style>
-    <Style Selector="TextBox"><Setter Property="MinHeight" Value="30" /><Setter Property="Padding" Value="7,4" /></Style>
-    <Style Selector="TextBox"><Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" /></Style>
+    <Style Selector="Menu &gt; MenuItem"><Setter Property="MinHeight" Value="24" /><Setter Property="Padding" Value="8,3" /></Style>
+    <Style Selector="TextBox"><Setter Property="MinHeight" Value="26" /><Setter Property="Padding" Value="6,2" /></Style>
+    <Style Selector="TextBox"><Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" /><Setter Property="Background" Value="{DynamicResource InputBrush}" /></Style>
     <Style Selector="ListBox.messageFields &gt; ListBoxItem"><Setter Property="HorizontalContentAlignment" Value="Stretch" /><Setter Property="Padding" Value="0" /></Style>
-    <Style Selector="ComboBox"><Setter Property="MinHeight" Value="30" /><Setter Property="Padding" Value="7,3" /></Style>
-    <Style Selector="AutoCompleteBox"><Setter Property="MinHeight" Value="30" /></Style>
-    <Style Selector="Button"><Setter Property="MinHeight" Value="30" /><Setter Property="Padding" Value="12,4" /></Style>
-    <Style Selector="TextBlock.groupTitle"><Setter Property="FontWeight" Value="SemiBold" /><Setter Property="Margin" Value="0,0,0,10" /></Style>
+    <Style Selector="ComboBox"><Setter Property="MinHeight" Value="26" /><Setter Property="Padding" Value="6,2" /><Setter Property="Background" Value="{DynamicResource InputBrush}" /></Style>
+    <Style Selector="AutoCompleteBox"><Setter Property="MinHeight" Value="26" /></Style>
+    <Style Selector="AutoCompleteBox.joinedInput"><Setter Property="MinHeight" Value="24" /></Style>
+    <Style Selector="AutoCompleteBox.joinedInput /template/ TextBox"><Setter Property="MinHeight" Value="24" /><Setter Property="BorderThickness" Value="0" /><Setter Property="Padding" Value="6,1" /></Style>
+    <Style Selector="CheckBox"><Setter Property="MinHeight" Value="20" /><Setter Property="Padding" Value="6,0,0,0" /></Style>
+    <Style Selector="Button"><Setter Property="MinHeight" Value="29" /><Setter Property="Padding" Value="10,3" /></Style>
+    <Style Selector="TextBlock.groupTitle"><Setter Property="FontWeight" Value="SemiBold" /><Setter Property="Margin" Value="0,0,0,6" /></Style>
     <Style Selector="TextBlock.fieldLabel"><Setter Property="FontSize" Value="12" /><Setter Property="Margin" Value="0,0,0,4" /></Style>
     <Style Selector="StackPanel.field"><Setter Property="Spacing" Value="0" /></Style>
     <Style Selector="TextBlock.hint"><Setter Property="Opacity" Value="0.72" /><Setter Property="FontSize" Value="12" /><Setter Property="TextWrapping" Value="Wrap" /></Style>

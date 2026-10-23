@@ -19,6 +19,7 @@ public partial class SettingsWindow : Window
     public SettingsWindow()
     {
         InitializeComponent();
+        EncodingField.ItemsSource = new[] { "UTF-8", "ISO-8859-1" };
         DataContextChanged += (_, _) =>
         {
             if (editing != null) { editing.PropertyChanged -= PreviewTheme; }
@@ -45,6 +46,13 @@ public partial class SettingsWindow : Window
         => DataContext = JsonSerializer.Deserialize<AppPreferences>(JsonSerializer.Serialize(preferences, SessionFields.JsonOptions), SessionFields.JsonOptions)!;
 
     private void Cancel_Click(object? sender, RoutedEventArgs args) => Close(null);
+
+    private void ChooseEncoding_Click(object? sender, RoutedEventArgs args)
+    {
+        var open = !EncodingField.IsDropDownOpen;
+        EncodingField.Focus();
+        EncodingField.IsDropDownOpen = open;
+    }
 
     private void Save_Click(object? sender, RoutedEventArgs args)
     {
