@@ -25,7 +25,7 @@ public sealed class SipSession : IDisposable
     {
         this.connect = connect;
         this.timeout = timeout ?? TimeSpan.FromSeconds(30);
-        this.connectTimeout = connectTimeout ?? TimeSpan.FromSeconds(5);
+        this.connectTimeout = connectTimeout ?? TimeSpan.FromMinutes(2);
     }
 
     public async Task ConnectAsync(SessionFields fields, string encoding, bool checkChecksum, CancellationToken cancellationToken = default)

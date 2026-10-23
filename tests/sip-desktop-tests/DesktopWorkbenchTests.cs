@@ -191,7 +191,7 @@ public sealed class DesktopWorkbenchTests
             if (Interlocked.Increment(ref attempts) > 1) { return connection.ConnectAsync(token).AsTask(); }
             started.TrySetResult();
             return Task.Delay(Timeout.Infinite, token);
-        }, connectTimeout: cancel ? TimeSpan.FromSeconds(5) : TimeSpan.FromSeconds(1));
+        }, connectTimeout: cancel ? null : TimeSpan.FromSeconds(1));
         await using var server = new SipServer(async (stream, token) =>
         {
             _ = await ReadMessage(stream, token);
