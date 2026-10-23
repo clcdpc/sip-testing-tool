@@ -13,12 +13,12 @@ public sealed class SipLogColorizer : DocumentColorizingTransformer
         var text = CurrentContext.Document.GetText(line);
         var dark = Application.Current?.ActualThemeVariant == ThemeVariant.Dark;
         IBrush? brush = text.StartsWith("--> ", StringComparison.Ordinal)
-            ? (dark ? Brushes.Salmon : Brushes.Crimson)
-            : text.StartsWith("<-- ", StringComparison.Ordinal) ? (dark ? Brushes.SkyBlue : Brushes.RoyalBlue) : null;
+            ? (dark ? new SolidColorBrush(Color.FromRgb(242, 139, 130)) : Brushes.Crimson)
+            : text.StartsWith("<-- ", StringComparison.Ordinal) ? (dark ? new SolidColorBrush(Color.FromRgb(138, 180, 248)) : Brushes.RoyalBlue) : null;
         if (brush != null)
         {
             ChangeLinePart(line.Offset, line.EndOffset, part => part.TextRunProperties.SetForegroundBrush(brush));
-            var separator = new SolidColorBrush(dark ? Color.Parse("#9AA0A8") : Color.Parse("#777777"));
+            IBrush separator = dark ? new SolidColorBrush(Color.FromRgb(165, 174, 188)) : Brushes.Black;
             for (var i = 4; i < text.Length; i++)
             {
                 if (text[i] == '|') { ChangeLinePart(line.Offset + i, line.Offset + i + 1, part => part.TextRunProperties.SetForegroundBrush(separator)); }

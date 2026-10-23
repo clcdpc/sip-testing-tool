@@ -5,6 +5,9 @@ using Avalonia.Automation;
 using Avalonia.Data;
 using Avalonia.Input;
 using Avalonia.Interactivity;
+using Avalonia.Layout;
+using Avalonia.Markup.Xaml.MarkupExtensions;
+using Avalonia.Media;
 using Clc.Sip.Desktop.Models;
 
 namespace Clc.Sip.Desktop.Views;
@@ -23,12 +26,12 @@ public sealed class OptionalDateTimeInput : UserControl
 
     public OptionalDateTimeInput()
     {
-        var layout = new Grid { ColumnDefinitions = new ColumnDefinitions("28,*,32") };
-        var include = new CheckBox { Name = "IncludeDate", VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center };
+        var layout = new Grid { ColumnDefinitions = new ColumnDefinitions("24,*,26") };
+        var include = new CheckBox { Name = "IncludeDate", VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Padding = new Thickness(0) };
         AutomationProperties.SetName(include, "Include date/time");
         include.Bind(CheckBox.IsCheckedProperty, new Binding(nameof(IsIncluded)) { Source = this, Mode = BindingMode.TwoWay });
         ToolTip.SetTip(include, "Include this date/time in the request.");
-        editor = new TextBox { Name = "DateTimeEditor", PlaceholderText = CommandOptions.DateFormat };
+        editor = new TextBox { Name = "DateTimeEditor", PlaceholderText = CommandOptions.DateFormat, BorderThickness = new Thickness(0), Background = Brushes.Transparent, MinHeight = 24, Padding = new Thickness(4, 1) };
         AutomationProperties.SetName(editor, "Date and time (yyyy-MM-dd HH:mm:ss)");
         editor.Bind(TextBox.TextProperty, new Binding(nameof(DateText)) { Source = this, Mode = BindingMode.TwoWay });
         editor.TextChanged += (_, _) =>
@@ -36,7 +39,9 @@ public sealed class OptionalDateTimeInput : UserControl
             if (TryRead(out var date)) { lastValid = date; }
         };
         editor.AddHandler(InputElement.KeyDownEvent, EditorKeyDown, RoutingStrategies.Tunnel);
-        calendarButton = new Button { Content = "▾", Padding = new Thickness(4), MinWidth = 0 };
+        var chevron = new PathIcon { Width = 10, Height = 6 };
+        chevron.Bind(PathIcon.DataProperty, new DynamicResourceExtension("DropDownChevron"));
+        calendarButton = new Button { Content = chevron, Padding = new Thickness(0), BorderThickness = new Thickness(0), Background = Brushes.Transparent, MinWidth = 0, MinHeight = 24, HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
         AutomationProperties.SetName(calendarButton, "Choose calendar date");
         popup = new Flyout { Content = calendar };
         calendarButton.Click += (_, _) => ShowCalendar();
@@ -53,7 +58,10 @@ public sealed class OptionalDateTimeInput : UserControl
         layout.Children.Add(include);
         layout.Children.Add(editor);
         layout.Children.Add(calendarButton);
-        Content = layout;
+        var border = new Border { Child = layout, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(3) };
+        border.Bind(Border.BorderBrushProperty, new DynamicResourceExtension("LineBrush"));
+        border.Bind(Border.BackgroundProperty, new DynamicResourceExtension("InputBrush"));
+        Content = border;
     }
 
     public void FocusEditor() { editor.Focus(); editor.SelectAll(); }

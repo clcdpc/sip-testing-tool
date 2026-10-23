@@ -39,7 +39,9 @@ Checkout defaults preserve the previous request: renewals allowed, no-block off,
 
 ## Command options
 
-Only the selected command's options are shown. Labels sit beside their inputs when the workbench has enough room; longer labels and date editors move above their inputs to preserve a usable input width. The rows adjust when the divider is dragged. All command options stay in the running session while switching commands or themes. Each command has a **Reset … options** button that affects that command's fields. New command options are session-only; saved defaults and `.sipc` files continue to cover the existing shared settings.
+Only the selected command's options are shown. Labels sit beside their inputs when the workbench has enough room. Fields stack beneath their labels when a long caption, date value or dropdown choice needs the extra width. The rows adjust when the divider is dragged. All command options stay in the running session while switching commands or themes. Each command has a **Reset … options** button that affects that command's fields. New command options are session-only; saved defaults and `.sipc` files continue to cover the existing shared settings.
+
+Avalonia uses compact control sizes and spacing to keep all twelve commands visible without scrolling at the minimum window size with the default workbench width. Its ribbon aligns the field rows and action buttons, and the editable vendor profile has an explicit dropdown arrow. Date/time controls share a single border around their checkbox, text and calendar button. Default settings use labels beside their values; character encoding offers UTF-8 and ISO-8859-1 plus typed encoding names. Field-table headings track the actual row width, including when a scrollbar appears; parent fields are shaded and set/invalid flag values receive emphasis. Notice choices use readable labels.
 
 | Command | Editable options |
 | --- | --- |
@@ -144,7 +146,7 @@ ClickOnce signing uses DigiCert KeyLocker through the Windows current-user Perso
 
 ## Verification
 
-Both test projects use MSTest.Sdk 4.5.1. Open `src/sip-testing-tool.sln`, build the solution, then use **Test > Test Explorer > Run All**. The Windows Forms project exposes 211 regression tests, 24 focused command-option tests and 116 individually named form-to-submission cases; the Avalonia project exposes 102 tests. Windows Forms UI tests run on an STA thread; Avalonia UI tests use its headless dispatcher. Each assembly runs sequentially because its checks share UI and process state.
+Both test projects use MSTest.Sdk 4.5.1. Open `src/sip-testing-tool.sln`, build the solution, then use **Test > Test Explorer > Run All**. The Windows Forms project exposes 211 regression tests, 24 focused command-option tests and 116 individually named form-to-submission cases; the Avalonia project exposes 112 tests. Windows Forms UI tests run on an STA thread; Avalonia UI tests use its headless dispatcher. Each assembly runs sequentially because its checks share UI and process state.
 
 From the repository root, the equivalent command is:
 
@@ -159,6 +161,8 @@ Run `bash build/TestMacBuild.sh` on macOS, Linux or Git Bash to exercise the sta
 Tests are ordinary MSTest methods grouped by behavior: checksums, connections, console output, workbench behavior, checkout, themes, command-option state, settings, updates and desktop sessions. Test classes use MSTest lifecycle methods; the shared test support is limited to UI setup, test data and loopback SIP peers. Both projects use MSTest assertions directly.
 
 The tests use loopback SIP servers and Avalonia's headless platform; they never contact a production SIP endpoint. Windows Forms tests submit through public buttons and verify the captured packets and message log.
+
+Avalonia layout checks in `DesktopParityTests.Layout.cs` render every command in both themes at default and minimum window sizes, check for unnecessary scrolling and clipped choices, and verify ribbon, date-editor, settings and field-table alignment. Their PNG previews are saved under `artifacts/layout-comparison/avalonia`. They share the existing parity test class's UI session because AvaloniaEdit key bindings retain dispatcher ownership.
 
 `tests/sip-tests/FormSubmissionTests.cs` and `FormSubmissionTests.Cases.cs` contain parameterized form-to-submission checks for all twelve commands. Each case edits real form controls, uses `Button.PerformClick()` to reset and submit, captures the actual request at a loopback TCP server, and compares fixed and variable fields with independent expected values. These cases exercise every command option, dropdown choice, typed date overrides and unchecked dates, optional-field omission, numeric boundaries, decimal culture handling, both Login buttons, updated ribbon values, checksums and transcript entries. These checks verify client wiring and serialization; acceptance by a particular SIP server still depends on that server's implementation and configuration.
 

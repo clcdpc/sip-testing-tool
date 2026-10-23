@@ -19,8 +19,9 @@ public sealed record MessageFieldRow(SipLogDetail Field, int Depth)
 
 public sealed class MessageFieldsPanel : UserControl
 {
+    private const string Columns = "28*,41*,31*";
     private readonly TextBlock title = new() { FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
-    private readonly ListBox table = new() { Classes = { "messageFields" } };
+    private readonly ListBox table = new() { Classes = { "messageFields" }, Padding = new Thickness(0), BorderThickness = new Thickness(0) };
     public IReadOnlyList<MessageFieldRow> Rows { get; private set; } = [];
     public event Action? CollapseRequested;
 
@@ -33,7 +34,7 @@ public sealed class MessageFieldsPanel : UserControl
         {
             if (TopLevel.GetTopLevel(this)?.Clipboard is { } clipboard) { await clipboard.SetTextAsync(CopyText()); }
         };
-        var collapse = new Button { Content = "Collapse" };
+        var collapse = new Button { Content = "− Collapse" };
         collapse.Click += (_, _) => CollapseRequested?.Invoke();
         Grid.SetColumn(copy, 1);
         Grid.SetColumn(collapse, 2);
@@ -41,24 +42,37 @@ public sealed class MessageFieldsPanel : UserControl
         header.Children.Add(copy);
         header.Children.Add(collapse);
         layout.Children.Add(header);
-        var labels = new Grid { ColumnDefinitions = new ColumnDefinitions("1.1*,1.6*,1.5*"), Margin = new Thickness(12, 4) };
+        var labels = new Grid { ColumnDefinitions = new ColumnDefinitions(Columns), Margin = new Thickness(2, 4), HorizontalAlignment = HorizontalAlignment.Left };
         foreach (var (name, column) in new[] { ("Field", 0), ("Description", 1), ("Value", 2) })
         {
-            var label = new TextBlock { Text = name, FontWeight = FontWeight.SemiBold };
+            var label = new TextBlock { Text = name, FontWeight = FontWeight.SemiBold, Margin = new Thickness(4, 0, 8, 0) };
             Grid.SetColumn(label, column);
             labels.Children.Add(label);
         }
         Grid.SetRow(labels, 1);
         layout.Children.Add(labels);
+        table.Bind(BackgroundProperty, new DynamicResourceExtension("LogBrush"));
+        table.TemplateApplied += (_, args) =>
+        {
+            if (args.NameScope.Find<ScrollViewer>("PART_ScrollViewer") is not { } scroll) { return; }
+            void AlignHeader() => labels.Width = Math.Max(0, scroll.Viewport.Width - 4);
+            scroll.PropertyChanged += (_, change) =>
+            {
+                if (change.Property == ScrollViewer.ViewportProperty) { AlignHeader(); }
+            };
+            AlignHeader();
+        };
         table.ItemTemplate = new FuncDataTemplate<MessageFieldRow>((row, _) =>
         {
             if (row == null) { return new TextBlock(); }
-            var grid = new Grid { ColumnDefinitions = new ColumnDefinitions("1.1*,1.6*,1.5*"), Margin = new Thickness(2, 4) };
+            var grid = new Grid { ColumnDefinitions = new ColumnDefinitions(Columns), Margin = new Thickness(2, 4) };
             foreach (var (text, column) in new[] { (row.Name, 0), (row.Field.Description, 1), (row.Field.DisplayValue, 2) })
             {
                 var cell = new SelectableTextBlock { Text = text, TextWrapping = TextWrapping.Wrap, Margin = new Thickness(4, 0, 8, 0) };
-                if (row.Field.State != SipLogValueState.Normal)
+                if (row.Field.Children != null) { cell.FontWeight = FontWeight.SemiBold; }
+                if (column == 2 && row.Field.State != SipLogValueState.Normal)
                 {
+                    cell.FontWeight = FontWeight.SemiBold;
                     cell.Bind(TextBlock.ForegroundProperty, new DynamicResourceExtension(row.Field.State == SipLogValueState.Set ? "InspectorSetBrush" : "InspectorInvalidBrush"));
                 }
                 Grid.SetColumn(cell, column);
@@ -66,6 +80,7 @@ public sealed class MessageFieldsPanel : UserControl
             }
             var border = new Border { Child = grid, BorderThickness = new Thickness(0, 0, 0, 1) };
             border.Bind(Border.BorderBrushProperty, new DynamicResourceExtension("LineBrush"));
+            if (row.Field.Children != null) { border.Bind(Border.BackgroundProperty, new DynamicResourceExtension("InspectorGroupBrush")); }
             return border;
         });
         ScrollViewer.SetHorizontalScrollBarVisibility(table, Avalonia.Controls.Primitives.ScrollBarVisibility.Disabled);
@@ -78,7 +93,7 @@ public sealed class MessageFieldsPanel : UserControl
         }, RoutingStrategies.Tunnel);
     }
 
-    public void ShowMessage(SipLogMessageDetails details)
+    public void ShowMessage(SipLogMessageDetails details, string? messageLabel = null)
     {
         var rows = new List<MessageFieldRow>();
         void Add(IEnumerable<SipLogDetail> fields, int depth)
@@ -90,7 +105,7 @@ public sealed class MessageFieldsPanel : UserControl
             }
         }
         Add(details.Fields, 0);
-        title.Text = details.Name;
+        title.Text = messageLabel == null ? details.Name : messageLabel + " · " + details.Name;
         Rows = rows;
         // Assign once so expanding a long response does not repeatedly size existing rows.
         table.ItemsSource = rows;
