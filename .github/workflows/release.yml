@@ -32,6 +32,12 @@ jobs:
           - runner: ubuntu-22.04
             rid: linux-x64
             profile: Linux-AppImage
+          - runner: macos-15
+            rid: osx-arm64
+            profile: macOS-arm64
+          - runner: macos-15-intel
+            rid: osx-x64
+            profile: macOS-x64
     defaults:
       run:
         shell: pwsh
@@ -88,6 +94,11 @@ jobs:
       - name: Verify publish profiles
         run: dotnet msbuild build/VerifyPublishPaths.proj
 
+      - name: Verify standalone Mac packaging
+        if: runner.os == 'macOS'
+        shell: bash
+        run: bash build/TestMacBuild.sh
+
       - name: Run Avalonia tests
         run: dotnet test tests/sip-desktop-tests/sip-desktop-tests.csproj --configuration Release
 
@@ -97,6 +108,10 @@ jobs:
 
       - name: Publish and package
         run: dotnet publish src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj --configuration Release -p:PublishProfile=$env:PUBLISH_PROFILE
+
+      - name: Package macOS release
+        if: runner.os == 'macOS'
+        run: ./build/PackageDesktop.ps1 -PublishDirectory "artifacts/avalonia/publish/$env:RELEASE_RID" -OutputDirectory "artifacts/avalonia/releases/$env:RELEASE_RID" -RuntimeIdentifier $env:RELEASE_RID -Version ($env:RELEASE_TAG.Substring(1))
 
       - name: Verify release downloads
         run: ./build/VerifyDesktopRelease.ps1 -Directory "artifacts/avalonia/releases/$env:RELEASE_RID" -RuntimeIdentifier $env:RELEASE_RID -Version ($env:RELEASE_TAG.Substring(1))
@@ -127,7 +142,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Download both sets of release assets
+      - name: Download all release assets
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           pattern: desktop-*
@@ -142,7 +157,7 @@ jobs:
           $releaseVersion = Get-DesktopReleaseVersion -Version $env:RELEASE_TAG -Tag
           $releaseOptions = @('--prerelease=' + $releaseVersion.IsPrerelease.ToString().ToLowerInvariant())
           if ($releaseVersion.IsPrerelease) { $releaseOptions += '--latest=false' }
-          foreach ($rid in @('win-x64', 'linux-x64')) {
+          foreach ($rid in @('win-x64', 'linux-x64', 'osx-arm64', 'osx-x64')) {
             ./build/VerifyDesktopRelease.ps1 -Directory "artifacts/release/desktop-$rid" -RuntimeIdentifier $rid -Version ($env:RELEASE_TAG.Substring(1))
           }
           $assets = @(Get-ChildItem -LiteralPath 'artifacts/release' -Recurse -File)
