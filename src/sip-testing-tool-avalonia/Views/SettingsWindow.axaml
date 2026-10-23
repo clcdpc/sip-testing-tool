@@ -21,12 +21,13 @@
           <views:OptionalFieldRow Label="Vendor profile (VP)"><TextBox Text="{Binding Defaults.VendorProfile}" /></views:OptionalFieldRow>
           <CheckBox Content="Connect on startup" IsChecked="{Binding ConnectOnStartup}" />
           <views:OptionalFieldRow Label="Character encoding">
-            <Border BorderBrush="{DynamicResource LineBrush}" Background="{DynamicResource InputBrush}" BorderThickness="1" CornerRadius="3">
-              <Grid ColumnDefinitions="*,24">
-                <AutoCompleteBox x:Name="EncodingField" Classes="joinedInput" MinimumPrefixLength="0" FilterMode="None" Text="{Binding EncodingName}" AutomationProperties.Name="Character encoding" />
-                <Button x:Name="EncodingDropDownButton" Grid.Column="1" Content="▾" Padding="0" BorderThickness="0" Background="Transparent" MinWidth="0" MinHeight="24" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Focusable="False" Click="ChooseEncoding_Click" AutomationProperties.Name="Choose character encoding" />
-              </Grid>
-            </Border>
+            <AutoCompleteBox x:Name="EncodingField" MinimumPrefixLength="0" FilterMode="None" Text="{Binding EncodingName}" AutomationProperties.Name="Character encoding">
+              <AutoCompleteBox.InnerRightContent>
+                <Button x:Name="EncodingDropDownButton" Width="24" Padding="0" BorderThickness="0" Background="Transparent" MinWidth="0" MinHeight="24" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Focusable="False" Click="ChooseEncoding_Click" AutomationProperties.Name="Choose character encoding">
+                  <PathIcon Width="10" Height="6" Data="{StaticResource DropDownChevron}" />
+                </Button>
+              </AutoCompleteBox.InnerRightContent>
+            </AutoCompleteBox>
           </views:OptionalFieldRow>
           <CheckBox Content="Validate response checksums" IsChecked="{Binding ValidateChecksums}" />
         </StackPanel>

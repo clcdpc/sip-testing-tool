@@ -39,7 +39,9 @@ public sealed class OptionalDateTimeInput : UserControl
             if (TryRead(out var date)) { lastValid = date; }
         };
         editor.AddHandler(InputElement.KeyDownEvent, EditorKeyDown, RoutingStrategies.Tunnel);
-        calendarButton = new Button { Content = "▾", Padding = new Thickness(0), BorderThickness = new Thickness(0), Background = Brushes.Transparent, MinWidth = 0, MinHeight = 24, HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
+        var chevron = new PathIcon { Width = 10, Height = 6 };
+        chevron.Bind(PathIcon.DataProperty, new DynamicResourceExtension("DropDownChevron"));
+        calendarButton = new Button { Content = chevron, Padding = new Thickness(0), BorderThickness = new Thickness(0), Background = Brushes.Transparent, MinWidth = 0, MinHeight = 24, HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
         AutomationProperties.SetName(calendarButton, "Choose calendar date");
         popup = new Flyout { Content = calendar };
         calendarButton.Click += (_, _) => ShowCalendar();

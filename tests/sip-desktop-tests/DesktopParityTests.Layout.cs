@@ -1,5 +1,6 @@
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Presenters;
 using Avalonia.Headless;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -137,6 +138,109 @@ public sealed partial class DesktopParityTests
         new FormattedText(text, System.Globalization.CultureInfo.InvariantCulture, FlowDirection.LeftToRight, new Typeface(font), size, Brushes.Black).Width;
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public Task CompactEditorsAndActionsCenterTheirContent(bool dark) => ui.Dispatch(() =>
+    {
+        using var model = new MainWindowViewModel { Fields = SessionTestData.SampleFields(), SelectedCommand = Choice(SipCommand.Renew) };
+        model.Preferences.DarkTheme = dark;
+        model.Options.DateText = "2026-11-05 22:31:33";
+        var window = new MainWindow { DataContext = model, Width = 1060, Height = 720 };
+        window.Show();
+        try
+        {
+            Layout(window);
+            foreach (var editor in window.GetVisualDescendants().OfType<TextBox>().Where(editor => editor.IsEffectivelyVisible && !string.IsNullOrEmpty(editor.Text)))
+            {
+                AssertEditorTextCentered(editor);
+            }
+            foreach (var choice in window.GetVisualDescendants().OfType<ComboBox>().Where(choice => choice.IsEffectivelyVisible))
+            {
+                var text = choice.GetVisualDescendants().OfType<TextBlock>().First(block => !string.IsNullOrEmpty(block.Text));
+                var center = text.TranslatePoint(new Point(0, text.Bounds.Height / 2), choice)!.Value.Y;
+                Assert.AreEqual(choice.Bounds.Height / 2, center, 1, choice.Name + " selection is not vertically centered.");
+            }
+            foreach (var name in new[] { "ConnectButton", "LoginButton", "ExecuteButton" })
+            {
+                var button = window.FindControl<Button>(name)!;
+                var text = button.GetVisualDescendants().OfType<TextBlock>().Single();
+                AssertCentered(text, button);
+            }
+            var date = Field<OptionalDateTimeInput>(window, "DateTextField");
+            var calendar = date.GetVisualDescendants().OfType<Button>().Single(button => button.Content is PathIcon);
+            AssertCentered((PathIcon)calendar.Content!, calendar);
+            Save(window, "centered-controls-" + (dark ? "dark" : "light"));
+        }
+        finally { window.Close(); }
+    }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public Task EditableDropDownsUseOneFrameWithCenteredContent(bool dark) => ui.Dispatch(() =>
+    {
+        using var model = new MainWindowViewModel { Fields = SessionTestData.SampleFields() };
+        model.Preferences.DarkTheme = dark;
+        var window = new MainWindow { DataContext = model };
+        window.Show();
+        try
+        {
+            Layout(window);
+            AssertJoinedDropDown(window, "VendorProfileField", "VendorProfileDropDownButton");
+            Save(window, "vendor-focused-" + (dark ? "dark" : "light"));
+        }
+        finally { window.Close(); }
+
+        var settings = new SettingsWindow(new AppPreferences { Defaults = SessionTestData.SampleFields() })
+        { RequestedThemeVariant = dark ? ThemeVariant.Dark : ThemeVariant.Light };
+        settings.Show();
+        try
+        {
+            Layout(settings);
+            AssertJoinedDropDown(settings, "EncodingField", "EncodingDropDownButton");
+            Save(settings, "encoding-focused-" + (dark ? "dark" : "light"));
+        }
+        finally { settings.Close(); }
+    }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
+
+    private static void AssertJoinedDropDown(Window window, string fieldName, string buttonName)
+    {
+        var field = window.FindControl<AutoCompleteBox>(fieldName)!;
+        var editor = field.GetVisualDescendants().OfType<TextBox>().Single();
+        var background = editor.GetVisualDescendants().OfType<Border>().Single(border => border.Name == "PART_BorderElement");
+        var arrow = window.FindControl<Button>(buttonName)!;
+        foreach (var focus in new[] { false, true })
+        {
+            if (focus) { editor.Focus(); }
+            foreach (var target in new Control[] { editor, arrow })
+            {
+                window.MouseMove(target.TranslatePoint(new Point(target.Bounds.Width / 2, target.Bounds.Height / 2), window)!.Value);
+                Layout(window);
+                Assert.AreEqual(field.Bounds.Size, editor.Bounds.Size, fieldName + " editor does not fill the field.");
+                Assert.AreEqual(editor.Bounds.Size, background.Bounds.Size, fieldName + " background does not fill the field.");
+                var right = arrow.TranslatePoint(new Point(arrow.Bounds.Width, 0), editor)!.Value.X;
+                Assert.AreEqual(editor.Bounds.Width - editor.BorderThickness.Right, right, 0.5, fieldName + " arrow is outside the field frame.");
+                AssertEditorTextCentered(editor);
+                AssertCentered((PathIcon)arrow.Content!, arrow);
+            }
+        }
+    }
+
+    private static void AssertEditorTextCentered(TextBox editor)
+    {
+        var text = editor.GetVisualDescendants().OfType<TextPresenter>().Single();
+        var center = text.TranslatePoint(new Point(0, text.TextLayout.Height / 2), editor)!.Value.Y;
+        Assert.AreEqual(editor.Bounds.Height / 2, center, 1, editor.Name + " text is not vertically centered.");
+    }
+
+    private static void AssertCentered(Control content, Control field)
+    {
+        var center = content.TranslatePoint(new Point(content.Bounds.Width / 2, content.Bounds.Height / 2), field)!.Value;
+        Assert.AreEqual(field.Bounds.Width / 2, center.X, 1, field.Name + " content is not horizontally centered.");
+        Assert.AreEqual(field.Bounds.Height / 2, center.Y, 1, field.Name + " content is not vertically centered.");
+    }
+
+    [TestMethod]
     [DataRow(1060)]
     [DataRow(1280)]
     public Task RibbonEditorsAndActionButtonsAlign(int width) => ui.Dispatch(() =>
@@ -156,10 +260,9 @@ public sealed partial class DesktopParityTests
                 Assert.AreEqual(first.Bounds.Height, field.Bounds.Height, 0.5, name + " has a different height.");
             }
             var profile = window.FindControl<AutoCompleteBox>("VendorProfileField")!;
-            var profileBorder = profile.GetVisualAncestors().OfType<Border>().First();
             var location = window.FindControl<TextBox>("LocationCodeField")!;
-            Assert.AreEqual(location.TranslatePoint(default, window)!.Value.Y, profileBorder.TranslatePoint(default, window)!.Value.Y, 0.5);
-            Assert.AreEqual(location.Bounds.Height, profileBorder.Bounds.Height, 0.5);
+            Assert.AreEqual(location.TranslatePoint(default, window)!.Value.Y, profile.TranslatePoint(default, window)!.Value.Y, 0.5);
+            Assert.AreEqual(location.Bounds.Height, profile.Bounds.Height, 0.5);
             var connect = window.FindControl<Button>("ConnectButton")!;
             var login = window.FindControl<Button>("LoginButton")!;
             Assert.AreEqual(connect.TranslatePoint(default, window)!.Value.Y, login.TranslatePoint(default, window)!.Value.Y, 0.5);

@@ -56,12 +56,13 @@
               <StackPanel Classes="field" Margin="0,0,8,0"><TextBlock Classes="fieldLabel" Text="Location code (CP)" /><TextBox x:Name="LocationCodeField" Text="{Binding Fields.LocationCode}" AutomationProperties.Name="Location Code" /></StackPanel>
               <StackPanel Grid.Column="1" Classes="field">
                 <TextBlock Classes="fieldLabel" Text="Vendor profile (VP)" />
-                <Border BorderBrush="{DynamicResource LineBrush}" Background="{DynamicResource InputBrush}" BorderThickness="1" CornerRadius="3">
-                  <Grid ColumnDefinitions="*,24">
-                    <AutoCompleteBox x:Name="VendorProfileField" Classes="joinedInput" MinimumPrefixLength="0" FilterMode="None" Text="{Binding Fields.VendorProfile}" ItemsSource="{Binding VendorProfiles}" AutomationProperties.Name="Vendor Profile" />
-                    <Button x:Name="VendorProfileDropDownButton" Grid.Column="1" Content="▾" Padding="0" BorderThickness="0" Background="Transparent" MinWidth="0" MinHeight="24" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Focusable="False" Click="VendorProfiles_Click" AutomationProperties.Name="Choose vendor profile" />
-                  </Grid>
-                </Border>
+                <AutoCompleteBox x:Name="VendorProfileField" MinimumPrefixLength="0" FilterMode="None" Text="{Binding Fields.VendorProfile}" ItemsSource="{Binding VendorProfiles}" AutomationProperties.Name="Vendor Profile">
+                  <AutoCompleteBox.InnerRightContent>
+                    <Button x:Name="VendorProfileDropDownButton" Width="24" Padding="0" BorderThickness="0" Background="Transparent" MinWidth="0" MinHeight="24" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Focusable="False" Click="VendorProfiles_Click" AutomationProperties.Name="Choose vendor profile">
+                      <PathIcon Width="10" Height="6" Data="{StaticResource DropDownChevron}" />
+                    </Button>
+                  </AutoCompleteBox.InnerRightContent>
+                </AutoCompleteBox>
               </StackPanel>
             </Grid>
             <Button x:Name="LoginButton" Grid.Row="3" Content="Login" Command="{Binding LoginCommand}" Margin="0,8,0,0" MinWidth="88" />
