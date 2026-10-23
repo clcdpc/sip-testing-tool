@@ -4,7 +4,7 @@
         xmlns:editor="using:AvaloniaEdit"
         xmlns:views="using:Clc.Sip.Desktop.Views"
         x:Class="Clc.Sip.Desktop.Views.MainWindow" x:DataType="vm:MainWindowViewModel"
-        Title="SIP Testing Tool" Width="1280" Height="820" MinWidth="1060" MinHeight="720"
+        Title="{Binding WindowTitle}" Width="1280" Height="820" MinWidth="1060" MinHeight="720"
         Icon="/Assets/app.ico" Background="{DynamicResource SurfaceBrush}"
         Topmost="{Binding AlwaysOnTop}" WindowStartupLocation="CenterScreen">
   <Window.KeyBindings>

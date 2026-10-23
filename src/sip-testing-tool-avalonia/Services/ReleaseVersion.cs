@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
 namespace Clc.Sip.Desktop.Services;
@@ -13,7 +14,10 @@ internal sealed class ReleaseVersion : IComparable<ReleaseVersion>
     private readonly string[] prerelease;
 
     public string Value { get; }
+    public string DisplayValue => Value.Split('+')[0];
     public bool IsPrerelease => prerelease.Length > 0;
+    public static ReleaseVersion Current => Parse(typeof(ReleaseVersion).Assembly
+        .GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion);
 
     private ReleaseVersion(string value, string[] core, string[] prerelease)
     {
