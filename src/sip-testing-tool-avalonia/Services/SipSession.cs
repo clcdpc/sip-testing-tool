@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net.Sockets;
 using System.Text;
 using Clc.Sip.Desktop.Models;
 
@@ -9,17 +10,28 @@ public sealed class SipSession : IDisposable
     private readonly SemaphoreSlim gate = new(1, 1);
     private readonly CancellationTokenSource lifetime = new();
     private readonly TimeSpan timeout;
+    private readonly TimeSpan connectTimeout;
+    private readonly Func<sip2, CancellationToken, Task> connect;
     private sip2? client;
     private bool disposed;
 
     public bool IsConnected => client?.IsConnected() == true;
     public string Endpoint { get; private set; } = "";
 
-    public SipSession(TimeSpan? timeout = null) => this.timeout = timeout ?? TimeSpan.FromSeconds(30);
+    public SipSession(TimeSpan? timeout = null, TimeSpan? connectTimeout = null)
+        : this((connection, cancellation) => connection.ConnectAsync(cancellation).AsTask(), timeout, connectTimeout) { }
 
-    public async Task ConnectAsync(SessionFields fields, string encoding, bool checkChecksum)
+    internal SipSession(Func<sip2, CancellationToken, Task> connect, TimeSpan? timeout = null, TimeSpan? connectTimeout = null)
+    {
+        this.connect = connect;
+        this.timeout = timeout ?? TimeSpan.FromSeconds(30);
+        this.connectTimeout = connectTimeout ?? TimeSpan.FromMinutes(2);
+    }
+
+    public async Task ConnectAsync(SessionFields fields, string encoding, bool checkChecksum, CancellationToken cancellationToken = default)
     {
         ObjectDisposedException.ThrowIf(disposed, this);
+        fields = fields.Copy();
         if (string.IsNullOrWhiteSpace(fields.Server))
         {
             throw new CommandValidationException(nameof(SessionFields.Server), "Server is required.");
@@ -31,32 +43,59 @@ public sealed class SipSession : IDisposable
         }
 
         var textEncoding = Encoding.GetEncoding(encoding);
-        await gate.WaitAsync(lifetime.Token);
+        var server = fields.Server.Trim();
+        var endpoint = $"{server}:{port}";
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(lifetime.Token, cancellationToken);
+        cancellation.CancelAfter(connectTimeout);
         try
         {
-            Disconnect();
-            var connection = new sip2(fields.Server.Trim(), port, fields.Ao, fields.Ap)
-            {
-                TextEncoding = textEncoding,
-                ValidateResponseChecksum = checkChecksum
-            };
-            client = connection;
+            await gate.WaitAsync(cancellation.Token).ConfigureAwait(false);
             try
             {
-                await RunAsync(connection, () =>
-                {
-                    connection.Connect();
-                    return true;
-                });
-                Endpoint = $"{fields.Server.Trim()}:{port}";
-            }
-            catch
-            {
+                ObjectDisposedException.ThrowIf(disposed, this);
                 Disconnect();
-                throw;
+                var connection = new sip2(server, port, fields.Ao, fields.Ap)
+                {
+                    TextEncoding = textEncoding,
+                    ValidateResponseChecksum = checkChecksum
+                };
+                client = connection;
+                try
+                {
+                    // Bound the entire attempt, including DNS, even if a connector is slow to acknowledge cancellation.
+                    await connect(connection, cancellation.Token).WaitAsync(cancellation.Token).ConfigureAwait(false);
+                    cancellation.Token.ThrowIfCancellationRequested();
+                    Endpoint = endpoint;
+                }
+                catch
+                {
+                    Disconnect();
+                    throw;
+                }
             }
+            finally { gate.Release(); }
         }
-        finally { gate.Release(); }
+        catch (Exception ex) when (cancellation.IsCancellationRequested)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (lifetime.IsCancellationRequested)
+            {
+                throw new OperationCanceledException("The connection attempt was cancelled.", ex, cancellation.Token);
+            }
+            throw new TimeoutException($"Connection to {endpoint} timed out after {connectTimeout.TotalSeconds.ToString("0.###", CultureInfo.InvariantCulture)} seconds. Check the server and port, then try again.", ex);
+        }
+        catch (SocketException ex)
+        {
+            var message = ex.SocketErrorCode switch
+            {
+                SocketError.HostNotFound or SocketError.NoData or SocketError.TryAgain => $"Could not resolve server '{server}'. Check the server name or use its IP address.",
+                SocketError.ConnectionRefused => $"The server refused the connection to {endpoint}. Check the port and that the SIP service is running.",
+                SocketError.NetworkUnreachable or SocketError.HostUnreachable => $"Cannot reach {endpoint}. Check your network or VPN connection.",
+                SocketError.TimedOut => $"Connection to {endpoint} timed out. Check the server and port, then try again.",
+                _ => $"Could not connect to {endpoint}: {ex.Message}"
+            };
+            throw new IOException(message, ex);
+        }
     }
 
     public async Task<SipTransaction> ExecuteAsync(SipCommand command, SessionFields fields, CommandFields inputs,
@@ -234,7 +273,11 @@ public sealed class SipSession : IDisposable
         return amount;
     }
 
-    public void Disconnect() => Interlocked.Exchange(ref client, null)?.Dispose();
+    public void Disconnect()
+    {
+        Interlocked.Exchange(ref client, null)?.Dispose();
+        Endpoint = "";
+    }
 
     public void Dispose()
     {

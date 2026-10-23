@@ -12,6 +12,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     private readonly SipSession session;
     private readonly SettingsStore settingsStore;
     private readonly UpdateService updates;
+    private CancellationTokenSource? connectionCancellation;
     private readonly Dictionary<SipCommand, CommandOptions> commandOptions = CommandChoice.All
         .ToDictionary(choice => choice.Command, choice => CommandOptions.Create(choice.Command));
 
@@ -31,6 +32,9 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [NotifyPropertyChangedFor(nameof(CanRun), nameof(CanConnect))]
     [NotifyCanExecuteChangedFor(nameof(ConnectCommand), nameof(ExecuteCommand), nameof(LoginCommand))]
     private bool isConnected;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(CancelConnectCommand))]
+    private bool isConnecting;
     [ObservableProperty] private string status = "Not connected";
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasError))]
@@ -173,11 +177,29 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     {
         await RunAsync(async () =>
         {
-            Status = "Connecting…";
-            await session.ConnectAsync(Fields.Copy(), Preferences.EncodingName, Preferences.ValidateChecksums);
-            Status = "Connected to " + session.Endpoint;
+            using var cancellation = new CancellationTokenSource();
+            connectionCancellation = cancellation;
+            IsConnecting = true;
+            Status = $"Connecting to {Fields.Server.Trim()}:{Fields.Port}…";
+            try
+            {
+                await session.ConnectAsync(Fields.Copy(), Preferences.EncodingName, Preferences.ValidateChecksums, cancellation.Token);
+                Status = "Connected to " + session.Endpoint;
+            }
+            catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+            {
+                Status = "Connection cancelled";
+            }
+            finally
+            {
+                connectionCancellation = null;
+                IsConnecting = false;
+            }
         });
     }
+
+    [RelayCommand(CanExecute = nameof(IsConnecting))]
+    private void CancelConnect() => connectionCancellation?.Cancel();
 
     [RelayCommand(CanExecute = nameof(CanRun))]
     private Task ExecuteAsync() => ExecuteSipAsync(SelectedCommand.Command);
@@ -307,6 +329,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
 
     public void Dispose()
     {
+        connectionCancellation?.Cancel();
         updates.Dispose();
         session.Dispose();
     }

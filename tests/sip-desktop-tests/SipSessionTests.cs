@@ -1,3 +1,6 @@
+using System.Diagnostics;
+using System.Net;
+using System.Net.Sockets;
 using Clc.Sip.Desktop.Models;
 using Clc.Sip.Desktop.Services;
 using Clc.Sip.Desktop.Tests.TestSupport;
@@ -107,6 +110,117 @@ public sealed class SipSessionTests
         catch (TimeoutException) { }
         Assert.IsFalse(session.IsConnected, "A timed-out session remained connected.");
         await server.Completion;
+    }
+
+    [TestMethod]
+    public async Task PendingConnectionTimesOutEvenIfTheConnectorDoesNotAcknowledgeCancellation()
+    {
+        var pending = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        sip2? abandoned = null;
+        CancellationToken connectToken = default;
+        using var session = new SipSession((connection, token) =>
+        {
+            abandoned = connection;
+            connectToken = token;
+            return pending.Task;
+        }, connectTimeout: TimeSpan.FromMilliseconds(200));
+        var timer = Stopwatch.StartNew();
+        try
+        {
+            var error = await Assert.ThrowsAsync<TimeoutException>(() => session.ConnectAsync(SampleFields(), "UTF-8", true)
+                .WaitAsync(TimeSpan.FromSeconds(3)));
+            StringAssert.Contains(error.Message, "sip.example.test:5002");
+            Assert.IsTrue(timer.Elapsed < TimeSpan.FromSeconds(2), "A pending connect ignored its deadline.");
+            Assert.IsTrue(connectToken.IsCancellationRequested);
+            Assert.IsFalse(session.IsConnected);
+            Assert.AreEqual("", session.Endpoint);
+            Assert.IsNotNull(abandoned);
+            await Assert.ThrowsAsync<ObjectDisposedException>(async () => await abandoned.ConnectAsync());
+        }
+        finally { pending.TrySetResult(); }
+    }
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public async Task CancellingOrDisposingAPendingConnectFinishesPromptly(bool dispose)
+    {
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var cancellation = new CancellationTokenSource();
+        using var session = new SipSession((_, token) =>
+        {
+            started.TrySetResult();
+            return Task.Delay(Timeout.Infinite, token);
+        });
+        var operation = session.ConnectAsync(SampleFields(), "UTF-8", true, cancellation.Token);
+        await started.Task.WaitAsync(TimeSpan.FromSeconds(2));
+        if (dispose) { session.Dispose(); } else { cancellation.Cancel(); }
+        await Assert.ThrowsAsync<OperationCanceledException>(() => operation.WaitAsync(TimeSpan.FromSeconds(2)));
+        Assert.IsFalse(session.IsConnected);
+        Assert.AreEqual("", session.Endpoint);
+    }
+
+    [TestMethod]
+    public async Task AConnectionTimeoutCanBeRetriedWithAWorkingServer()
+    {
+        var attempts = 0;
+        using var session = new SipSession((connection, token) => Interlocked.Increment(ref attempts) == 1
+            ? Task.Delay(Timeout.Infinite, token) : connection.ConnectAsync(token).AsTask(),
+            connectTimeout: TimeSpan.FromMilliseconds(250));
+        await Assert.ThrowsAsync<TimeoutException>(() => session.ConnectAsync(SampleFields(), "UTF-8", true));
+        await using var server = new SipServer(async (stream, token) =>
+        {
+            _ = await ReadMessage(stream, token);
+            await WriteMessage(stream, "941", token);
+        });
+        var fields = SampleFields();
+        fields.Server = "127.0.0.1";
+        fields.Port = server.Port.ToString();
+        await session.ConnectAsync(fields, "UTF-8", true);
+        var result = await session.ExecuteAsync(SipCommand.Login, fields, new(), "UTF-8", true);
+        Assert.IsTrue(session.IsConnected && result.ChecksumValid && !result.ConnectionReset);
+        await server.Completion;
+    }
+
+    [TestMethod]
+    [DataRow(SocketError.HostNotFound, "resolve server")]
+    [DataRow(SocketError.ConnectionRefused, "refused")]
+    [DataRow(SocketError.NetworkUnreachable, "network or VPN")]
+    public async Task ConnectionFailuresExplainTheTargetAndAllowRetry(SocketError error, string explanation)
+    {
+        var attempts = 0;
+        using var session = new SipSession((connection, token) => Interlocked.Increment(ref attempts) == 1
+            ? Task.FromException(new SocketException((int)error)) : connection.ConnectAsync(token).AsTask());
+        var failure = await Assert.ThrowsAsync<IOException>(() => session.ConnectAsync(SampleFields(), "UTF-8", true));
+        StringAssert.Contains(failure.Message, "sip.example.test");
+        StringAssert.Contains(failure.Message, explanation);
+        Assert.IsFalse(session.IsConnected);
+        await using var server = new SipServer(async (stream, token) =>
+        {
+            _ = await ReadMessage(stream, token);
+            await WriteMessage(stream, "941", token);
+        });
+        var fields = SampleFields();
+        fields.Server = "127.0.0.1";
+        fields.Port = server.Port.ToString();
+        await session.ConnectAsync(fields, "UTF-8", true);
+        Assert.IsTrue((await session.ExecuteAsync(SipCommand.Login, fields, new(), "UTF-8", true)).ChecksumValid);
+        await server.Completion;
+    }
+
+    [TestMethod]
+    public async Task RefusedTcpPortReturnsWithoutWaitingForTheConnectionDeadline()
+    {
+        using var unavailable = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+        unavailable.Bind(new IPEndPoint(IPAddress.Loopback, 0));
+        var fields = SampleFields();
+        fields.Server = "127.0.0.1";
+        fields.Port = ((IPEndPoint)unavailable.LocalEndPoint!).Port.ToString();
+        using var session = new SipSession();
+        var failure = await Assert.ThrowsAsync<IOException>(() => session.ConnectAsync(fields, "UTF-8", true)
+            .WaitAsync(TimeSpan.FromSeconds(3)));
+        StringAssert.Contains(failure.Message, "refused");
+        Assert.IsFalse(session.IsConnected);
     }
 
     [TestMethod(DisplayName = "Invalid input is rejected before sending")]
