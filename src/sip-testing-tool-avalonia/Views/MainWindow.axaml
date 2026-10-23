@@ -101,22 +101,22 @@
         <Grid RowDefinitions="Auto,*,Auto">
           <ComboBox x:Name="CommandPicker" ItemsSource="{Binding Commands}" SelectedItem="{Binding SelectedCommand}" HorizontalAlignment="Stretch" Margin="0,0,0,12" AutomationProperties.Name="SIP Command" />
           <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-            <StackPanel Spacing="10">
-              <StackPanel x:Name="PatronQueryPanel" IsVisible="{Binding IsPatronQuery}" Spacing="10">
+            <StackPanel Spacing="14">
+              <StackPanel x:Name="PatronQueryPanel" IsVisible="{Binding IsPatronQuery}" Spacing="14">
                 <views:OptionalFieldRow Label="Summary"><ComboBox ItemsSource="{Binding Summaries}" SelectedItem="{Binding SelectedSummary}" HorizontalAlignment="Stretch" /></views:OptionalFieldRow>
                 <Grid ColumnDefinitions="*,*">
                   <views:OptionalFieldRow Label="Start item (BP)" Margin="0,0,8,0"><TextBox x:Name="BpField" Text="{Binding Fields.Bp}" AutomationProperties.Name="Start Item BP" /></views:OptionalFieldRow>
                   <views:OptionalFieldRow Grid.Column="1" Label="End item (BQ)"><TextBox x:Name="BqField" Text="{Binding Fields.Bq}" AutomationProperties.Name="End Item BQ" /></views:OptionalFieldRow>
                 </Grid>
               </StackPanel>
-              <StackPanel x:Name="FeePanel" IsVisible="{Binding IsFeePaid}" Spacing="10">
+              <StackPanel x:Name="FeePanel" IsVisible="{Binding IsFeePaid}" Spacing="14">
                 <views:OptionalFieldRow Label="Fee type"><TextBox x:Name="FeeTypeField" Text="{Binding FeeType}" /></views:OptionalFieldRow>
                 <views:OptionalFieldRow Label="Payment type"><TextBox x:Name="PaymentTypeField" Text="{Binding PaymentType}" /></views:OptionalFieldRow>
                 <views:OptionalFieldRow Label="Payment amount"><TextBox x:Name="AmountField" Text="{Binding Amount}" /></views:OptionalFieldRow>
                 <views:OptionalFieldRow Label="Fee identifier (CG)"><TextBox Text="{Binding FeeIdentifier}" /></views:OptionalFieldRow>
                 <views:OptionalFieldRow Label="Transaction ID (BK)"><TextBox Text="{Binding TransactionId}" /></views:OptionalFieldRow>
               </StackPanel>
-              <StackPanel x:Name="NoticePanel" IsVisible="{Binding IsNotice}" Spacing="10">
+              <StackPanel x:Name="NoticePanel" IsVisible="{Binding IsNotice}" Spacing="14">
                 <views:OptionalFieldRow Label="Delivery status"><ComboBox x:Name="NoticeStatusField" ItemsSource="{Binding NoticeStatuses}" SelectedItem="{Binding SelectedNoticeStatus}" HorizontalAlignment="Stretch" /></views:OptionalFieldRow>
                 <views:OptionalFieldRow Label="Delivery date/time"><views:OptionalDateTimeInput x:Name="NoticeDateField" DateText="{Binding Options.DateText}" IsIncluded="{Binding Options.UseDate}" ToolTip.Tip="Unchecked uses the time of execution." AutomationProperties.Name="Delivery date/time" /></views:OptionalFieldRow>
                 <views:OptionalFieldRow Label="Delivery medium"><ComboBox x:Name="NoticeMediumField" ItemsSource="{Binding NoticeMedia}" SelectedItem="{Binding SelectedNoticeMedium}" HorizontalAlignment="Stretch" /></views:OptionalFieldRow>

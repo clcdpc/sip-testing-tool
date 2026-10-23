@@ -14,7 +14,7 @@ namespace Clc.Sip.Desktop.Views;
 public sealed class CommandOptionsView : UserControl
 {
     private MainWindowViewModel? model;
-    private readonly StackPanel fields = new() { Spacing = 10 };
+    private readonly StackPanel fields = new() { Spacing = 14 };
 
     public CommandOptionsView()
     {
