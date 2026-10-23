@@ -216,6 +216,8 @@ public sealed class SipSessionTests
         var fields = SampleFields();
         fields.Server = "127.0.0.1";
         fields.Port = ((IPEndPoint)unavailable.LocalEndPoint!).Port.ToString();
+        // macOS drops SYNs to a bound, non-listening socket; release the port to get a refusal.
+        unavailable.Dispose();
         using var session = new SipSession();
         var failure = await Assert.ThrowsAsync<IOException>(() => session.ConnectAsync(fields, "UTF-8", true)
             .WaitAsync(TimeSpan.FromSeconds(3)));

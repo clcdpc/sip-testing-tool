@@ -2,7 +2,7 @@
 
 **Avalonia is the primary SIP Testing Tool desktop app**, targeting Windows, Linux and macOS. The **3.0** release series introduces it as the main application, starting with **3.0.0-beta.1**. The legacy Windows Forms app remains available as a fallback while the Avalonia release is validated.
 
-The main window's title shows the running release version, including prerelease identifiers, for example **SIP Testing Tool v3.0.0-beta.2**. The title and updater read the same application informational version; commit/build metadata is omitted from the title.
+The main window's title shows the running release version, including prerelease identifiers, for example **SIP Testing Tool v3.0.0-beta.4**. The title and updater read the same application informational version; commit/build metadata is omitted from the title.
 
 Open **`src/sip-testing-tool.sln`** in Visual Studio with .NET 10 and Windows desktop development support. Set **sip-testing-tool-avalonia** as the startup project. Use **Build Solution** and **Start Debugging**; NuGet restores the dependencies. The Avalonia extension for Visual Studio is optional for XAML previewing. Select **sip-testing-tool** explicitly when working on the legacy Windows Forms app.
 
@@ -120,7 +120,7 @@ Updatum uses temporary download/helper files and a temporary backup during repla
 
 ### GitHub release builds
 
-The **Desktop release** GitHub Actions workflow packages the primary Avalonia app when a `vMAJOR.MINOR.PATCH` tag, optionally followed by a prerelease identifier, is pushed. The tag must exactly match **Version** in `src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj`; version `3.0.0` requires tag `v3.0.0`, and version `3.0.0-beta.2` requires tag `v3.0.0-beta.2`. Alpha, beta and release-candidate identifiers follow semantic version syntax; numeric identifiers cannot have leading zeroes (`beta.1`, not `beta.01`). Build metadata is also accepted, but changing only metadata does not create a newer update.
+The **Desktop release** GitHub Actions workflow packages the primary Avalonia app when a `vMAJOR.MINOR.PATCH` tag, optionally followed by a prerelease identifier, is pushed. The tag must exactly match **Version** in `src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj`; version `3.0.0` requires tag `v3.0.0`, and version `3.0.0-beta.4` requires tag `v3.0.0-beta.4`. Alpha, beta and release-candidate identifiers follow semantic version syntax; numeric identifiers cannot have leading zeroes (`beta.1`, not `beta.01`). Build metadata is also accepted, but changing only metadata does not create a newer update.
 
 The workflow builds Windows x64 on `windows-2025`, Linux x64 on `ubuntu-22.04`, macOS Apple Silicon on `macos-15` and macOS Intel on `macos-15-intel`. All four jobs run the Avalonia tests and publish-profile checks; Windows also runs the shared protocol and Windows Forms tests. The existing profiles package the single-EXE ZIP and framework-dependent AppImage. Each Mac job publishes its self-contained profile and packages **`SIP Testing Tool.app`** as `SIP-Testing-Tool_osx-arm64_v<version>.zip` or `SIP-Testing-Tool_osx-x64_v<version>.zip`, including the .NET runtime. Mac bundles use the same packaging script as the standalone Mac build below. Before upload, verification checks the expected asset names, archive/AppImage structure and SHA-256 sidecars; Mac verification also checks the executable architecture, bundle version, bundled runtime and the code signature after extracting the ZIP. Keep the `SIP-Testing-Tool_<rid>_v<version>` asset naming convention: the Windows/Linux updater selects the appropriate runtime and format from those names.
 
@@ -128,14 +128,14 @@ After all four jobs succeed, a final job verifies all downloads again, creates a
 
 The Mac ZIPs require **macOS 14 or later**. Extract the ZIP for your Mac's architecture, then copy **SIP Testing Tool.app** to Applications. The app has an **ad-hoc signature**, with no Developer ID certificate or Apple notarization configured; macOS Gatekeeper can block the first launch of an internet download. If you trust the release, follow [Apple's instructions](https://support.apple.com/en-us/102445) to approve it in **System Settings → Privacy & Security → Open Anyway** after attempting to open it. Developer ID signing and notarization require an Apple Developer account and signing/notarization credentials in GitHub Actions secrets. Mac apps update by downloading a newer release and replacing the app; in-app updates remain available on Windows/Linux.
 
-To release, commit and push the changes with the desired project version, merge them into `master`, then tag that merged commit. **Pushing the matching tag approves automatic publication**; no separate GitHub Publish button is required. For version `3.0.0-beta.2`:
+To release, commit and push the changes with the desired project version, merge them into `master`, then tag that merged commit. **Pushing the matching tag approves automatic publication**; no separate GitHub Publish button is required. For version `3.0.0-beta.4`:
 
 ```text
-git tag -a v3.0.0-beta.2 -m "Release 3.0.0-beta.2"
-git push origin v3.0.0-beta.2
+git tag -a v3.0.0-beta.4 -m "Release 3.0.0-beta.4"
+git push origin v3.0.0-beta.4
 ```
 
-After publication, check all four downloads, including launch on both Mac architectures and Windows/Linux two-version update checks. For the beta update test, run the existing `3.0.0-beta.1` EXE/AppImage, choose **Updates → Check for updates**, then **Restart to update**; the restarted title should show **v3.0.0-beta.2**. Drafts are always excluded from in-app updates; published prereleases are offered only to prerelease builds. Published releases are available to eligible portable builds using that GitHub repository; no separate update server, index, installer or delta package is needed. The initial beta.1 tag used the earlier workflow and retains its manual draft-publication step.
+After publication, check all four downloads, including launch on both Mac architectures and Windows/Linux two-version update checks. For the beta update test, run the existing `3.0.0-beta.2` EXE/AppImage, choose **Updates → Check for updates**, then **Restart to update**; the restarted title should show **v3.0.0-beta.4**. Drafts are always excluded from in-app updates; published prereleases are offered only to prerelease builds. Published releases are available to eligible portable builds using that GitHub repository; no separate update server, index, installer or delta package is needed. The initial beta.1 tag used the earlier workflow and retains its manual draft-publication step.
 
 ## Build on a Mac
 
@@ -158,8 +158,8 @@ The `macOS-arm64` and `macOS-x64` publish profiles also support direct `dotnet p
 
 ```powershell
 dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=macOS-arm64
-./build/PackageDesktop.ps1 -RuntimeIdentifier osx-arm64 -PublishDirectory artifacts/avalonia/publish/osx-arm64 -OutputDirectory artifacts/avalonia/releases/osx-arm64 -Version 3.0.0-beta.2
-./build/VerifyDesktopRelease.ps1 -Directory artifacts/avalonia/releases/osx-arm64 -RuntimeIdentifier osx-arm64 -Version 3.0.0-beta.2
+./build/PackageDesktop.ps1 -RuntimeIdentifier osx-arm64 -PublishDirectory artifacts/avalonia/publish/osx-arm64 -OutputDirectory artifacts/avalonia/releases/osx-arm64 -Version 3.0.0-beta.4
+./build/VerifyDesktopRelease.ps1 -Directory artifacts/avalonia/releases/osx-arm64 -RuntimeIdentifier osx-arm64 -Version 3.0.0-beta.4
 ```
 
 Use `macOS-x64` and `osx-x64` for Intel. Match `-Version` to the published project's version.
