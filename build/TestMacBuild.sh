@@ -17,8 +17,9 @@ test_root="$(mktemp -d "$repo_root/artifacts/mac build tests-XXXXXX")"
 trap 'printf "Mac bootstrap check failed on line %s. Diagnostics: %s\n" "$LINENO" "$test_root" >&2' ERR
 mock_bin="$test_root/bin"
 fixture="$test_root/fixture/repository"
-mkdir -p "$mock_bin" "$fixture/src/sip-testing-tool-avalonia/Properties/PublishProfiles" \
+mkdir -p "$mock_bin" "$fixture/build" "$fixture/src/sip-testing-tool-avalonia/Properties/PublishProfiles" \
     "$fixture/src/sip-testing-tool-avalonia/Assets"
+cp "$repo_root/build/PackageMacOS.sh" "$fixture/build/"
 cp "$repo_root/src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj" \
     "$fixture/src/sip-testing-tool-avalonia/"
 cp "$repo_root"/src/sip-testing-tool-avalonia/Properties/PublishProfiles/macOS-*.pubxml \

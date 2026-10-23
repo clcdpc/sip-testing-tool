@@ -58,8 +58,8 @@ mkdir "$source_root"
 tar -xzf "$archive" -C "$source_root" --strip-components 1
 
 project="$source_root/src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj"
-macos_assets="$source_root/src/sip-testing-tool-avalonia/Properties/macOS"
-if [ ! -f "$project" ] || [ ! -f "$source_root/src/sip-testing-tool-avalonia/Properties/PublishProfiles/$profile.pubxml" ]; then
+if [ ! -f "$project" ] || [ ! -f "$source_root/src/sip-testing-tool-avalonia/Properties/PublishProfiles/$profile.pubxml" ] \
+    || [ ! -f "$source_root/build/PackageMacOS.sh" ]; then
     fail "The downloaded source does not contain the macOS build yet. Ask the maintainer to publish the current version, then run this script again."
 fi
 
@@ -87,62 +87,10 @@ printf '\nPublishing the application...\n'
 "$dotnet" publish "$project" --configuration Release \
     --artifacts-path "$run_root/build" "-p:PublishProfile=$profile" "-p:UsedAvaloniaProducts="
 version="$("$dotnet" msbuild "$project" -nologo -getProperty:Version)"
-version="${version%%[-+]*}"
-[[ "$version" =~ ^[0-9]+(\.[0-9]+){0,2}$ ]] || fail "The project returned an invalid app version: $version"
 
 publish_root="$source_root/artifacts/avalonia/publish/$runtime"
 app="$run_root/SIP Testing Tool.app"
-macos_root="$app/Contents/MacOS"
-resources="$app/Contents/Resources"
-frameworks="$app/Contents/Frameworks"
-mkdir -p "$macos_root" "$resources" "$frameworks"
-# Keep managed assemblies and data out of code-only directories. Relative links
-# preserve .NET's publish layout while allowing the whole app to be relocated.
-shopt -s dotglob nullglob
-for entry in "$publish_root"/*; do
-    name="${entry##*/}"
-    if [ -f "$entry" ] && [[ "$(file -b "$entry")" == *Mach-O* ]]; then
-        case "$name" in
-            *.dylib) destination="Frameworks" ;;
-            *) destination="MacOS" ;;
-        esac
-    else
-        destination="Resources"
-    fi
-    cp -R "$entry" "$app/Contents/$destination/$name"
-    # The .NET host resolves assembly links before looking for its runtime;
-    # native libraries also locate helpers relative to their own directory.
-    for directory in MacOS Resources Frameworks; do
-        if [ "$directory" != "$destination" ]; then
-            ln -s "../$destination/$name" "$app/Contents/$directory/$name"
-        fi
-    done
-done
-shopt -u dotglob nullglob
-chmod +x "$macos_root/sip-testing-tool-avalonia"
-sed "s/__APP_VERSION__/$version/g" "$macos_assets/Info.plist" > "$app/Contents/Info.plist"
-plutil -lint "$app/Contents/Info.plist"
-
-printf '\nCreating the Mac app icon...\n'
-iconset="$run_root/app.iconset"
-mkdir "$iconset"
-for size in 16 32 128 256 512; do
-    sips -z "$size" "$size" "$source_root/src/sip-testing-tool-avalonia/Assets/app.png" \
-        --out "$iconset/icon_${size}x${size}.png" >/dev/null
-    double_size=$((size * 2))
-    sips -z "$double_size" "$double_size" "$source_root/src/sip-testing-tool-avalonia/Assets/app.png" \
-        --out "$iconset/icon_${size}x${size}@2x.png" >/dev/null
-done
-iconutil -c icns "$iconset" -o "$resources/app.icns"
-
-printf '\nSigning the local build...\n'
-while IFS= read -r -d '' binary; do
-    if [[ "$(file -b "$binary")" == *Mach-O* ]]; then
-        codesign --force --sign - --timestamp=none "$binary"
-    fi
-done < <(find "$macos_root" "$frameworks" -type f -print0)
-codesign --force --sign - --timestamp=none --entitlements "$macos_assets/Entitlements.plist" "$app"
-codesign --verify --deep --strict "$app"
+/bin/bash "$source_root/build/PackageMacOS.sh" "$publish_root" "$app" "$version"
 
 printf '%s\n' "$app" > "$work_root/latest-app.txt"
 printf '\nBuild complete. Open this app:\n%s\n\nRun this script again to build the latest version.\n' "$app"
