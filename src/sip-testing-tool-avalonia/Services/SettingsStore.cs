@@ -24,6 +24,10 @@ public sealed class SettingsStore
         var preferences = await JsonSerializer.DeserializeAsync<AppPreferences>(stream, SessionFields.JsonOptions)
             ?? throw new InvalidDataException("The defaults file is empty.");
         preferences.Defaults ??= new SessionFields();
+        if (string.Equals(preferences.UpdateFeedUrl?.Trim().TrimEnd('/'), UpdateService.LegacyFeedUrl, StringComparison.OrdinalIgnoreCase))
+        {
+            preferences.UpdateFeedUrl = UpdateService.DefaultRepositoryUrl;
+        }
         return preferences;
     }
 

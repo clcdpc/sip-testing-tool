@@ -19,6 +19,7 @@ public sealed class SettingsTests
             """;
         using var input = new MemoryStream(Encoding.UTF8.GetBytes(legacy));
         var fields = await SettingsStore.ImportAsync(input);
+        Assert.AreEqual("5002", fields.Port);
         Assert.AreEqual("2468", fields.PatronPin);
         Assert.AreEqual("MAIN", fields.LocationCode);
         Assert.AreEqual("ITG", fields.VendorProfile);
@@ -27,6 +28,7 @@ public sealed class SettingsTests
         exported.Position = 0;
         var copy = await SettingsStore.ImportAsync(exported);
         Assert.AreEqual(fields.Server, copy.Server);
+        Assert.AreEqual(fields.Port, copy.Port);
         Assert.AreEqual(fields.PatronPin, copy.PatronPin);
         Assert.AreEqual("10", copy.Bq);
         copy.Ao = "different";
@@ -39,7 +41,7 @@ public sealed class SettingsTests
         using var scratch = new ScratchDirectory();
         var store = new SettingsStore(Path.Combine(scratch.Path, "settings.json"));
         var defaults = await store.LoadAsync();
-        Assert.AreEqual("5002", defaults.Defaults.Port);
+        Assert.AreEqual("", defaults.Defaults.Port);
         Assert.IsFalse(defaults.ConnectOnStartup, "First startup should not connect to a server.");
         defaults.Defaults = SampleFields();
         defaults.EncodingName = "iso-8859-1";
@@ -48,6 +50,7 @@ public sealed class SettingsTests
         defaults.Defaults.ItemBarcode = "changed";
         await store.SaveAsync(defaults);
         var reloaded = await store.LoadAsync();
+        Assert.AreEqual("5002", reloaded.Defaults.Port, "An explicitly saved port should still be preserved.");
         Assert.AreEqual("changed", reloaded.Defaults.ItemBarcode);
         Assert.AreEqual("2468", reloaded.Defaults.PatronPin);
         Assert.AreEqual("iso-8859-1", reloaded.EncodingName);

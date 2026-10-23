@@ -62,7 +62,7 @@ public partial class SettingsWindow : Window
             _ = Encoding.GetEncoding(preferences.EncodingName);
             if (!string.IsNullOrWhiteSpace(preferences.UpdateFeedUrl))
             {
-                _ = UpdateService.GetFeedUrl(preferences.UpdateFeedUrl);
+                _ = UpdateService.GetRepositoryUrl(preferences.UpdateFeedUrl);
             }
 
             accepted = true;

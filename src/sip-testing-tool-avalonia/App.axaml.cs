@@ -24,6 +24,7 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var model = new MainWindowViewModel();
+            model.RestartRequested += () => desktop.Shutdown();
             desktop.MainWindow = new MainWindow { DataContext = model };
             desktop.MainWindow.Opened += async (_, _) => await model.InitializeAsync();
             desktop.Exit += (_, _) => model.Dispose();

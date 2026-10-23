@@ -1,13 +1,15 @@
 # SIP Testing Tool
 
-Open **`src/sip-testing-tool.sln`** in Visual Studio with .NET 10 and Windows desktop development support. Set **sip-testing-tool** as the startup project for the Windows Forms app. The **sip-testing-tool-avalonia** project is also available for Windows, Linux and macOS. Use **Build Solution** and **Start Debugging**; NuGet restores the dependencies. The Avalonia extension for Visual Studio is optional for XAML previewing.
+**Avalonia is the primary SIP Testing Tool desktop app**, targeting Windows, Linux and macOS. The **3.0** release series introduces it as the main application, starting with **3.0.0-beta.1**. The legacy Windows Forms app remains available as a fallback while the Avalonia release is validated.
+
+Open **`src/sip-testing-tool.sln`** in Visual Studio with .NET 10 and Windows desktop development support. Set **sip-testing-tool-avalonia** as the startup project. Use **Build Solution** and **Start Debugging**; NuGet restores the dependencies. The Avalonia extension for Visual Studio is optional for XAML previewing. Select **sip-testing-tool** explicitly when working on the legacy Windows Forms app.
 
 ## Projects
 
 | Project | Purpose |
 | --- | --- |
-| `src/sip-testing-tool-avalonia` | Avalonia desktop app for Windows, Linux and macOS; Velopack updates on Windows/Linux. |
-| `src/sip-testing-tool` | Windows Forms app with folder, single-file and ClickOnce publishing profiles. |
+| `src/sip-testing-tool-avalonia` | Primary desktop app for Windows, Linux and macOS; Updatum updates on Windows/Linux. |
+| `src/sip-testing-tool` | Legacy Windows Forms fallback with folder, single-file and ClickOnce publishing profiles. |
 | `src/sip-core` | Shared SIP client used by both apps and the console. |
 | `src/sip-console` | JSON command runner that emits PRTG XML. |
 | `tests/sip-tests` | Windows Forms, console and SIP regression checks. |
@@ -17,7 +19,7 @@ Both interfaces keep connection, login, patron and item values in the top ribbon
 
 In both desktop interfaces, press **Enter** in any connection field to **Connect**, or in any login field (including the algorithm options) to **Login**. Enter focuses the corresponding button, so the next **Tab** moves directly to the next section: Login after Connect, or Patron after Login. Validation errors focus the field needing correction. Login becomes available after connecting. When the vendor profile list is open, Enter accepts the highlighted choice; press Enter again to log in. The profile list includes the documented Polaris values **SIP**, **ENVISIONWARE**, **COMPRISE**, **3M** and **ITG**. **SIP** selects the default profile; clearing the field omits VP. Custom profile values can still be typed.
 
-Default connection fields can be left blank in either interface, including the port. **Connect** requires a server and a numeric port from 1 through 65535. Once connected, **Connect** reconnects using the current ribbon values; an invalid edit leaves the existing connection open. Saving defaults keeps the current ribbon values, command options, connection and message history; use **Settings → Reload default values** to apply the saved fields to the ribbon.
+Default connection fields start blank in either interface, including the port. **Connect** requires a server and a numeric port from 1 through 65535. Once connected, **Connect** reconnects using the current ribbon values; an invalid edit leaves the existing connection open. Saving defaults keeps the current ribbon values, command options, connection and message history; use **Settings → Reload default values** to apply the saved fields to the ribbon.
 
 In either desktop message log, hover over either character of a field identifier such as **AO**, **AA**, or **U4** to see its name and description. Help covers sent and received SIP2 fields, the **AY** sequence number and **AZ** checksum, and vendor extensions. Alphanumeric identifiers are recognized without treating their values as malformed data. Unknown field codes retain their original values and are labeled as possible server-specific extensions. Standard descriptions follow the [SIP2 protocol definition](https://developers.exlibrisgroup.com/wp-content/uploads/2020/01/3M-Standard-Interchange-Protocol-Version-2.00.pdf). The raw transcript remains selectable, copyable and exportable.
 
@@ -27,9 +29,15 @@ Patron status, summary and supported-message (**BX**) flags can be inspected ind
 
 Click **+** beside a log message in either interface to open its field table beneath the transcript. Each field has a name, brief description and value in message order, including repeated fields and the sequence/checksum trailer. Patron status, summary and supported-message fields have a parent row followed by an indented row for every flag, with explicit **SET**, **Not set**, reserved or invalid states. Unknown fields and incomplete data retain their original values. The table shows one message at a time; another **+** switches messages. Drag the divider to resize the table, click **−** or **Collapse** to close it, or press **Escape** while the table has focus. Table cells can be selected and copied, and raw log selection and export keep their existing behavior.
 
-Polaris field help uses the supplied **SIP Message Documentation** (July 2010, pages 2–4) and **RPA via SIP for Vendors 2012** references. It names birth/expiration dates, patron codes and home branches, statistical classes, postal codes, and checkin collection/call-number/hold fields. **U1–U5** are the library-defined **User1–User5** attributes; the references list U4/U5, and the library confirmed the same convention for U1–U3. Their values are kept as configured text. Checkin **CV** alert codes are decoded separately from the legacy Polaris 3.6 login use of CV. Login **CP** authentication overrides and the patron username/barcode behavior of **AA** are explained in their message context.
+Polaris field help uses the supplied **SIP Message Documentation** (July 2010, pages 2–4), **RPA via SIP for Vendors 2012**, and **Polaris SIP2 Custom Extensions & Enhancements** (revised 23 October 2026) references. The last document is an unofficial static analysis of SIPService.exe **8.1.7065.1**. The reference names birth/expiration dates, patron codes and home branches, statistical classes, postal codes, and checkin collection/call-number/hold fields. **U1–U5** are library-defined **User1–User5** attributes, identified together in the 8.1 reference; their configured text is preserved. Checkin **CV** alert codes remain distinct from the historical Polaris 3.6 login field; the 8.1 reference does not establish CV as a login alias. Login **CP** authentication overrides and the patron username/barcode behavior of **AA** are explained in their message context.
+
+The 8.1 additions identify **FA** as accrued fines total, **PC** and EnvisionWare **SI** as internal patron IDs, **PB** as the resolved patron barcode, and **DB** as patron credit balance. Numeric text is preserved: FA's observed integer truncation is explained, and DB/FA monetary units remain unconfirmed. The **PY** help describes the local end-of-day expiration comparison and warns that an unevaluated/default N does not establish that registration is current. Known response headers **42** (deposit-account activity) and **44** (notice update) expose their first tagged fields correctly. In response 42, **TX** is documented only as literal zero in the analyzed build. Notice-pair **BK** is an echoed request value with an unconfirmed business meaning. These definitions do not assume the unproven request-41 layout or response-44 result-code mappings.
 
 Recognized Polaris **AV** fine entries expand into child rows for the fine transaction ID and outstanding amount, plus fine type, fee description, related item barcode and title where supplied. The documented amount-first 3M format keeps the combined fee description/title together because it specifies no boundary between them. Layouts are recognized from the value syntax; the two references differ on some vendor-profile mappings. Unknown layouts and extra data remain readable without guessed components. Hovering an AV identifier also lists its decoded components. Count rows and simple name/address fields omit descriptions that merely repeat their names; counts still distinguish numeric values from unavailable blank counts.
+
+The [worked field dictionary sample](examples/field-definitions.example.json) contains **96 entries covering 85 field codes and 55 value labels**, generated from the current compiled field reference. It includes the standard tagged fields, library-defined U1–U5 labels, Polaris extensions and message-specific meanings. This is a reference/template for the proposed optional dictionary; external-file loading has not yet been implemented. The opinionated defaults and parsing rules remain compiled into the application.
+
+In the sample, `version` identifies the JSON format. Each `fields` entry has a `code`, `name` and `description`; optional `messages` scopes it to the listed two-digit message IDs, and optional `values` maps exact raw strings to explanations. A general entry and a message-specific entry can share a code; the scoped entry takes precedence in that message. Quoted numeric keys preserve leading zeroes, and the two-space CV key represents a blank checkin alert. Keep only the entries/properties you intend to customize in a future override file so omitted definitions inherit the compiled defaults. Fixed message headers, flag positions, date decoding and compound AV parsing continue to use their built-in implementations.
 
 **Checkout** includes renewal policy, no-block mode, an optional no-block due date/time, item properties (CH), terminal password (AC), fee acknowledgement (BO), and cancel (BI). Check the date picker to include its date/time; an unchecked picker sends a blank date. Blank item properties omit CH. BO and BI each offer **Omit field**, **No (N)** and **Yes (Y)**. The AC terminal password is separate from the shared login password (CO) and patron PIN (AD).
 
@@ -77,37 +85,53 @@ The console project includes `Examples/acs-status.json`. Supply a JSON filename 
 
 ## Avalonia publishing and updates
 
-Right-click **sip-testing-tool-avalonia → Publish**, select one of its checked-in folder profiles, and publish in **Release**:
+Select **Windows-Zip** in Visual Studio's Publish page for the Windows release. The finished ZIP contains one `sip-testing-tool-avalonia.exe`; extract it to a writable folder and run it. **Windows-SingleFile** publishes the same update-capable EXE directly when a ZIP is unnecessary.
 
-| Visual Studio profile | Application files | Velopack release files |
+| Profile | Finished output | Run |
 | --- | --- | --- |
-| `Velopack-Windows` | `artifacts/avalonia/publish/win-x64` | `artifacts/velopack/win-x64` |
-| `Velopack-Linux` | `artifacts/avalonia/publish/linux-x64` | `artifacts/velopack/linux-x64` |
-| `Windows-SingleFile` | `artifacts/avalonia/publish/win-x64-single-file/sip-testing-tool-avalonia.exe` | — |
-| `macOS-arm64` | `artifacts/avalonia/publish/osx-arm64` | — |
-| `macOS-x64` | `artifacts/avalonia/publish/osx-x64` | — |
+| `Windows-Zip` | `artifacts/avalonia/releases/win-x64` | Extract `SIP-Testing-Tool_win-x64_v<version>.zip` and run its EXE |
+| `Linux-AppImage` | `artifacts/avalonia/releases/linux-x64` | `SIP-Testing-Tool_linux-x64_v<version>.AppImage` |
+| `Windows-SingleFile` | `artifacts/avalonia/publish/win-x64-single-file` | The EXE directly |
+| `macOS-arm64` / `macOS-x64` | `artifacts/avalonia/publish/osx-<architecture>` | Use the Mac build instructions below for an app bundle |
 
-The paths above are relative to the consolidated repository root. Publish profiles store plain folder paths relative to each application's `.csproj`, which both Visual Studio and command-line publishing resolve into that root's `artifacts` folder. Visual Studio also reads profiles from XML streams without their file location, so profile values must not depend on `MSBuildProjectDirectory`, `MSBuildThisFileDirectory`, or imports that use those properties. `PublishPaths.props` supplies the absolute root for Velopack packaging during the application build.
+**The .NET runtime is excluded from the Windows and Linux releases.** Install the [x64 .NET 10 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) on Windows, or the [x64 .NET 10 Runtime for your Linux distribution](https://learn.microsoft.com/en-us/dotnet/core/install/linux). The Windows Desktop Runtime or SDK also satisfies the Windows requirement. Avalonia's native graphics/text libraries are included; the Windows single-file bundle extracts them into .NET's temporary cache at startup.
 
-The two **Velopack** profiles publish self-contained .NET applications and then run the pinned local Velopack CLI. Windows produces an installer, portable ZIP and update package; Linux produces an AppImage and update package. Both Velopack profiles can be packaged on Windows. Increase **Version** in the Avalonia `.csproj` for every release; a release version must identify the same application contents whenever it is served to users. Keep old release packages when publishing subsequent versions so Velopack can generate deltas.
+Visual Studio's folder link opens the finished output shown above. Profile paths stay relative to the application project because Visual Studio also reads profiles as XML streams without their file location. `PublishPaths.props` supplies the repository root for internal staging. Choosing another destination in Visual Studio, or passing `-p:PublishDir=...`, sends the finished ZIP/AppImage there. Raw files for packaging stay under `artifacts/avalonia/staging/<runtime>`. Packaging requires PowerShell 7 (`pwsh`). AppImage packaging runs on Linux and downloads pinned, SHA-256-verified versions of appimagetool and the native AppImage launcher into `artifacts/tools/appimage`.
 
-**Windows-SingleFile** produces one portable Windows x64 EXE containing the application and its Avalonia dependencies. Users install the [x64 .NET 10 Runtime](https://dotnet.microsoft.com/en-us/download/dotnet/10.0) separately; the .NET 10 Desktop Runtime or SDK also satisfies that requirement. The .NET runtime is excluded from the EXE. Debug symbol files are omitted from the publish output, and Avalonia's native graphics/text libraries unpack into .NET's temporary cache at startup. Settings retain their existing per-user location. Update this portable build by replacing the EXE; use **Velopack-Windows** for the installer and automatic update workflow. See Microsoft's [single-file deployment documentation](https://learn.microsoft.com/en-us/dotnet/core/deploying/single-file/overview) for bundling and native extraction behavior.
-
-If publishing reports an **equal or greater version**, that version already exists in the selected release directory, including packages created during local testing. Increase `<Version>` in `src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj` (for example, `2.1.0` to `2.1.1`) and publish again. The application file version follows that value automatically. Validation publishes can use a separate `VelopackOutputDir` to avoid occupying the next release version in the normal output directory.
-
-The app checks for updates at startup when enabled in **Settings → Change default settings**, and from **Updates → Check for updates**. Available updates download in the background. **Restart to update** applies an update only when the user chooses to restart and no SIP operation is running. Builds outside a Velopack installation skip feed requests. User defaults remain outside the replaced application files.
-
-The proposed feed base is `https://siptool.clcohio.org/updates/desktop/`. The updater appends the current OS and architecture, selecting `win-x64/` or `linux-x64/`. To activate a feed, copy the **contents of each Velopack release directory**, including its release index and packages, into the matching directory on the web server. Host these files unchanged over HTTPS and allow the package/index/AppImage file extensions to be downloaded. This setup does not upload files to the server or replace the existing ClickOnce deployment.
-
-Windows packages are unsigned until signing is configured. The optional **VelopackSignParams** MSBuild property passes Windows SignTool arguments to Velopack; configure the certificate/provider and timestamping for the publishing account before distributing releases. The Windows Forms ClickOnce certificate selection is independent of this setting. Linux users download the AppImage to a writable location, mark it executable once (`chmod +x <file>.AppImage`), then launch it; subsequent updates replace that AppImage. Existing ClickOnce users install the new desktop app once and can import their `.sipc` settings.
-
-Equivalent local commands from the repository root are:
+Equivalent commands from the repository root:
 
 ```text
-dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=Velopack-Windows
-dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=Velopack-Linux
+dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=Windows-Zip
+dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=Linux-AppImage
 dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=Windows-SingleFile
 ```
+
+Run the Linux command on Linux. Keep the AppImage in a writable location, mark it executable once (`chmod +x <file>.AppImage`), and launch it. The native AppImage launcher supports extraction mode (`APPIMAGE_EXTRACT_AND_RUN=1`) on systems without FUSE. Both packaging profiles produce a download and a matching `.sha256` sidecar. Increment **Version** in the Avalonia `.csproj` for each release. Local publishing can rebuild the same version; the release workflow refuses to replace a published GitHub release.
+
+The app uses [StageKit.Updatum](https://github.com/sn4k3/StageKit/tree/v0.4.1/src/StageKit.Updatum) to download and install updates from published [GitHub Releases](https://github.com/clcdpc/sip-testing-tool/releases). Stable builds receive stable releases only. Prerelease builds, such as `2.1.2-beta.1`, receive newer prereleases and stable releases; installing a stable release returns the app to stable-only updates. Version selection follows [semantic version precedence](https://semver.org/), so `beta.2` precedes `beta.10`, and the final `2.1.2` follows every `2.1.2` prerelease. Commit/build metadata does not affect ordering. The app reads its full informational version to retain the beta identifier, and selects the highest compatible version regardless of publication order.
+
+**Settings → Change default settings → GitHub update repository** controls the source; leave it empty to disable checks. Existing settings with the old default web feed migrate to this repository. Startup checks can be disabled independently, and **Updates → Check for updates** checks manually. Development builds and the current Mac builds skip update requests; the published Windows EXE supports updates without an installer.
+
+Available updates download in the background and require a verified SHA-256 digest from GitHub or the matching checksum sidecar. The updater verifies the download again before installation. **Restart to update** is available when the download is ready and no SIP operation or update check is running. Preferences are saved before starting the helper, which waits for this specific process to exit, replaces the existing EXE/AppImage while retaining its filename, and restarts it. Closing normally without choosing restart discards the temporary download. User defaults retain their per-user location.
+
+Updatum uses temporary download/helper files and a temporary backup during replacement; the Windows application folder contains only its EXE. A failed file swap restores the previous file, but there is no automatic rollback if the new app starts and then crashes. Updatum 0.4.1 may show its temporary Windows command window during restart. Packages remain unsigned until application signing is configured. Existing Velopack and ClickOnce installations require a one-time move to the new portable release; their old updater cannot consume this format.
+
+### GitHub release builds
+
+The **Desktop release** GitHub Actions workflow packages the primary Avalonia app when a `vMAJOR.MINOR.PATCH` tag, optionally followed by a prerelease identifier, is pushed. The tag must exactly match **Version** in `src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj`; version `3.0.0` requires tag `v3.0.0`, and version `3.0.0-beta.1` requires tag `v3.0.0-beta.1`. Alpha, beta and release-candidate identifiers follow semantic version syntax; numeric identifiers cannot have leading zeroes (`beta.1`, not `beta.01`). Build metadata is also accepted, but changing only metadata does not create a newer update.
+
+The workflow builds Windows x64 on `windows-2025` and Linux x64 on `ubuntu-22.04`. Both jobs run the Avalonia tests and publish-profile checks; Windows also runs the shared protocol and Windows Forms tests. The existing profiles package the single-EXE ZIP and framework-dependent AppImage. Before upload, verification checks the expected asset names, archive/AppImage structure and SHA-256 sidecars. Keep the `SIP-Testing-Tool_<rid>_v<version>` asset naming convention: the updater selects the appropriate runtime and format from those names.
+
+After both jobs succeed, a final job verifies both downloads again and creates a **draft** GitHub Release with exactly four assets: Windows ZIP, Linux AppImage, and their two checksum sidecars. Prerelease versions automatically set GitHub's **Pre-release** flag and are explicitly excluded from **Latest**. The full version suffix remains in both download names and their checksum sidecars. The workflow uses the automatically supplied `GITHUB_TOKEN`, with `contents: write` limited to the release job. A rerun can refresh a draft and correct its prerelease classification; it refuses to replace a published release.
+
+To release, commit and push the changes with the desired project version, then push the matching tag. The first Avalonia 3.0 beta uses version `3.0.0-beta.1`:
+
+```text
+git tag -a v3.0.0-beta.1 -m "Release 3.0.0-beta.1"
+git push origin v3.0.0-beta.1
+```
+
+Review the draft's downloads on Windows and Linux, including launch and two-version update checks, before selecting **Publish release**. Drafts are always excluded from in-app updates; published prereleases are offered only to prerelease builds. Publishing the reviewed release makes it available to eligible portable builds using that GitHub repository; no separate update server, index, installer or delta package is needed.
 
 ## Build on a Mac
 
@@ -124,11 +148,11 @@ Everything downloaded or built stays under **`sip-testing-tool-macos` in the wor
 
 The bundle keeps native executables in `Contents/MacOS`, native libraries in `Contents/Frameworks`, and managed DLLs and data in `Contents/Resources`. Relative links expose the publish layout from all three directories so .NET can resolve assemblies, native libraries and runtime helpers, including after moving or copying the app. This follows the [signed-bundle layout rules](https://docs.avaloniaui.net/docs/deployment/macos/#sandbox-and-bundle); copying managed DLLs directly into `MacOS` causes `codesign` to reject them as unsigned nested code. After updating the build script, download it again before rerunning it; an older downloaded copy retains its original packaging steps.
 
-Run the same script again to build the latest `master`; the private SDK and NuGet cache are reused, and previous builds are preserved. These locally built Mac apps update by rerunning the script. They are not Velopack releases or Developer ID/notarized downloads.
+Run the same script again to build the latest `master`; the private SDK and NuGet cache are reused, and previous builds are preserved. These locally built Mac apps update by rerunning the script. They do not use in-app updates and are not Developer ID/notarized downloads.
 
 The `macOS-arm64` and `macOS-x64` publish profiles also support direct `dotnet publish` commands with an existing .NET 10 SDK. They produce self-contained application folders under the repository's `artifacts/avalonia/publish` directory. The standalone script adds the [macOS `.app` packaging](https://docs.avaloniaui.net/docs/deployment/macos), icon and local signing on the Mac.
 
-## Windows Forms publishing
+## Legacy Windows Forms publishing
 
 Right-click **sip-testing-tool → Publish** and choose one of the profiles under `src/sip-testing-tool/Properties/PublishProfiles`:
 

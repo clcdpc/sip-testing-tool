@@ -6,7 +6,7 @@ namespace Clc.Sip.Desktop.Models;
 public partial class SessionFields : ObservableObject
 {
     [ObservableProperty] private string server = "";
-    [ObservableProperty] private string port = "5002";
+    [ObservableProperty] private string port = "";
     [ObservableProperty] private string ao = "";
     [ObservableProperty] private string ap = "";
     [ObservableProperty] private string username = "";

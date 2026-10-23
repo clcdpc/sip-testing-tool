@@ -1,0 +1,621 @@
+{
+    "version": 1,
+    "fields": [
+        {
+            "code": "AA",
+            "name": "Patron identifier",
+            "description": "The patron's barcode or other library identifier."
+        },
+        {
+            "code": "AA",
+            "messages": [
+                "42"
+            ],
+            "name": "Patron identifier",
+            "description": "Copied from the deposit-account activity request (41)."
+        },
+        {
+            "code": "AA",
+            "messages": [
+                "63"
+            ],
+            "name": "Patron identifier",
+            "description": "Patron barcode; Polaris also accepts a patron username in this request."
+        },
+        {
+            "code": "AA",
+            "messages": [
+                "64"
+            ],
+            "name": "Patron identifier",
+            "description": "Patron barcode. Polaris returns the barcode even when the request used a username."
+        },
+        {
+            "code": "AB",
+            "name": "Item identifier",
+            "description": "The item's barcode or other library identifier."
+        },
+        {
+            "code": "AC",
+            "name": "Terminal password",
+            "description": "Password for the self-check terminal, separate from the login and patron passwords."
+        },
+        {
+            "code": "AD",
+            "name": "Patron password",
+            "description": "The patron's PIN or password."
+        },
+        {
+            "code": "AE",
+            "name": "Personal name",
+            "description": ""
+        },
+        {
+            "code": "AF",
+            "name": "Screen message",
+            "description": "Text from the library system to display to the user."
+        },
+        {
+            "code": "AG",
+            "name": "Print line",
+            "description": "Text from the library system to print on a receipt."
+        },
+        {
+            "code": "AH",
+            "name": "Due date",
+            "description": "When the checked-out item is due back."
+        },
+        {
+            "code": "AJ",
+            "name": "Title identifier",
+            "description": "A title or bibliographic identifier, or the item's title text."
+        },
+        {
+            "code": "AL",
+            "name": "Blocked card message",
+            "description": "The reason supplied when blocking a patron's card."
+        },
+        {
+            "code": "AM",
+            "name": "Library name",
+            "description": ""
+        },
+        {
+            "code": "AN",
+            "name": "Terminal location",
+            "description": "The self-check terminal's location supplied by the library system."
+        },
+        {
+            "code": "AO",
+            "name": "Institution ID",
+            "description": "Identifies the library or institution for this transaction."
+        },
+        {
+            "code": "AP",
+            "name": "Current location",
+            "description": "The item's current location or the location handling the transaction."
+        },
+        {
+            "code": "AQ",
+            "name": "Permanent location",
+            "description": "The item's normal home or shelving location."
+        },
+        {
+            "code": "AS",
+            "name": "Hold items",
+            "description": "An entry in the patron's list of holds; may repeat for multiple items."
+        },
+        {
+            "code": "AT",
+            "name": "Overdue items",
+            "description": "An entry in the patron's list of overdue items."
+        },
+        {
+            "code": "AU",
+            "name": "Charged items",
+            "description": "An entry in the patron's list of checked-out items."
+        },
+        {
+            "code": "AV",
+            "name": "Fine item details",
+            "description": "Polaris formats can include a transaction ID, outstanding amount, fine type, fee description and related item details."
+        },
+        {
+            "code": "AY",
+            "name": "Sequence number",
+            "description": "A digit from 0 to 9 used to match messages for SIP error detection.",
+            "values": {
+                "0": "Sequence 0.",
+                "1": "Sequence 1.",
+                "2": "Sequence 2.",
+                "3": "Sequence 3.",
+                "4": "Sequence 4.",
+                "5": "Sequence 5.",
+                "6": "Sequence 6.",
+                "7": "Sequence 7.",
+                "8": "Sequence 8.",
+                "9": "Sequence 9."
+            }
+        },
+        {
+            "code": "AZ",
+            "name": "Checksum",
+            "description": "Four hexadecimal digits used to detect transmission errors."
+        },
+        {
+            "code": "BC",
+            "name": "Birth date (Polaris)",
+            "description": ""
+        },
+        {
+            "code": "BC",
+            "messages": [
+                "64"
+            ],
+            "name": "Birth date (Polaris)",
+            "description": "Disclosure of the patron's birth date depends on server configuration."
+        },
+        {
+            "code": "BD",
+            "name": "Home address",
+            "description": ""
+        },
+        {
+            "code": "BE",
+            "name": "Email address",
+            "description": ""
+        },
+        {
+            "code": "BF",
+            "name": "Home phone number",
+            "description": ""
+        },
+        {
+            "code": "BG",
+            "name": "Owner",
+            "description": "The institution that owns the item."
+        },
+        {
+            "code": "BH",
+            "name": "Currency type",
+            "description": "Three-letter currency code for this payment, such as USD."
+        },
+        {
+            "code": "BI",
+            "name": "Cancel",
+            "description": "Whether this cancels the earlier transaction.",
+            "values": {
+                "Y": "Cancellation requested.",
+                "N": "No cancellation requested."
+            }
+        },
+        {
+            "code": "BK",
+            "name": "Transaction ID",
+            "description": "An identifier assigned by the library system or payment device for auditing."
+        },
+        {
+            "code": "BK",
+            "messages": [
+                "43"
+            ],
+            "name": "Notice request value (Polaris)",
+            "description": "Polaris copies BK from request 43 into response 44 unchanged. Its business meaning is unconfirmed; the response does not generate a notification ID."
+        },
+        {
+            "code": "BK",
+            "messages": [
+                "44"
+            ],
+            "name": "Echoed request value (Polaris)",
+            "description": "Polaris copies BK from request 43 into response 44 unchanged. Its business meaning is unconfirmed; the response does not generate a notification ID."
+        },
+        {
+            "code": "BL",
+            "name": "Valid patron",
+            "description": "Whether the library system recognizes the patron.",
+            "values": {
+                "Y": "Patron recognized.",
+                "N": "Patron not recognized."
+            }
+        },
+        {
+            "code": "BM",
+            "name": "Renewed items",
+            "description": "An entry identifying an item successfully renewed by Renew all."
+        },
+        {
+            "code": "BN",
+            "name": "Unrenewed items",
+            "description": "An entry for an item that Renew all could not renew; may include a reason."
+        },
+        {
+            "code": "BO",
+            "name": "Fee acknowledged",
+            "description": "Whether the patron accepts the transaction's fee.",
+            "values": {
+                "Y": "Fee acknowledged.",
+                "N": "Fee not acknowledged."
+            }
+        },
+        {
+            "code": "BP",
+            "name": "Start item",
+            "description": "First detail entry, counting from 1. Polaris requires both BP and BQ to return details."
+        },
+        {
+            "code": "BQ",
+            "name": "End item",
+            "description": "Last detail entry, inclusive. Polaris requires both BP and BQ to return details."
+        },
+        {
+            "code": "BR",
+            "name": "Queue position",
+            "description": "The patron's position in the hold queue."
+        },
+        {
+            "code": "BS",
+            "name": "Pickup location",
+            "description": "The location where a hold should be collected."
+        },
+        {
+            "code": "BT",
+            "name": "Fee type",
+            "description": "The type of fee being paid or charged.",
+            "values": {
+                "01": "Other / unknown.",
+                "02": "Administrative.",
+                "03": "Damage.",
+                "04": "Overdue.",
+                "05": "Processing.",
+                "06": "Rental.",
+                "07": "Replacement.",
+                "08": "Computer access.",
+                "09": "Hold fee."
+            }
+        },
+        {
+            "code": "BU",
+            "name": "Recall items",
+            "description": "An entry in the patron's list of recalled items."
+        },
+        {
+            "code": "BV",
+            "name": "Fee amount",
+            "description": "The amount paid, owed, or charged, depending on the message."
+        },
+        {
+            "code": "BW",
+            "name": "Expiration date/time",
+            "description": "When the hold expires."
+        },
+        {
+            "code": "BX",
+            "name": "Supported messages",
+            "description": "Y means supported; N means not supported."
+        },
+        {
+            "code": "BY",
+            "name": "Hold type",
+            "description": "Whether the hold applies to a title or a particular copy.",
+            "values": {
+                "1": "Other.",
+                "2": "Any copy of the title.",
+                "3": "A specific copy.",
+                "4": "Any copy at one branch or location."
+            }
+        },
+        {
+            "code": "BZ",
+            "name": "Hold items limit",
+            "description": "Maximum number of holds allowed for this patron."
+        },
+        {
+            "code": "CA",
+            "name": "Overdue items limit",
+            "description": "The patron's permitted overdue-item limit."
+        },
+        {
+            "code": "CB",
+            "name": "Charged items limit",
+            "description": "Maximum number of items the patron may have checked out."
+        },
+        {
+            "code": "CC",
+            "name": "Fee limit",
+            "description": "The patron's permitted outstanding-fee limit."
+        },
+        {
+            "code": "CD",
+            "name": "Unavailable hold items",
+            "description": "An entry for a patron hold that is not yet available."
+        },
+        {
+            "code": "CF",
+            "name": "Hold queue length",
+            "description": "The number of holds waiting for the item."
+        },
+        {
+            "code": "CG",
+            "name": "Fee identifier",
+            "description": "Identifies the particular fee to which a payment should be applied."
+        },
+        {
+            "code": "CH",
+            "name": "Item properties",
+            "description": "Additional item information whose format is agreed with the library system."
+        },
+        {
+            "code": "CI",
+            "name": "Security inhibit",
+            "description": "Whether the terminal should leave the item's security state unchanged.",
+            "values": {
+                "Y": "Leave the security state unchanged.",
+                "N": "Normal security handling."
+            }
+        },
+        {
+            "code": "CJ",
+            "name": "Recall date/time",
+            "description": "When the recall was issued."
+        },
+        {
+            "code": "CK",
+            "name": "Media type",
+            "description": "The item's material or media format.",
+            "values": {
+                "000": "Other.",
+                "001": "Book.",
+                "002": "Magazine.",
+                "003": "Bound journal.",
+                "004": "Audio tape.",
+                "005": "Video tape.",
+                "006": "CD / CD-ROM.",
+                "007": "Diskette.",
+                "008": "Book with diskette.",
+                "009": "Book with CD.",
+                "010": "Book with audio tape."
+            }
+        },
+        {
+            "code": "CL",
+            "name": "Sort bin",
+            "description": "The sorting destination assigned to a returned item."
+        },
+        {
+            "code": "CM",
+            "name": "Hold pickup date/time",
+            "description": "The date by which an available hold should be collected."
+        },
+        {
+            "code": "CN",
+            "name": "Login user ID",
+            "description": "The account used to log in to the SIP server."
+        },
+        {
+            "code": "CO",
+            "name": "Login password",
+            "description": "The password for the SIP login account."
+        },
+        {
+            "code": "CP",
+            "name": "Location code",
+            "description": "The self-check location supplied during login."
+        },
+        {
+            "code": "CP",
+            "messages": [
+                "93"
+            ],
+            "name": "Location code",
+            "description": "The self-check location supplied during login.",
+            "values": {
+                "AUTHENTICATE": "Require case-sensitive patron PIN/password authentication.",
+                "AUTHENTICATE_INSENSITIVE": "Require case-insensitive patron PIN/password authentication."
+            }
+        },
+        {
+            "code": "CQ",
+            "name": "Valid patron password",
+            "description": "Whether the supplied patron PIN or password is valid.",
+            "values": {
+                "Y": "Patron password valid.",
+                "N": "Patron password invalid."
+            }
+        },
+        {
+            "code": "CR",
+            "name": "Collection abbreviation (Polaris)",
+            "description": ""
+        },
+        {
+            "code": "CS",
+            "name": "Call number (Polaris)",
+            "description": ""
+        },
+        {
+            "code": "CT",
+            "name": "Hold pickup branch (Polaris)",
+            "description": ""
+        },
+        {
+            "code": "CV",
+            "messages": [
+                "10"
+            ],
+            "name": "Checkin alert type (Polaris)",
+            "description": "",
+            "values": {
+                "  ": "Normal checkin; no alert.",
+                "00": "Unknown alert.",
+                "01": "Hold for another library.",
+                "02": "Hold for this library.",
+                "03": "Hold for interlibrary loan; listed as unused in the Polaris reference.",
+                "04": "Send to another library.",
+                "99": "Other alert; listed as unused in the Polaris reference."
+            }
+        },
+        {
+            "code": "CV",
+            "messages": [
+                "93"
+            ],
+            "name": "Vendor profile (legacy Polaris)",
+            "description": "Polaris 3.6 used CV at login; later versions use VP. The 8.1 reference does not establish CV as a login alias."
+        },
+        {
+            "code": "CY",
+            "name": "Next hold patron barcode (Polaris)",
+            "description": "The next patron in the item's hold queue."
+        },
+        {
+            "code": "DA",
+            "name": "Next hold patron name (Polaris)",
+            "description": ""
+        },
+        {
+            "code": "DB",
+            "messages": [
+                "42"
+            ],
+            "name": "Patron credit balance (Polaris)",
+            "description": "The patron's CreditBalance rendered as signed integer text. Monetary units have not been confirmed. Available when the deposit handler has refreshed patron data; availability is not guaranteed."
+        },
+        {
+            "code": "DB",
+            "messages": [
+                "64"
+            ],
+            "name": "Patron credit balance (Polaris)",
+            "description": "The patron's CreditBalance rendered as signed integer text. Monetary units have not been confirmed. Emitted by the EnvisionWare processing branch."
+        },
+        {
+            "code": "DE",
+            "name": "Notice comment (extension)",
+            "description": "Comment sent by this tool's server-specific Notice update command."
+        },
+        {
+            "code": "FA",
+            "messages": [
+                "24",
+                "64"
+            ],
+            "name": "Accrued fines total (Polaris)",
+            "description": "The analyzed Polaris 8.1 build truncates the accrued fines total to a 32-bit integer and sends decimal text. Monetary units have not been confirmed."
+        },
+        {
+            "code": "PA",
+            "name": "Patron code (Polaris)",
+            "description": ""
+        },
+        {
+            "code": "PB",
+            "messages": [
+                "24",
+                "64"
+            ],
+            "name": "Resolved patron barcode (Polaris)",
+            "description": "The barcode resolved from the patron record, including when authentication used a username."
+        },
+        {
+            "code": "PC",
+            "messages": [
+                "24",
+                "64"
+            ],
+            "name": "Internal patron ID (Polaris)",
+            "description": "The internal Polaris PatronID, serialized as decimal text."
+        },
+        {
+            "code": "PE",
+            "name": "Home branch (Polaris)",
+            "description": "Abbreviation of the patron's registered organization or home branch."
+        },
+        {
+            "code": "PS",
+            "name": "Patron statistical class (Polaris)",
+            "description": ""
+        },
+        {
+            "code": "PX",
+            "name": "Patron expiration date (Polaris)",
+            "description": "Expiration of the patron's registration, in SIP date/time format."
+        },
+        {
+            "code": "PX",
+            "messages": [
+                "64"
+            ],
+            "name": "Patron expiration date (Polaris)",
+            "description": ""
+        },
+        {
+            "code": "PY",
+            "name": "Patron expired (Polaris)",
+            "description": "Expiration flag based on local end of day in the analyzed 8.1 build. Evaluation can be skipped; N does not establish that registration is current."
+        },
+        {
+            "code": "PY",
+            "messages": [
+                "64"
+            ],
+            "name": "Patron expired (Polaris)",
+            "description": "The analyzed Polaris 8.1 build compares local end of day (23:59:59) with the patron's expiration timestamp. Evaluation can be skipped for some patron states and in the EnvisionWare path; exact boundary behavior is unverified.",
+            "values": {
+                "Y": "Expiration flag set: local end of day is later than expiration when evaluated.",
+                "N": "Expiration flag clear; the calculation may have been skipped, so N does not establish that registration is current."
+            }
+        },
+        {
+            "code": "PZ",
+            "name": "Postal code (Polaris)",
+            "description": ""
+        },
+        {
+            "code": "SI",
+            "messages": [
+                "64"
+            ],
+            "name": "Internal patron ID (Polaris)",
+            "description": "PatronID emitted by the EnvisionWare processing branch. It matches PC in the analyzed path; the reason for the duplicate identifier is unconfirmed."
+        },
+        {
+            "code": "TX",
+            "messages": [
+                "42"
+            ],
+            "name": "Deposit response value (Polaris)",
+            "description": "The analyzed Polaris 8.1.7065.1 build emits literal decimal 0. The field's broader business meaning has not been established."
+        },
+        {
+            "code": "U1",
+            "name": "User1 (Polaris)",
+            "description": "Patron attribute configured by the library."
+        },
+        {
+            "code": "U2",
+            "name": "User2 (Polaris)",
+            "description": "Patron attribute configured by the library."
+        },
+        {
+            "code": "U3",
+            "name": "User3 (Polaris)",
+            "description": "Patron attribute configured by the library."
+        },
+        {
+            "code": "U4",
+            "name": "User4 (Polaris)",
+            "description": "Patron attribute configured by the library."
+        },
+        {
+            "code": "U5",
+            "name": "User5 (Polaris)",
+            "description": "Patron attribute configured by the library."
+        },
+        {
+            "code": "VP",
+            "name": "Vendor profile (extension)",
+            "description": "Polaris login profile: SIP (1/default), 3M (2), ENVISIONWARE (3), COMPRISE (4), or ITG (5). The analyzed 8.1 parser falls back to SIP for unsupported values."
+        }
+    ]
+}

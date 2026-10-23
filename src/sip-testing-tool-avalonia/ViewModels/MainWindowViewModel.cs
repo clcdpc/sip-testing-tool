@@ -25,7 +25,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     private SummaryChoice selectedSummary = SummaryChoice.All[0];
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanRun), nameof(CanConnect), nameof(CanRestartUpdate))]
-    [NotifyCanExecuteChangedFor(nameof(ConnectCommand), nameof(ExecuteCommand), nameof(LoginCommand), nameof(RestartUpdateCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ConnectCommand), nameof(ExecuteCommand), nameof(LoginCommand), nameof(RestartUpdateCommand), nameof(CheckUpdatesCommand))]
     private bool isBusy;
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanRun), nameof(CanConnect))]
@@ -51,6 +51,8 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [NotifyCanExecuteChangedFor(nameof(RestartUpdateCommand))]
     private bool updateReady;
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanRestartUpdate))]
+    [NotifyCanExecuteChangedFor(nameof(RestartUpdateCommand))]
     [NotifyCanExecuteChangedFor(nameof(CheckUpdatesCommand))]
     private bool checkingUpdates;
 
@@ -68,13 +70,14 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     public bool UsesRange => SelectedSummary.Key != "none";
     public bool CanRun => IsConnected && !IsBusy;
     public bool CanConnect => !IsBusy;
-    public bool CanRestartUpdate => UpdateReady && !IsBusy;
+    public bool CanRestartUpdate => UpdateReady && !IsBusy && !CheckingUpdates;
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
     public string ExecuteLabel => "Execute " + SelectedCommand.Name;
 
     public event Action? TransactionAppended;
     public event Action? ThemeChanged;
     public event Action<string>? ValidationFailed;
+    public event Action? RestartRequested;
 
     [RelayCommand]
     private void ResetOptions()
@@ -146,7 +149,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         _ = Encoding.GetEncoding(value.EncodingName);
         if (!string.IsNullOrWhiteSpace(value.UpdateFeedUrl))
         {
-            _ = UpdateService.GetFeedUrl(value.UpdateFeedUrl);
+            _ = UpdateService.GetRepositoryUrl(value.UpdateFeedUrl);
         }
 
         await settingsStore.SaveAsync(value);
@@ -255,7 +258,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     [RelayCommand]
     private void DismissError() => ErrorMessage = null;
 
-    private bool CanCheckUpdates() => !CheckingUpdates;
+    private bool CanCheckUpdates() => !CheckingUpdates && !IsBusy;
 
     [RelayCommand(CanExecute = nameof(CanCheckUpdates))]
     private async Task CheckUpdatesAsync()
@@ -280,16 +283,30 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     }
 
     [RelayCommand(CanExecute = nameof(CanRestartUpdate))]
-    private void RestartUpdate()
+    private async Task RestartUpdateAsync()
     {
+        if (!CanRestartUpdate) { return; }
+        IsBusy = true;
         try
         {
+            await settingsStore.SaveAsync(Preferences);
+            await updates.PrepareRestartAsync(Preferences.UpdateFeedUrl);
             session.Disconnect();
             IsConnected = false;
-            updates.ApplyAndRestart();
+            UpdateReady = false;
+            RestartRequested?.Invoke();
         }
-        catch (Exception ex) { ErrorMessage = "Could not install the update: " + ex.Message; }
+        catch (Exception ex)
+        {
+            UpdateReady = updates.IsReady;
+            ErrorMessage = "Could not install the update: " + ex.Message;
+        }
+        finally { IsBusy = false; }
     }
 
-    public void Dispose() => session.Dispose();
+    public void Dispose()
+    {
+        updates.Dispose();
+        session.Dispose();
+    }
 }

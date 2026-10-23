@@ -1,0 +1,36 @@
+<Project>
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('PublishPaths.props', '$(MSBuildThisFileDirectory)'))" Condition="'$(SipRepositoryDirectory)' == ''" />
+  <PropertyGroup>
+    <_ReleaseProjectDirectory>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', '..'))</_ReleaseProjectDirectory>
+  </PropertyGroup>
+  <Target Name="ExcludeSingleFileDebugSymbols" AfterTargets="PrepareForBundle" Condition="'$(PublishSingleFile)' == 'true'">
+    <ItemGroup>
+      <FilesToBundle Remove="@(FilesToBundle)" Condition="'%(FilesToBundle.Extension)' == '.pdb'" />
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="'%(ResolvedFileToPublish.Extension)' == '.pdb'" />
+    </ItemGroup>
+  </Target>
+  <Target Name="ResolveReleasePublishPaths" Condition="'$(CreateDesktopPackage)' == 'true'">
+    <PropertyGroup>
+      <_ReleasePublishDir>$(PublishDir)</_ReleasePublishDir>
+      <ReleaseOutputDir>$([MSBuild]::NormalizeDirectory('$(_ReleaseProjectDirectory)', '$(PublishDir)'))</ReleaseOutputDir>
+      <ReleaseStagingDir>$([MSBuild]::NormalizeDirectory('$(SipArtifactsDirectory)', 'avalonia/staging/$(RuntimeIdentifier)'))</ReleaseStagingDir>
+    </PropertyGroup>
+  </Target>
+  <!-- Visual Studio displays the finished release folder. Only .NET publishes to staging. -->
+  <Target Name="StageDesktopPublish" BeforeTargets="PrepareForPublish" DependsOnTargets="ResolveReleasePublishPaths" Condition="'$(CreateDesktopPackage)' == 'true'">
+    <Error Condition="'$(ReleaseOutputDir)' == '$(ReleaseStagingDir)'" Text="The release destination must be different from the application staging folder." />
+    <Error Condition="'$(Configuration)' != 'Release' or '$(SelfContained)' != 'false'" Text="Desktop releases must use Release and exclude the .NET runtime (SelfContained=false)." />
+    <Error Condition="'$(RuntimeIdentifier)' != 'win-x64' and '$(RuntimeIdentifier)' != 'linux-x64'" Text="Choose Windows-Zip or Linux-AppImage." />
+    <PropertyGroup>
+      <PublishDir>$(ReleaseStagingDir)</PublishDir>
+    </PropertyGroup>
+  </Target>
+  <Target Name="PackageDesktopRelease" AfterTargets="Publish" DependsOnTargets="ResolveReleasePublishPaths" Condition="'$(CreateDesktopPackage)' == 'true'">
+    <!-- Appending a dot keeps a trailing Windows slash from escaping a closing quote. -->
+    <Exec Command="pwsh -NoProfile -File &quot;$(SipRepositoryDirectory)build/PackageDesktop.ps1&quot; -RuntimeIdentifier &quot;$(RuntimeIdentifier)&quot; -PublishDirectory &quot;$(ReleaseStagingDir).&quot; -OutputDirectory &quot;$(ReleaseOutputDir).&quot; -Version &quot;$(Version)&quot;" />
+    <PropertyGroup>
+      <PublishDir>$(_ReleasePublishDir)</PublishDir>
+    </PropertyGroup>
+    <Message Importance="high" Text="Desktop release files: $(ReleaseOutputDir)" />
+  </Target>
+</Project>

@@ -11,7 +11,6 @@ public sealed class TestAssembly
     [AssemblyInitialize]
     public static void Initialize(TestContext _)
     {
-        Velopack.VelopackApp.Build().SetAutoApplyOnStartup(false).Run();
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
     }
 }

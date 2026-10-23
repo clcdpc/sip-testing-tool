@@ -38,11 +38,14 @@ internal static class SipFixedFields
     private static readonly Definition uidAlgorithm = new(1, "UID algorithm", "Encoding agreed with the server for the login user ID. The tool sends the entered value without encrypting it.", AlgorithmValue);
     private static readonly Definition pwdAlgorithm = new(1, "PWD algorithm", "Encoding agreed with the server for the login password. The tool sends the entered value without encrypting it.", AlgorithmValue);
     private static readonly Definition holdMode = new(1, "Hold mode", "The operation requested on the patron's hold.", value => value switch { "+" => "Add a hold.", "-" => "Delete a hold.", "*" => "Change a hold.", _ => "Unrecognized hold mode." });
-    private static readonly Definition polarisBirthDate = new(18, "Birth date (Polaris)", "", value =>
+    private static readonly Definition polarisBirthDate = new(18, "Birth date (Polaris)", "Disclosure of the patron's birth date depends on server configuration.", value =>
         string.IsNullOrWhiteSpace(value) ? "No birth date supplied." : DateTime.TryParseExact(value[..8], "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
             ? date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) : "Unrecognized birth date.");
     private static readonly Definition polarisExpiration = new(18, "Patron expiration date (Polaris)", "", DateValue);
-    private static readonly Definition polarisExpired = Flag("Patron expired (Polaris)", "", "Registration expired.", "Registration not expired.");
+    private static readonly Definition polarisExpired = Flag("Patron expired (Polaris)",
+        "The analyzed Polaris 8.1 build compares local end of day (23:59:59) with the patron's expiration timestamp. Evaluation can be skipped for some patron states and in the EnvisionWare path; exact boundary behavior is unverified.",
+        "Expiration flag set: local end of day is later than expiration when evaluated.",
+        "Expiration flag clear; the calculation may have been skipped, so N does not establish that registration is current.");
     private static readonly Definition polarisAlert = new(2, "Checkin alert type (Polaris)", "", value => value switch
     {
         "  " => "Normal checkin; no alert.",
@@ -83,11 +86,17 @@ internal static class SipFixedFields
         ["36"] = new("End session response", Flag("End session", "Whether the server ended the patron's session.", "Session ended.", "Session could not be ended."), transactionDate),
         ["37"] = new("Fee paid", transactionDate, feeType, paymentType, currency),
         ["38"] = new("Fee paid response", Flag("Payment accepted", "Whether the server accepted this payment.", "Payment accepted.", "Payment refused."), transactionDate),
+        // Only these response headers are established by the supplied 8.1 reference.
+        // Request 41's positional layout and response 44's result-code meanings remain unknown.
+        ["42"] = new("Deposit-account activity response (Polaris)",
+            Flag("Deposit result (Polaris)", "One-character Y/N result in Polaris response 42. Exact success/failure conditions are unverified.", "Result flag set (Y).", "Result flag clear (N).")),
         ["43"] = new("Notice update (extension)",
             new(2, "Delivery status", "Delivery result in this tool's server-specific Notice update command.", value => Code(value, ["Unsuccessful delivery", "Successful delivery", "Intercepted / rejected"])),
             transactionDate, new(18, "Delivery date/time", "When the notice was delivered or delivery was attempted.", DateValue),
             new(3, "Delivery medium", "How this server-specific notice was delivered.", value => Code(value, ["Any / unknown", "Mail", "Phone", "Fax", "Email", "SMS"])),
             new(3, "Notice type", "The category of this server-specific notice.", value => Code(value, ["Any / unknown", "Overdue", "Recall", "Hold", "Fine / billing"]))),
+        ["44"] = new("Notice update response (Polaris)",
+            new Definition(1, "Notice result (Polaris)", "One-character result in Polaris response 44. Its code meanings have not been established by the supplied 8.1 reference.")),
         ["63"] = new("Patron information", language, transactionDate, summary),
         ["64"] = new("Patron information response", patronStatus, language, transactionDate,
             Count("Hold items count"), Count("Overdue items count"), Count("Charged items count"), Count("Fine items count"), Count("Recall items count"), Count("Unavailable holds count")),

@@ -39,7 +39,7 @@
           <Separator Margin="0,8" />
           <CheckBox Content="Dark theme" IsChecked="{Binding DarkTheme}" />
           <TextBlock Classes="groupTitle" Text="Application updates" />
-          <views:OptionalFieldRow Label="Update feed base URL"><TextBox Text="{Binding UpdateFeedUrl}" PlaceholderText="https://…/updates/desktop/" /></views:OptionalFieldRow>
+          <views:OptionalFieldRow Label="GitHub update repository"><TextBox Text="{Binding UpdateFeedUrl}" PlaceholderText="https://github.com/clcdpc/sip-testing-tool" /></views:OptionalFieldRow>
           <CheckBox Content="Check and download updates on startup" IsChecked="{Binding CheckUpdatesOnStartup}" />
           <TextBlock Classes="hint" Text="Downloaded updates are installed when you choose Restart to update." />
           <TextBlock x:Name="SettingsError" TextWrapping="Wrap" Foreground="{DynamicResource ErrorTextBrush}" />

@@ -5,17 +5,19 @@
   </PropertyGroup>
   <!-- Let each profile load its own path properties, as an independent publishing helper would. -->
   <Import Project="$(ProfileFile)" Condition="'$(ProfileFile)' != ''" />
-  <Import Project="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/Velopack.targets" Condition="'$(ProfileFile)' != ''" />
+  <Import Project="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/Release.targets" Condition="'$(ProfileFile)' != ''" />
 
   <UsingTask TaskName="VerifyPublishProfileStream" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>
       <ProfileFile ParameterType="System.String" Required="true" />
       <ApplicationProjectDirectory ParameterType="System.String" Required="true" />
       <ExpectedPublishPath ParameterType="System.String" Required="true" />
+      <PublishDirectoryOverride ParameterType="System.String" />
     </ParameterGroup>
     <Task>
       <Using Namespace="System.IO" />
       <Using Namespace="System.Xml" />
+      <Using Namespace="System.Collections.Generic" />
       <Code Type="Method" Language="cs"><![CDATA[
       public override bool Execute()
       {
@@ -29,7 +31,10 @@
           using (var stream = File.OpenRead(ProfileFile))
           using (var reader = XmlReader.Create(stream))
           {
-            var profile = Activator.CreateInstance(projectType, new object[] { reader, null, null, collection });
+            var globals = new Dictionary<string, string>();
+            if (!String.IsNullOrEmpty(PublishDirectoryOverride))
+              globals["PublishDir"] = PublishDirectoryOverride;
+            var profile = Activator.CreateInstance(projectType, new object[] { reader, globals, null, collection });
             var getPropertyValue = projectType.GetMethod("GetPropertyValue", new[] { typeof(string) });
             foreach (var property in new[] { "PublishDir", "PublishUrl" })
             {
@@ -57,27 +62,41 @@
       <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool/Properties/PublishProfiles/FolderProfile.pubxml" ApplicationProject="sip-testing-tool" Subdirectory="app" />
       <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool/Properties/PublishProfiles/Windows-SingleFile.pubxml" ApplicationProject="sip-testing-tool" Subdirectory="app-single-file" />
       <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool/Properties/PublishProfiles/ClickOnceProfile.pubxml" ApplicationProject="sip-testing-tool" Subdirectory="clickonce" />
-      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/Velopack-Windows.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/publish/win-x64" />
-      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/Velopack-Linux.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/publish/linux-x64" />
+      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/Windows-Zip.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/releases/win-x64" />
+      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/Linux-AppImage.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/releases/linux-x64" />
       <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/Windows-SingleFile.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/publish/win-x64-single-file" />
       <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/macOS-arm64.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/publish/osx-arm64" />
       <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/macOS-x64.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/publish/osx-x64" />
+      <ReleaseProfileCheck Include="@(ProfileCheck)" Condition="'%(ProfileCheck.Subdirectory)' == 'avalonia/releases/win-x64' or '%(ProfileCheck.Subdirectory)' == 'avalonia/releases/linux-x64'" />
     </ItemGroup>
-    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="VerifyProfile" Properties="ProfileFile=%(ProfileCheck.Identity);ApplicationProject=%(ProfileCheck.ApplicationProject);ExpectedSubdirectory=%(ProfileCheck.Subdirectory)" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="VerifyProfile;VerifyReleaseStaging" Properties="ProfileFile=%(ProfileCheck.Identity);ApplicationProject=%(ProfileCheck.ApplicationProject);ExpectedSubdirectory=%(ProfileCheck.Subdirectory)" />
+    <!-- Visual Studio passes the selected destination as a global property. It must still
+         redirect to staging, including when the user chooses a folder containing spaces. -->
+    <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="VerifyProfile;VerifyReleaseStaging" Properties="ProfileFile=%(ReleaseProfileCheck.Identity);ApplicationProject=%(ReleaseProfileCheck.ApplicationProject);ExpectedSubdirectory=custom release/%(ReleaseProfileCheck.Subdirectory);PublishDir=../../artifacts/custom release/%(ReleaseProfileCheck.Subdirectory)/;PublishUrl=../../artifacts/custom release/%(ReleaseProfileCheck.Subdirectory)/;ProfilePublishDirectoryOverride=../../artifacts/custom release/%(ReleaseProfileCheck.Subdirectory)/" />
   </Target>
 
-  <Target Name="VerifyProfile" DependsOnTargets="ResolveVelopackPublishPaths">
+  <Target Name="VerifyProfile" DependsOnTargets="ResolveReleasePublishPaths">
     <PropertyGroup>
       <ApplicationProjectDirectory>$(RepositoryDirectory)src/$(ApplicationProject)/</ApplicationProjectDirectory>
       <ExpectedPublishPath>$([System.IO.Path]::GetFullPath('$(RepositoryDirectory)artifacts/$(ExpectedSubdirectory)/'))</ExpectedPublishPath>
       <ActualPublishPath>$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(ApplicationProjectDirectory)', '$(PublishDir)'))))</ActualPublishPath>
       <ActualPublishUrl Condition="'$(PublishUrl)' != ''">$([System.IO.Path]::GetFullPath($([System.IO.Path]::Combine('$(ApplicationProjectDirectory)', '$(PublishUrl)'))))</ActualPublishUrl>
-      <ExpectedVelopackPath>$([System.IO.Path]::GetFullPath('$(RepositoryDirectory)artifacts/velopack/$(RuntimeIdentifier)'))</ExpectedVelopackPath>
+      <ActualReleasePath Condition="'$(CreateDesktopPackage)' == 'true'">$([MSBuild]::NormalizeDirectory('$(ApplicationProjectDirectory)', '$(ReleaseOutputDir)'))</ActualReleasePath>
     </PropertyGroup>
     <Error Condition="'$(ActualPublishPath)' != '$(ExpectedPublishPath)'" Text="$(ProfileFile): PublishDir resolves to $(ActualPublishPath); expected $(ExpectedPublishPath)." />
     <Error Condition="'$(ActualPublishUrl)' != '$(ExpectedPublishPath)'" Text="$(ProfileFile): PublishUrl resolves to $(ActualPublishUrl); expected $(ExpectedPublishPath)." />
-    <Error Condition="'$(CreateVelopackPackage)' == 'true' and '$(VelopackOutputDir)' != '$(ExpectedVelopackPath)'" Text="$(ProfileFile): VelopackOutputDir resolves to $(VelopackOutputDir); expected $(ExpectedVelopackPath)." />
-    <VerifyPublishProfileStream ProfileFile="$(ProfileFile)" ApplicationProjectDirectory="$(ApplicationProjectDirectory)" ExpectedPublishPath="$(ExpectedPublishPath)" />
+    <Error Condition="'$(CreateDesktopPackage)' == 'true' and '$(ActualReleasePath)' != '$(ExpectedPublishPath)'" Text="$(ProfileFile): ReleaseOutputDir resolves to $(ActualReleasePath); expected $(ExpectedPublishPath)." />
+    <VerifyPublishProfileStream ProfileFile="$(ProfileFile)" ApplicationProjectDirectory="$(ApplicationProjectDirectory)" ExpectedPublishPath="$(ExpectedPublishPath)" PublishDirectoryOverride="$(ProfilePublishDirectoryOverride)" />
     <Message Importance="high" Text="$([System.IO.Path]::GetFileName('$(ProfileFile)')): $(ActualPublishPath)" />
+  </Target>
+
+  <Target Name="VerifyReleaseStaging" DependsOnTargets="StageDesktopPublish" Condition="'$(CreateDesktopPackage)' == 'true'">
+    <PropertyGroup>
+      <ExpectedStagingPath>$([MSBuild]::NormalizeDirectory('$(RepositoryDirectory)', 'artifacts/avalonia/staging/$(RuntimeIdentifier)'))</ExpectedStagingPath>
+      <StagedPublishUrl>$([MSBuild]::NormalizeDirectory('$(ApplicationProjectDirectory)', '$(PublishUrl)'))</StagedPublishUrl>
+      <StagedReleaseOutputDir>$([MSBuild]::NormalizeDirectory('$(ApplicationProjectDirectory)', '$(ReleaseOutputDir)'))</StagedReleaseOutputDir>
+    </PropertyGroup>
+    <Error Condition="'$(PublishDir)' != '$(ExpectedStagingPath)'" Text="$(ProfileFile): .NET must publish to staging, including when PublishDir is a global property." />
+    <Error Condition="'$(StagedReleaseOutputDir)' != '$(ExpectedPublishPath)' or '$(StagedPublishUrl)' != '$(ExpectedPublishPath)'" Text="$(ProfileFile): staging must preserve the release destination shown in Visual Studio." />
   </Target>
 </Project>
