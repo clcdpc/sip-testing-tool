@@ -25,6 +25,7 @@ namespace Clc.Sip
 
         // inject socket from gui
         TcpClient socket = new TcpClient();
+        private volatile bool disposed;
 
         private const char FieldTerminator = '|';
         private const char MessageTerminator = '\r';
@@ -82,6 +83,12 @@ namespace Clc.Sip
         public void Connect()
         {
             socket.Connect(hostname, port);
+        }
+
+        public ValueTask ConnectAsync(CancellationToken cancellationToken = default)
+        {
+            ObjectDisposedException.ThrowIf(disposed, this);
+            return socket.ConnectAsync(hostname, port, cancellationToken);
         }
 
         public SipTransaction Login(string sipUsername, string sipPassword, string locationCode = "", string vendorProfile = "", string uidAlgorithm = "0", string pwdAlgorithm = "0")
@@ -297,6 +304,7 @@ namespace Clc.Sip
 
         public void Dispose()
         {
+            disposed = true;
             socket.Dispose();
         }
 

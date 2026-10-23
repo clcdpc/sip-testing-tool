@@ -10,6 +10,16 @@ namespace Clc.Sip.Tests;
 [TestCategory("Regression")]
 public sealed class ConnectionTests
 {
+    [TestMethod]
+    public async Task AsyncConnectHonorsAPreCancelledToken()
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        using var sip = new sip2("127.0.0.1", 5002);
+        await Assert.ThrowsAsync<OperationCanceledException>(async () => await sip.ConnectAsync(cancellation.Token));
+        Assert.IsFalse(sip.IsConnected());
+    }
+
     [TestMethod(DisplayName = "ACS Status over TCP")]
     public void AcsStatusExchangesRequestAndResponseOverTcp()
     {

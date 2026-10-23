@@ -6,6 +6,7 @@ using Avalonia.Threading;
 using Avalonia.VisualTree;
 using AvaloniaEdit;
 using Clc.Sip.Desktop.Models;
+using Clc.Sip.Desktop.Services;
 using Clc.Sip.Desktop.ViewModels;
 using Clc.Sip.Desktop.Views;
 using Clc.Sip.Desktop.Tests.TestSupport;
@@ -177,6 +178,75 @@ public sealed class DesktopWorkbenchTests
 
         return true;
     }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
+
+    [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public Task PendingConnectionsKeepCancelAndTheUiResponsiveAndCanBeRetried(bool cancel) => ui.Dispatch(async () =>
+    {
+        var started = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var attempts = 0;
+        using var session = new SipSession((connection, token) =>
+        {
+            if (Interlocked.Increment(ref attempts) > 1) { return connection.ConnectAsync(token).AsTask(); }
+            started.TrySetResult();
+            return Task.Delay(Timeout.Infinite, token);
+        }, connectTimeout: cancel ? TimeSpan.FromSeconds(5) : TimeSpan.FromSeconds(1));
+        await using var server = new SipServer(async (stream, token) =>
+        {
+            _ = await ReadMessage(stream, token);
+            await WriteMessage(stream, "941", token);
+        });
+        using var model = new MainWindowViewModel(session) { Fields = SampleFields() };
+        model.Fields.Server = "127.0.0.1";
+        model.Fields.Port = server.Port.ToString();
+        model.AppendTransaction(new() { Message = "previous request", Response = "previous response" });
+        var previousLog = model.LogDocument.Text;
+        var window = new MainWindow { DataContext = model };
+        window.Show();
+        try
+        {
+            LayoutNow(window);
+            var operation = model.ConnectCommand.ExecuteAsync(null);
+            await started.Task.WaitAsync(TimeSpan.FromSeconds(2));
+            LayoutNow(window);
+            var cancelButton = window.FindControl<Button>("CancelConnectButton")!;
+            Assert.IsTrue(model.IsBusy && model.IsConnecting && !model.IsConnected);
+            Assert.IsTrue(cancelButton.IsEffectivelyVisible && cancelButton.IsEffectivelyEnabled,
+                "A pending connection must leave its Cancel button usable.");
+            Assert.IsFalse(model.ConnectCommand.CanExecute(null));
+            var pulse = false;
+            await Dispatcher.UIThread.InvokeAsync(() => pulse = true, DispatcherPriority.Background);
+            Assert.IsTrue(pulse && !operation.IsCompleted, "The pending connection blocked the UI dispatcher.");
+            var log = window.FindControl<TextEditor>("MessageLog")!;
+            Assert.IsTrue(log.IsEffectivelyEnabled);
+            log.SelectAll();
+            Assert.AreEqual(previousLog, log.SelectedText);
+            if (cancel) { cancelButton.Command!.Execute(null); }
+            await operation.WaitAsync(TimeSpan.FromSeconds(3));
+            LayoutNow(window);
+            Assert.IsFalse(model.IsBusy || model.IsConnecting || model.IsConnected);
+            Assert.IsTrue(model.ConnectCommand.CanExecute(null), "Connect did not become available for retry.");
+            Assert.IsFalse(cancelButton.IsVisible);
+            Assert.AreEqual(previousLog, model.LogDocument.Text);
+            if (cancel)
+            {
+                Assert.IsFalse(model.HasError, "User cancellation should not display an error.");
+                Assert.AreEqual("Connection cancelled", model.Status);
+            }
+            else
+            {
+                StringAssert.Contains(model.ErrorMessage!, "timed out");
+            }
+            await model.ConnectCommand.ExecuteAsync(null);
+            Assert.IsTrue(model.IsConnected && !model.IsBusy && !model.HasError);
+            await model.LoginCommand.ExecuteAsync(null);
+            await server.Completion;
+            StringAssert.Contains(model.LogDocument.Text, "<-- 941");
+        }
+        finally { window.Close(); }
+        return true;
+    }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(20));
 
     [TestMethod(DisplayName = "Checksum errors retain both raw messages")]
     public Task ChecksumFailuresRetainSentAndReceivedMessages() => ui.Dispatch(async () =>
