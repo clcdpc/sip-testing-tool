@@ -10,5 +10,5 @@ public partial class AppPreferences : ObservableObject
     [ObservableProperty] private string encodingName = "UTF-8";
     [ObservableProperty] private bool validateChecksums = true;
     [ObservableProperty] private bool checkUpdatesOnStartup = true;
-    [ObservableProperty] private string updateFeedUrl = "https://siptool.clcohio.org/updates/desktop/";
+    [ObservableProperty] private string updateFeedUrl = Services.UpdateService.DefaultRepositoryUrl;
 }

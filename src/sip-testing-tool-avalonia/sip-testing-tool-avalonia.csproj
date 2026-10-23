@@ -5,7 +5,7 @@
     <RootNamespace>Clc.Sip.Desktop</RootNamespace>
     <AssemblyName>sip-testing-tool-avalonia</AssemblyName>
     <ApplicationIcon>Assets/app.ico</ApplicationIcon>
-    <Version>2.1.1</Version>
+    <Version>3.0.0-beta.1</Version>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
@@ -17,9 +17,10 @@
     <PackageReference Include="Avalonia.Fonts.Inter" Version="12.1.4" />
     <PackageReference Include="Avalonia.AvaloniaEdit" Version="12.0.0" />
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
-    <PackageReference Include="Velopack" Version="1.2.161" />
+    <PackageReference Include="StageKit.Updatum" Version="0.4.1" />
+    <InternalsVisibleTo Include="sip-desktop-tests" />
     <ProjectReference Include="../sip-core/sip-core.csproj" />
     <AvaloniaResource Include="Assets/**" />
   </ItemGroup>
-  <Import Project="Properties/Velopack.targets" Condition="Exists('Properties/Velopack.targets')" />
+  <Import Project="Properties/Release.targets" />
 </Project>

@@ -24,7 +24,7 @@ public sealed class WorkbenchTests
         Assert.AreEqual(12, commands.Items.Count);
         Assert.IsTrue(commands.Items.Contains("ACS Status") && commands.Items.Contains("Notice update"), "An existing SIP command is missing.");
         Assert.IsTrue(!form.GetButton("executeCommandButton").Enabled && !form.GetButton("loginButton").Enabled, "Commands must start disabled.");
-        Assert.AreEqual("5002", form.GetTextBox("portTextBox").Text);
+        Assert.AreEqual("", form.GetTextBox("portTextBox").Text);
         ((ToolStripMenuItem)form.ContextMenuStrip.Items[0]).PerformClick();
         Assert.IsTrue(form.TopMost);
         using var settings = new SettingsForm();

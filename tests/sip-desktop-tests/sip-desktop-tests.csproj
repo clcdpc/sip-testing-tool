@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
   <ItemGroup>
+    <EmbeddedResource Include="../release-version-cases.json" LogicalName="ReleaseVersionCases.json" />
     <PackageReference Include="Avalonia.Headless" Version="12.1.4" />
     <ProjectReference Include="../../src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj" />
   </ItemGroup>

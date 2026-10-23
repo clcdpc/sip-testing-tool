@@ -11,6 +11,7 @@ public sealed class PolarisLogFieldTests
 {
     private const string patronHeader = "64              00120261022    083815000100000000000600000000";
     private const string checkinHeader = "101YNN20261022    083815";
+    private const string statusHeader = "24              00120261022    083815";
 
     [ClassInitialize]
     public static void Initialize(TestContext _) => WinFormsTestEnvironment.Initialize();
@@ -111,6 +112,136 @@ public sealed class PolarisLogFieldTests
         Assert.AreEqual("CP · Location code", detail.Name);
         StringAssert.Contains(detail.Meaning, explanation);
         StringAssert.Contains(SipLogFields.Find("--> " + message, 8).Description, explanation);
+    }
+
+    [TestMethod(DisplayName = "Polaris 8.1 extensions retain wire values and expose qualified definitions in field help")]
+    [DataRow("64", "DB", "-25", "Patron credit balance", "Monetary units have not been confirmed")]
+    [DataRow("42", "DB", "0", "Patron credit balance", "refreshed patron data")]
+    [DataRow("64", "SI", "000123", "Internal patron ID", "EnvisionWare")]
+    [DataRow("24", "FA", "17", "Accrued fines total", "truncates")]
+    [DataRow("64", "FA", "0.00", "Accrued fines total", "Monetary units have not been confirmed")]
+    [DataRow("24", "PC", "000123", "Internal patron ID", "PatronID")]
+    [DataRow("64", "PC", "000123", "Internal patron ID", "PatronID")]
+    [DataRow("24", "PB", "001234567890", "Resolved patron barcode", "username")]
+    [DataRow("64", "PB", "001234567890", "Resolved patron barcode", "username")]
+    [DataRow("42", "TX", "0", "Deposit response value", "literal decimal 0")]
+    [DataRow("42", "TX", "vendor-specific", "Deposit response value", "business meaning has not been established")]
+    public void UpdatedReferenceFieldsPreserveRawValues(string messageId, string identifier, string value, string name, string qualification)
+    {
+        var header = messageId switch { "64" => patronHeader, "24" => statusHeader, "42" => "42Y", _ => throw new ArgumentException(messageId) };
+        var message = header + identifier + value + "|AY1AZABCD";
+        var detail = SipLogFields.DescribeMessage(message).Fields.Single(field => field.Name.StartsWith(identifier + " · ", StringComparison.Ordinal));
+        StringAssert.Contains(detail.Name, name);
+        StringAssert.Contains(detail.Name, "Polaris");
+        StringAssert.Contains(detail.Description, qualification);
+        Assert.AreEqual(value, detail.Value);
+        Assert.AreEqual(value, detail.DisplayValue, "Numeric identifiers, balances and opaque values must not be reformatted.");
+        Assert.AreEqual(identifier + value, message.Substring(detail.Offset, detail.Length));
+        Assert.AreEqual(SipLogValueState.Normal, detail.State);
+        Assert.IsNull(detail.Meaning, "Units and additional business meanings must not be inferred.");
+        var help = SipLogFields.Find("<-- " + message, 4 + detail.Offset);
+        StringAssert.Contains(help.Description, qualification);
+        Assert.AreEqual(identifier, help.Identifier);
+        Assert.IsNull(SipLogFields.Find("<-- " + message, 6 + detail.Offset), "Variable field values retain their existing hover behavior.");
+    }
+
+    [TestMethod(DisplayName = "Polaris 8.1 fields are only defined in documented reply contexts")]
+    public void UpdatedExtensionNamesDoNotLeakIntoOtherMessageTypes()
+    {
+        foreach (var identifier in new[] { "DB", "SI", "FA", "PC", "PB", "TX" })
+        {
+            var detail = SipLogFields.DescribeMessage("9300" + identifier + "opaque|").Fields.Last();
+            Assert.AreEqual(identifier + " · Unrecognized field", detail.Name);
+            Assert.AreEqual("opaque", detail.Value);
+        }
+        foreach (var identifier in new[] { "DB", "SI", "TX" })
+        {
+            StringAssert.Contains(SipLogFields.DescribeMessage(statusHeader + identifier + "opaque|").Fields.Last().Name, "Unrecognized field");
+        }
+        StringAssert.Contains(SipLogFields.DescribeMessage(patronHeader + "TXopaque|").Fields.Last().Name, "Unrecognized field");
+    }
+
+    [TestMethod(DisplayName = "Deposit response 42 reads its Y/N header and first AA field without requiring AO")]
+    [DataRow("Y", "set (Y)")]
+    [DataRow("N", "clear (N)")]
+    public void DepositResponseUsesTheDocumentedHeader(string result, string meaning)
+    {
+        var message = "42" + result + "AArequested-user|DB-25|TX0|";
+        var details = SipLogFields.DescribeMessage(message);
+        Assert.AreEqual("Deposit-account activity response (Polaris)", details.Name);
+        var flag = details.Fields.Single(field => field.Name == "Deposit result (Polaris)");
+        StringAssert.Contains(flag.Meaning, meaning);
+        Assert.AreEqual(2, flag.Offset);
+        Assert.AreEqual(1, flag.Length);
+        var patron = details.Fields.Single(field => field.Name == "AA · Patron identifier");
+        Assert.AreEqual(3, patron.Offset);
+        Assert.AreEqual("requested-user", patron.Value);
+        StringAssert.Contains(patron.Description, "Copied");
+        Assert.IsFalse(details.Fields.Any(field => field.Name.Contains("Unrecognized", StringComparison.Ordinal)));
+        var help = SipLogFields.Find("<-- " + message, 6);
+        Assert.IsTrue(help.IsFixed);
+        Assert.AreEqual(1, help.Length);
+        StringAssert.Contains(help.Description, meaning);
+    }
+
+    [TestMethod(DisplayName = "Notice response 44 preserves unproven result codes and describes BK as an echo")]
+    [DataRow("Y")]
+    [DataRow("N")]
+    [DataRow("1")]
+    [DataRow("0")]
+    [DataRow("?")]
+    public void NoticeResponseDoesNotInventResultOrTransactionSemantics(string result)
+    {
+        var message = "44" + result + "AOlibrary|AApatron|BKrequest-reference|ABitem|";
+        var details = SipLogFields.DescribeMessage(message);
+        Assert.AreEqual("Notice update response (Polaris)", details.Name);
+        var flag = details.Fields.Single(field => field.Name == "Notice result (Polaris)");
+        Assert.AreEqual(result, flag.Value);
+        Assert.IsNull(flag.Meaning, "The reference does not establish response 44's result-code meanings.");
+        var echo = details.Fields.Single(field => field.Name.StartsWith("BK · ", StringComparison.Ordinal));
+        Assert.AreEqual("request-reference", echo.Value);
+        StringAssert.Contains(echo.Name, "Echoed request value");
+        StringAssert.Contains(echo.Description, "unchanged");
+        StringAssert.Contains(echo.Description, "business meaning is unconfirmed");
+        StringAssert.Contains(SipLogFields.Find("<-- " + message, 4 + echo.Offset).Description, "unchanged");
+        Assert.AreEqual("AO · Institution ID", details.Fields[2].Name, "The first identified field must not be swallowed as an unknown header.");
+    }
+
+    [TestMethod(DisplayName = "BK retains standard meaning outside the proprietary notice pair")]
+    public void NoticeRequestAndStandardTransactionIdRemainDistinct()
+    {
+        var notice = SipLogFields.DescribeMessage("430120261022    08381520261022    083800004003BKrequest-reference|").Fields.Last();
+        StringAssert.Contains(notice.Name, "Notice request value");
+        StringAssert.Contains(notice.Description, "unchanged");
+        var payment = SipLogFields.DescribeMessage("3720261022    0838150400USDBKpayment-reference|").Fields.Last();
+        Assert.AreEqual("BK · Transaction ID", payment.Name);
+    }
+
+    [TestMethod(DisplayName = "Polaris expiration flags preserve processing and end-of-day qualifications")]
+    [DataRow("Y", "when evaluated")]
+    [DataRow("N", "may have been skipped")]
+    public void ExpirationFlagDoesNotClaimAnUnevaluatedPatronIsCurrent(string value, string qualification)
+    {
+        var message = patronHeader + "PY" + value + "|";
+        var field = SipLogFields.DescribeMessage(message).Fields.Last();
+        StringAssert.Contains(field.Description, "23:59:59");
+        StringAssert.Contains(field.Description, "EnvisionWare");
+        StringAssert.Contains(field.Meaning, qualification);
+        StringAssert.Contains(SipLogFields.Find("<-- " + message, 6 + patronHeader.Length).Description, qualification);
+    }
+
+    [TestMethod(DisplayName = "Incomplete proprietary response headers and request 41 keep their unknown data intact")]
+    public void IncompleteOrUnprovenProprietaryHeadersAreNotGuessed()
+    {
+        foreach (var message in new[] { "42", "44" })
+        {
+            var field = SipLogFields.DescribeMessage(message).Fields.Last();
+            Assert.AreEqual("Incomplete fixed header", field.Name);
+            Assert.AreEqual(SipLogValueState.Invalid, field.State);
+        }
+        var request = SipLogFields.DescribeMessage("41opaque positional data|AApatron|");
+        Assert.AreEqual("Unknown message (41)", request.Name);
+        Assert.AreEqual("opaque positional data", request.Fields.Single(field => field.Name == "Unrecognized header").Value);
     }
 
     [TestMethod(DisplayName = "Repeated default AV values split into transaction ID and outstanding amount")]

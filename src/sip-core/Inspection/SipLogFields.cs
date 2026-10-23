@@ -74,18 +74,18 @@ public static partial class SipLogFields
         ["CP"] = "Location code\nThe self-check location supplied during login.",
         ["CQ"] = "Valid patron password\nY means the supplied patron PIN or password is valid; N means it is not.",
         ["DE"] = "Notice comment (extension)\nComment sent by this tool's server-specific Notice update command.",
-        ["VP"] = "Vendor profile (extension)\nPolaris response format selected at login, such as SIP, 3M, ENVISIONWARE, COMPRISE or ITG.",
+        ["VP"] = "Vendor profile (extension)\nPolaris login profile: SIP (1/default), 3M (2), ENVISIONWARE (3), COMPRISE (4), or ITG (5). The analyzed 8.1 parser falls back to SIP for unsupported values.",
         // Polaris: SIP Message Documentation (2010), pages 2-4, and
-        // RPA via SIP for Vendors 2012, Patron Information Response extensions.
+        // RPA via SIP for Vendors 2012, Patron Information Response extensions,
+        // and Polaris_SIP2_Custom_Extensions_8.1_Updated.pdf (23 October 2026), pp. 2-3.
         ["BC"] = "Birth date (Polaris)",
         ["PA"] = "Patron code (Polaris)",
         ["PE"] = "Home branch (Polaris)\nAbbreviation of the patron's registered organization or home branch.",
         ["PS"] = "Patron statistical class (Polaris)",
         ["PX"] = "Patron expiration date (Polaris)\nExpiration of the patron's registration, in SIP date/time format.",
-        ["PY"] = "Patron expired (Polaris)\nY means the patron's registration has expired; N means it has not.",
+        ["PY"] = "Patron expired (Polaris)\nExpiration flag based on local end of day in the analyzed 8.1 build. Evaluation can be skipped; N does not establish that registration is current.",
         ["PZ"] = "Postal code (Polaris)",
-        // U1-U3 use the same library-defined convention as U4/U5, confirmed by
-        // the user; only U4/U5 are listed in the supplied Polaris documents.
+        // The 8.1 reference identifies all five library-defined patron fields.
         ["U1"] = "User1 (Polaris)\nPatron attribute configured by the library.",
         ["U2"] = "User2 (Polaris)\nPatron attribute configured by the library.",
         ["U3"] = "User3 (Polaris)\nPatron attribute configured by the library.",

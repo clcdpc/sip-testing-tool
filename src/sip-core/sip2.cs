@@ -11,7 +11,7 @@ namespace Clc.Sip
         public bool ValidateResponseChecksum { get; set; } = true;
 
         public string hostname = "";
-        public int port = 5002;
+        public int port;
 
         public string language = "000";
 
