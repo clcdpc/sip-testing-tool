@@ -1,4 +1,3 @@
-using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using Octokit;
@@ -36,8 +35,7 @@ public sealed class UpdateService : IDisposable
         this.createManager = createManager;
         this.supportsUpdates = supportsUpdates;
         // InformationalVersion retains beta identifiers and may include SDK-added commit metadata.
-        this.currentVersion = ReleaseVersion.Parse(currentVersion ?? typeof(UpdateService).Assembly
-            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion);
+        this.currentVersion = currentVersion is null ? ReleaseVersion.Current : ReleaseVersion.Parse(currentVersion);
     }
 
     public static string GetRepositoryUrl(string value)

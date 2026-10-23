@@ -73,6 +73,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     public bool CanRestartUpdate => UpdateReady && !IsBusy && !CheckingUpdates;
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
     public string ExecuteLabel => "Execute " + SelectedCommand.Name;
+    public string WindowTitle => "SIP Testing Tool v" + ReleaseVersion.Current.DisplayValue;
 
     public event Action? TransactionAppended;
     public event Action? ThemeChanged;
