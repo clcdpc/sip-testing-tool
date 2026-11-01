@@ -1,5 +1,6 @@
 using System.Text;
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Input;
@@ -21,7 +22,7 @@ public sealed class MessageFieldsPanel : UserControl
 {
     private const string Columns = "28*,41*,31*";
     private readonly TextBlock title = new() { FontWeight = FontWeight.SemiBold, VerticalAlignment = VerticalAlignment.Center, TextWrapping = TextWrapping.Wrap };
-    private readonly ListBox table = new() { Classes = { "messageFields" }, Padding = new Thickness(0), BorderThickness = new Thickness(0) };
+    private readonly ListBox table = new() { Classes = { "messageFields" }, Padding = new Thickness(0), BorderThickness = new Thickness(0), Focusable = true, IsTabStop = true };
     public IReadOnlyList<MessageFieldRow> Rows { get; private set; } = [];
     public event Action? CollapseRequested;
 
@@ -52,6 +53,7 @@ public sealed class MessageFieldsPanel : UserControl
         Grid.SetRow(labels, 1);
         layout.Children.Add(labels);
         table.Bind(BackgroundProperty, new DynamicResourceExtension("LogBrush"));
+        AutomationProperties.SetName(table, "Expanded message properties");
         table.TemplateApplied += (_, args) =>
         {
             if (args.NameScope.Find<ScrollViewer>("PART_ScrollViewer") is not { } scroll) { return; }
@@ -111,6 +113,18 @@ public sealed class MessageFieldsPanel : UserControl
         table.ItemsSource = rows;
         table.SelectedIndex = -1;
         if (rows.Count > 0) { table.ScrollIntoView(rows[0]); }
+    }
+
+    internal void FocusProperties()
+    {
+        // A previously hidden panel needs its template attached before it can receive focus.
+        UpdateLayout();
+        if (Rows.Count > 0)
+        {
+            if (table.SelectedIndex < 0) { table.SelectedIndex = 0; }
+            if (table.SelectedItem is { } selected) { table.ScrollIntoView(selected); }
+        }
+        table.Focus(NavigationMethod.Tab);
     }
 
     public string CopyText()

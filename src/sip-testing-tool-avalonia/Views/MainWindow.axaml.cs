@@ -29,6 +29,12 @@ public partial class MainWindow : Window
             new FuncDataTemplate<Enum>((value, _) => new TextBlock { Text = Regex.Replace(value.ToString(), "(?<!^)([A-Z][a-z])", " $1") });
         AddHandler(KeyDownEvent, SessionKeyDown, RoutingStrategies.Tunnel);
         LogInspection = new SipLogInspector(MessageLog, MessageFields);
+        LogInspection.FocusFallbackRequested += () => ClearLogButton.Focus(NavigationMethod.Tab);
+        var focusMessagesCommand = new RelayCommand(LogInspection.FocusMessages);
+        var focusMessagesGesture = new KeyGesture(Key.M, KeyModifiers.Shift | (OperatingSystem.IsMacOS() ? KeyModifiers.Meta : KeyModifiers.Control));
+        KeyBindings.Add(new KeyBinding { Gesture = focusMessagesGesture, Command = focusMessagesCommand });
+        FocusMessagesMenuItem.Command = focusMessagesCommand;
+        FocusMessagesMenuItem.InputGesture = focusMessagesGesture;
         PropertyChanged += (_, args) =>
         {
             if (args.Property == ActualThemeVariantProperty) { RefreshLogTheme(); }
@@ -46,7 +52,6 @@ public partial class MainWindow : Window
             {
                 LogContent.RowDefinitions[1].Height = new GridLength(0);
                 LogContent.RowDefinitions[2].Height = new GridLength(0);
-                if (MessageFields.IsKeyboardFocusWithin) { MessageLog.Focus(); }
             }
             InspectorDivider.IsVisible = MessageFields.IsVisible = expanded;
         };

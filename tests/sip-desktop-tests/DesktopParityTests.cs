@@ -473,7 +473,7 @@ public sealed partial class DesktopParityTests
             Layout(window);
             Assert.IsTrue(window.FindControl<MessageFieldsPanel>("MessageFields")!.IsVisible);
             Assert.AreEqual(raw, log.Text);
-            log.Focus();
+            log.TextArea.Focus();
             Press(window, Key.Escape);
             Assert.IsNull(window.LogInspection.PinnedField);
         }

@@ -22,6 +22,8 @@
       <MenuItem Header="_View">
         <MenuItem Header="Always on top" ToggleType="CheckBox" IsChecked="{Binding AlwaysOnTop}" />
         <MenuItem Header="_Dark mode" ToggleType="CheckBox" IsChecked="{Binding Preferences.DarkTheme, Mode=OneWay}" Command="{Binding ToggleThemeCommand}" InputGesture="Ctrl+Shift+D" />
+        <Separator />
+        <MenuItem x:Name="FocusMessagesMenuItem" Header="_Sent / received messages" />
       </MenuItem>
       <MenuItem Header="_Updates">
         <MenuItem Header="_Check for updates" Command="{Binding CheckUpdatesCommand}" />
@@ -137,8 +139,8 @@
         <Grid ColumnDefinitions="*,Auto" Background="{DynamicResource RibbonBrush}" Margin="0,0,0,0">
           <TextBlock Classes="groupTitle" Text="Sent / received messages" Margin="12,0" VerticalAlignment="Center" />
           <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="8">
-            <Button Content="Clear log" Command="{Binding ClearLogCommand}" />
-            <Button Content="Export log…" Click="ExportLog_Click" />
+            <Button x:Name="ClearLogButton" Content="Clear log" Command="{Binding ClearLogCommand}" />
+            <Button x:Name="ExportLogButton" Content="Export log…" Click="ExportLog_Click" />
           </StackPanel>
         </Grid>
         <Grid x:Name="LogContent" Grid.Row="1" RowDefinitions="*,0,0">

@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
@@ -6,7 +7,6 @@ using Avalonia.Media;
 using Avalonia.Styling;
 using AvaloniaEdit;
 using AvaloniaEdit.Document;
-using AvaloniaEdit.Editing;
 using AvaloniaEdit.Rendering;
 using Clc.Sip.Helpers;
 
@@ -28,11 +28,16 @@ public sealed class SipLogInspector : IDisposable
     public SipLogField? HoveredField => hover;
     public SipLogField? PinnedField => pinned;
     public event Action<bool>? ExpansionChanged;
+    public event Action? FocusFallbackRequested;
 
     public SipLogInspector(TextEditor editor, MessageFieldsPanel panel)
     {
         this.editor = editor;
         this.panel = panel;
+        editor.Options.AcceptsTab = false;
+        editor.IsTabStop = false;
+        editor.TextArea.IsTabStop = false;
+        KeyboardNavigation.SetTabNavigation(editor.TextArea, KeyboardNavigationMode.Continue);
         margin = new MessageMargin(this);
         overlay = new InspectionLayer(this) { IsHitTestVisible = false, Focusable = false };
         editor.TextArea.LeftMargins.Insert(0, margin);
@@ -64,7 +69,7 @@ public sealed class SipLogInspector : IDisposable
         if (document?.TextLength == 0 || expandedLine?.IsDeleted == true) { Collapse(); }
         if (pinned != null && pinned.Offset + pinned.Length > (document?.TextLength ?? 0)) { pinned = null; }
         SetHover(null);
-        margin.InvalidateVisual();
+        margin.RefreshMessages();
     }
 
     public void ExpandMessageAtOffset(int offset)
@@ -80,15 +85,45 @@ public sealed class SipLogInspector : IDisposable
         panel.ShowMessage(SipLogFields.DescribeMessage(text[4..]),
             $"{(text.StartsWith("--> ", StringComparison.Ordinal) ? "Sent" : "Received")} message {number}");
         ExpansionChanged?.Invoke(true);
-        margin.InvalidateVisual();
+        margin.RefreshButtons();
+        panel.FocusProperties();
     }
 
     public void Collapse()
     {
+        var restoreFocus = panel.IsKeyboardFocusWithin;
+        var messageLine = expandedLine;
         expandedLine = null;
         expandedText = null;
         ExpansionChanged?.Invoke(false);
-        margin.InvalidateVisual();
+        if (restoreFocus) { editor.UpdateLayout(); }
+        margin.RefreshButtons();
+        if (restoreFocus) { RestoreMessageFocus(messageLine); }
+    }
+
+    public void FocusMessages()
+    {
+        if (expandedLine != null)
+        {
+            panel.FocusProperties();
+            return;
+        }
+        editor.UpdateLayout();
+        margin.RefreshButtons();
+        if (margin.FocusMessage(null)) { return; }
+        var lastMessage = document?.Lines.LastOrDefault(line => line.Length >= 4 && IsMessage(document.GetText(line.Offset, 4)));
+        if (lastMessage != null)
+        {
+            editor.ScrollToLine(lastMessage.LineNumber);
+            editor.UpdateLayout();
+            margin.RefreshButtons();
+        }
+        RestoreMessageFocus(lastMessage);
+    }
+
+    private void RestoreMessageFocus(DocumentLine? preferredLine = null)
+    {
+        if (!margin.FocusMessage(preferredLine)) { FocusFallbackRequested?.Invoke(); }
     }
 
     public void InspectOffset(int offset, bool pin = false)
@@ -166,7 +201,7 @@ public sealed class SipLogInspector : IDisposable
     private void EditorKeyDown(object? sender, KeyEventArgs args)
     {
         if (args.Key == Key.Escape) { pinned = null; SetHover(null); RefreshTheme(); }
-        if (args.Key == Key.Enter && args.KeyModifiers == KeyModifiers.Control)
+        if (editor.TextArea.IsFocused && args.Key == Key.Enter && args.KeyModifiers == KeyModifiers.Control)
         {
             ExpandMessageAtOffset(editor.CaretOffset);
             args.Handled = true;
@@ -176,10 +211,14 @@ public sealed class SipLogInspector : IDisposable
     public void RefreshTheme()
     {
         overlay.InvalidateVisual();
-        margin.InvalidateVisual();
+        margin.RefreshButtons();
     }
 
-    private void GeometryChanged(object? sender, EventArgs args) => overlay.InvalidateVisual();
+    private void GeometryChanged(object? sender, EventArgs args)
+    {
+        overlay.InvalidateVisual();
+        margin.RefreshButtons();
+    }
 
     private void Scrolled(object? sender, EventArgs args)
     {
@@ -243,37 +282,90 @@ public sealed class SipLogInspector : IDisposable
         public override void Render(DrawingContext context) => owner.Draw(owner.editor.TextArea.TextView, context);
     }
 
-    private sealed class MessageMargin(SipLogInspector owner) : AbstractMargin
+    private sealed class MessageMargin : Canvas
     {
-        protected override Size MeasureOverride(Size availableSize) => new(25, 0);
-        protected override void OnTextViewVisualLinesChanged() { base.OnTextViewVisualLinesChanged(); InvalidateVisual(); }
+        private readonly SipLogInspector owner;
+        private readonly Dictionary<DocumentLine, int> messageNumbers = new();
+        private readonly Dictionary<DocumentLine, Button> buttons = new();
 
-        public override void Render(DrawingContext context)
+        public MessageMargin(SipLogInspector owner)
         {
-            base.Render(context);
-            if (TextView?.VisualLinesValid != true || owner.document == null) { return; }
-            var pen = new Pen(Application.Current?.ActualThemeVariant == ThemeVariant.Dark ? Brushes.LightSteelBlue : Brushes.SteelBlue, 1);
-            foreach (var visual in TextView.VisualLines)
-            {
-                var line = visual.FirstDocumentLine;
-                if (!IsMessage(owner.document.GetText(line))) { continue; }
-                var y = visual.VisualTop - TextView.VerticalOffset + 3;
-                var rect = new Rect(5, y, 13, 13);
-                context.DrawRectangle(null, pen, rect, 2, 2);
-                context.DrawLine(pen, new Point(8, y + 6.5), new Point(15, y + 6.5));
-                if (owner.expandedLine != line) { context.DrawLine(pen, new Point(11.5, y + 3), new Point(11.5, y + 10)); }
-            }
+            this.owner = owner;
+            Width = 25;
+            Background = Brushes.Transparent;
+            Cursor = new Cursor(StandardCursorType.Arrow);
+            ClipToBounds = true;
         }
 
-        protected override void OnPointerPressed(PointerPressedEventArgs args)
+        public void RefreshMessages()
         {
-            base.OnPointerPressed(args);
-            if (TextView?.VisualLinesValid != true || !args.GetCurrentPoint(this).Properties.IsLeftButtonPressed) { return; }
-            var y = args.GetPosition(this).Y + TextView.VerticalOffset;
-            var line = TextView.VisualLines.FirstOrDefault(visual => y >= visual.VisualTop && y < visual.VisualTop + Math.Min(visual.Height, 22));
-            if (line == null) { return; }
-            owner.ExpandMessageAtOffset(line.FirstDocumentLine.Offset);
-            args.Handled = true;
+            messageNumbers.Clear();
+            if (owner.document != null)
+            {
+                foreach (var line in owner.document.Lines)
+                {
+                    if (line.Length >= 4 && IsMessage(owner.document.GetText(line.Offset, 4))) { messageNumbers.Add(line, messageNumbers.Count + 1); }
+                }
+            }
+            RefreshButtons();
+        }
+
+        public bool FocusMessage(DocumentLine? preferredLine)
+        {
+            if (preferredLine is { IsDeleted: false } && buttons.TryGetValue(preferredLine, out var preferred) && preferred.Focus(NavigationMethod.Tab)) { return true; }
+            return buttons.Where(pair => !pair.Key.IsDeleted).OrderBy(pair => pair.Key.LineNumber).Any(pair => pair.Value.Focus(NavigationMethod.Tab));
+        }
+
+        public void RefreshButtons()
+        {
+            var view = owner.editor.TextArea.TextView;
+            if (!view.VisualLinesValid) { return; }
+            var visible = new HashSet<DocumentLine>();
+            var brush = Application.Current?.ActualThemeVariant == ThemeVariant.Dark ? Brushes.LightSteelBlue : Brushes.SteelBlue;
+            foreach (var visual in view.VisualLines)
+            {
+                var line = visual.FirstDocumentLine;
+                if (!messageNumbers.TryGetValue(line, out var number)) { continue; }
+                var top = visual.VisualTop - view.VerticalOffset;
+                if (top < 0) { continue; }
+                visible.Add(line);
+                if (!buttons.TryGetValue(line, out var button))
+                {
+                    button = new Button
+                    {
+                        MinWidth = 0,
+                        MinHeight = 0,
+                        Padding = new Thickness(0),
+                        CornerRadius = new CornerRadius(2),
+                        BorderThickness = new Thickness(1),
+                        FontSize = 12,
+                        Background = Brushes.Transparent,
+                        Cursor = new Cursor(StandardCursorType.Arrow)
+                    };
+                    button.Click += (_, _) => { if (!line.IsDeleted) { owner.ExpandMessageAtOffset(line.Offset); } };
+                    // TextEditor forwards bubbled focus events to the transcript.
+                    button.GotFocus += (_, args) => args.Handled = true;
+                    Children.Add(button);
+                    buttons.Add(line, button);
+                }
+                var expanded = owner.expandedLine == line;
+                button.Content = expanded ? "−" : "+";
+                button.Width = button.Height = Math.Min(19, view.DefaultLineHeight);
+                button.TabIndex = line.LineNumber;
+                button.Foreground = button.BorderBrush = brush;
+                var direction = owner.document!.GetCharAt(line.Offset) == '-' ? "sent" : "received";
+                AutomationProperties.SetName(button, $"{(expanded ? "Collapse" : "Expand")} {direction} message {number}");
+                SetLeft(button, (Width - button.Width) / 2);
+                SetTop(button, top);
+            }
+            var restoreFocus = false;
+            foreach (var line in buttons.Keys.Where(line => !visible.Contains(line)).ToArray())
+            {
+                restoreFocus |= buttons[line].IsFocused;
+                Children.Remove(buttons[line]);
+                buttons.Remove(line);
+            }
+            if (restoreFocus) { owner.RestoreMessageFocus(); }
         }
     }
 }
