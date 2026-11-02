@@ -28,14 +28,12 @@ foreach ($asset in $assets) {
 $digests = @{}
 foreach ($asset in $assets) { $digests[$asset.Name] = (Get-FileHash -LiteralPath $asset.FullName -Algorithm SHA256).Hash }
 
-$existing = & gh release view $Tag --repo $Repository --json isDraft 2>$null
-if ($LASTEXITCODE -eq 0) {
-    if (($existing | ConvertFrom-Json).isDraft -ne $true) {
+$existing = Find-DesktopGitHubRelease -Repository $Repository -Tag $Tag
+if ($null -ne $existing) {
+    if (-not $existing.draft) {
         throw 'This release is already published. Create a new version instead of replacing published assets.'
     }
-    $draft = Get-DesktopDraftRelease -Repository $Repository -Tag $Tag
-    & gh release edit $Tag --repo $Repository --draft @releaseOptions
-    if ($LASTEXITCODE -ne 0) { throw 'Could not update the draft release classification.' }
+    $draft = Get-DesktopDraftRelease -Repository $Repository -Tag $Tag -ReleaseId $existing.id
 } else {
     & gh release create $Tag --repo $Repository --verify-tag --draft --title "SIP Testing Tool $Tag" --generate-notes @releaseOptions
     if ($LASTEXITCODE -ne 0) { throw 'Could not create the draft release.' }
@@ -49,9 +47,12 @@ foreach ($asset in @(Get-DesktopGitHubReleaseAssets -Repository $Repository -Rel
     $null = Invoke-DesktopGitHubApi -Path "repos/$Repository/releases/assets/$($asset.id)" -Method DELETE
 }
 $null = Get-DesktopDraftRelease -Repository $Repository -Tag $Tag -ReleaseId $draft.id
+# Unlike REST /releases/tags/{tag}, these CLI commands support drafts through
+# GraphQL discovery followed by numeric release URLs. Keep their upload handling.
 $assetPaths = @($assets.FullName)
 & gh release upload $Tag @assetPaths --repo $Repository
 if ($LASTEXITCODE -ne 0) { throw 'Could not upload all release assets. The release remains a draft.' }
 Assert-DesktopGitHubReleaseDigests -Repository $Repository -Tag $Tag -ReleaseId $draft.id -ExpectedDigests $digests
+# Classification changes only after every digest and the complete asset set pass.
 & gh release edit $Tag --repo $Repository --draft=false @releaseOptions
 if ($LASTEXITCODE -ne 0) { throw 'Could not publish the release. Check its status on GitHub before rerunning.' }

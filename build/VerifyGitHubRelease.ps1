@@ -6,18 +6,54 @@ function Invoke-DesktopGitHubApi {
     if ($Paginate) { $arguments += @('--paginate', '--slurp') }
     $response = & gh @arguments
     if ($LASTEXITCODE -ne 0) { throw "GitHub API failed: $Method $Path" }
-    if ($Method -ne 'DELETE') { $response | ConvertFrom-Json }
+    if ($Method -ne 'DELETE') {
+        $parsed = $response | ConvertFrom-Json -NoEnumerate
+        if ($null -eq $parsed) { throw "Missing GitHub API response: $Method $Path" }
+        # Preserve empty and single-page arrays so malformed pagination is not
+        # confused with a successful list containing no releases or assets.
+        return ,$parsed
+    }
+}
+
+function Find-DesktopGitHubRelease {
+    param([string]$Repository, [string]$Tag)
+    # The tag endpoint only finds published releases. Authenticated enumeration
+    # includes drafts, and an API failure must never mean "safe to create".
+    $pages = Invoke-DesktopGitHubApi -Path "repos/$Repository/releases?per_page=100" -Paginate
+    if ($pages -isnot [array] -or $pages.Count -eq 0) { throw 'Invalid paginated GitHub release list.' }
+    $seenIds = @{}
+    $matching = @(foreach ($page in $pages) {
+        if ($page -isnot [array]) { throw 'Invalid paginated GitHub release list.' }
+        foreach ($release in $page) {
+            if (($release.id -isnot [long] -and $release.id -isnot [int]) -or $release.id -le 0 -or
+                $release.tag_name -isnot [string] -or [string]::IsNullOrWhiteSpace($release.tag_name) -or
+                $release.draft -isnot [bool]) {
+                throw 'Invalid GitHub release metadata in the release list.'
+            }
+            if ($seenIds.ContainsKey($release.id)) { throw 'Ambiguous GitHub release list: repeated release ID.' }
+            $seenIds[$release.id] = $true
+            if ($release.tag_name -ceq $Tag) { $release }
+        }
+    })
+    if ($matching.Count -gt 1) { throw 'Ambiguous GitHub releases for the requested tag.' }
+    if ($matching.Count -eq 1) { $matching[0] }
 }
 
 function Get-DesktopDraftRelease {
     param([string]$Repository, [string]$Tag, [long]$ReleaseId = 0)
-    $path = if ($ReleaseId -gt 0) { "$ReleaseId" } else { 'tags/' + [Uri]::EscapeDataString($Tag) }
-    $release = Invoke-DesktopGitHubApi -Path "repos/$Repository/releases/$path"
+    if ($ReleaseId -eq 0) {
+        $discovered = Find-DesktopGitHubRelease -Repository $Repository -Tag $Tag
+        if ($null -eq $discovered) { throw 'The intended draft was not found in the GitHub release list.' }
+        if (-not $discovered.draft) { throw 'This release is already published. Create a new version instead of replacing published assets.' }
+        $ReleaseId = $discovered.id
+    }
+    if ($ReleaseId -le 0) { throw 'Invalid GitHub release ID.' }
+    $release = Invoke-DesktopGitHubApi -Path "repos/$Repository/releases/$ReleaseId"
     if (($release.id -isnot [long] -and $release.id -isnot [int]) -or $release.id -le 0 -or
-        ($ReleaseId -gt 0 -and $release.id -ne $ReleaseId) -or $release.tag_name -cne $Tag) {
+        $release.id -ne $ReleaseId -or $release.tag_name -cne $Tag -or $release.draft -isnot [bool]) {
         throw 'The GitHub release does not match the intended release ID and tag.'
     }
-    if ($release.draft -isnot [bool] -or -not $release.draft) {
+    if (-not $release.draft) {
         throw 'This release is already published. Create a new version instead of replacing published assets.'
     }
     $release
@@ -26,7 +62,11 @@ function Get-DesktopDraftRelease {
 function Get-DesktopGitHubReleaseAssets {
     param([string]$Repository, [long]$ReleaseId)
     $pages = Invoke-DesktopGitHubApi -Path "repos/$Repository/releases/$ReleaseId/assets?per_page=100" -Paginate
-    foreach ($page in $pages) { foreach ($asset in $page) { $asset } }
+    if ($pages -isnot [array] -or $pages.Count -eq 0) { throw 'Invalid paginated GitHub asset list.' }
+    foreach ($page in $pages) {
+        if ($page -isnot [array]) { throw 'Invalid paginated GitHub asset list.' }
+        foreach ($asset in $page) { $asset }
+    }
 }
 
 function Assert-DesktopGitHubReleaseDigests {
@@ -48,7 +88,8 @@ function Assert-DesktopGitHubReleaseDigests {
         }
         # Resolve by the ID listed on this draft, then require the same ID and name.
         $metadata = Invoke-DesktopGitHubApi -Path "repos/$Repository/releases/assets/$($asset.id)"
-        if ($metadata.id -ne $asset.id -or $metadata.name -cne $asset.name -or $metadata.state -cne 'uploaded') {
+        if (($metadata.id -isnot [long] -and $metadata.id -isnot [int]) -or
+            $metadata.id -ne $asset.id -or $metadata.name -cne $asset.name -or $metadata.state -cne 'uploaded') {
             throw "Release asset metadata does not match: $($asset.name)"
         }
         if ($metadata.digest -isnot [string] -or $metadata.digest -cnotmatch '\Asha256:([0-9a-fA-F]{64})\z') {
