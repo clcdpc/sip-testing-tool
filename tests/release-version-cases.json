@@ -1,5 +1,6 @@
 [
     { "version": "0.0.0", "valid": true, "prerelease": false },
+    { "version": "0.0.0-dev", "valid": true, "prerelease": true },
     { "version": "2.1.2", "valid": true, "prerelease": false },
     { "version": "2.1.2-beta", "valid": true, "prerelease": true },
     { "version": "2.1.2-beta.1", "valid": true, "prerelease": true },

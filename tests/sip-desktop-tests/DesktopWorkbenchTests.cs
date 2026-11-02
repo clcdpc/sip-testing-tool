@@ -35,6 +35,7 @@ public sealed class DesktopWorkbenchTests
         window.Show();
         try
         {
+            Assert.AreEqual("SIP Testing Tool v" + ReleaseVersion.Current.DisplayValue, window.Title);
             foreach (var size in new[] { new Size(1060, 720), new Size(1320, 860), new Size(1600, 1000) })
             {
                 window.Width = size.Width;

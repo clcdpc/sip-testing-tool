@@ -40,11 +40,16 @@ public sealed class UpdateServiceTests
     }
 
     [TestMethod]
-    public async Task DevelopmentBuildsDoNotRequestUpdatesOrRestart()
+    [DataRow("0.0.0-dev")]
+    [DataRow("0.0.0-dev+0123456789abcdef0123456789abcdef01234567")]
+    public async Task DevelopmentBuildsDoNotRequestUpdatesOrRestart(string version)
     {
-        using var updates = new UpdateService();
-        Assert.AreEqual("Updates are available in the portable Windows EXE and Linux AppImage.", await updates.CheckAndDownloadAsync(UpdateService.DefaultRepositoryUrl));
+        using var fixture = new UpdateFixture(currentVersion: version);
+        using var updates = fixture.CreateService();
+        Assert.AreEqual("Updates are disabled for development builds.", await updates.CheckAndDownloadAsync(UpdateService.DefaultRepositoryUrl));
         Assert.IsFalse(updates.IsReady);
+        Assert.IsNull(fixture.Manager);
+        Assert.AreEqual(0, fixture.DownloadCount);
         await Assert.ThrowsAsync<InvalidOperationException>(() => updates.PrepareRestartAsync(UpdateService.DefaultRepositoryUrl));
     }
 
@@ -94,6 +99,9 @@ public sealed class UpdateServiceTests
     [DataRow("2.1.2-beta.2+commit.123", "2.1.2")]
     [DataRow("2.1.2-beta.2", "2.1.3-beta.1")]
     [DataRow("2.1.2", "2.1.3")]
+    [DataRow("3.0.0-beta.5", "3.0.0-beta.6")]
+    [DataRow("3.0.0-beta.9", "3.0.0-beta.10")]
+    [DataRow("3.0.0-beta.5+build.001.commit", "3.0.0-beta.6+build.002")]
     public async Task NewerSemanticVersionIsDownloaded(string current, string next)
     {
         using var fixture = new UpdateFixture(currentVersion: current,
