@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Automation;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -223,7 +224,9 @@ public sealed class SipLogInspector : IDisposable
     private void Scrolled(object? sender, EventArgs args)
     {
         SetHover(null);
-        RefreshTheme();
+        overlay.InvalidateVisual();
+        // ScrollOffsetChanged still exposes the previous visual lines. Update
+        // the expander controls in VisualLinesChanged, after the new viewport is measured.
     }
 
     public void Draw(TextView textView, DrawingContext context)
@@ -320,6 +323,8 @@ public sealed class SipLogInspector : IDisposable
         {
             var view = owner.editor.TextArea.TextView;
             if (!view.VisualLinesValid) { return; }
+            var size = Math.Min(19, view.DefaultLineHeight);
+            var viewportHeight = ((IScrollable)view).Viewport.Height;
             var visible = new HashSet<DocumentLine>();
             var brush = Application.Current?.ActualThemeVariant == ThemeVariant.Dark ? Brushes.LightSteelBlue : Brushes.SteelBlue;
             foreach (var visual in view.VisualLines)
@@ -327,7 +332,10 @@ public sealed class SipLogInspector : IDisposable
                 var line = visual.FirstDocumentLine;
                 if (!messageNumbers.TryGetValue(line, out var number)) { continue; }
                 var top = visual.VisualTop - view.VerticalOffset;
-                if (top < 0) { continue; }
+                // A clipped header still needs its button, including tiny negative
+                // positions from fractional font metrics at the end of the log.
+                // Use the button's bounds so a wrapped body alone adds no tab stop.
+                if (top + size <= 0 || top >= viewportHeight) { continue; }
                 visible.Add(line);
                 if (!buttons.TryGetValue(line, out var button))
                 {
@@ -350,7 +358,7 @@ public sealed class SipLogInspector : IDisposable
                 }
                 var expanded = owner.expandedLine == line;
                 button.Content = expanded ? "−" : "+";
-                button.Width = button.Height = Math.Min(19, view.DefaultLineHeight);
+                button.Width = button.Height = size;
                 button.TabIndex = line.LineNumber;
                 button.Foreground = button.BorderBrush = brush;
                 var direction = owner.document!.GetCharAt(line.Offset) == '-' ? "sent" : "received";

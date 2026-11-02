@@ -17,18 +17,28 @@ public sealed partial class DesktopParityTests
         var view = log.TextArea.TextView;
         var scroll = (Avalonia.Controls.Primitives.IScrollable)view;
         var lines = view.VisualLinesValid
-            ? string.Join(", ", view.VisualLines.Select(line => $"{line.FirstDocumentLine.LineNumber}:top={line.VisualTop:F3},y={line.VisualTop - view.VerticalOffset:F3},height={line.Height:F3}"))
+            ? string.Join(", ", view.VisualLines.Select(line => $"{line.FirstDocumentLine.LineNumber}:top={line.VisualTop:R},y={line.VisualTop - view.VerticalOffset:R},height={line.Height:R}"))
             : "invalid";
-        var buttons = log.TextArea.LeftMargins.First().GetVisualDescendants().OfType<Button>();
-        return $"valid={view.VisualLinesValid}; offset={view.VerticalOffset:F3}; viewport={scroll.Viewport}; bounds={view.Bounds}; lineHeight={view.DefaultLineHeight:F3}; extent={scroll.Extent}; lines=[{lines}]; expanders=[{string.Join(", ", buttons.Select(button => $"{AutomationProperties.GetName(button)}:y={Canvas.GetTop(button):F3}"))}]";
+        var buttons = MessageExpanders(log);
+        return $"valid={view.VisualLinesValid}; offset={view.VerticalOffset:R}; viewport={scroll.Viewport}; bounds={view.Bounds}; lineHeight={view.DefaultLineHeight:R}; extent={scroll.Extent}; lines=[{lines}]; expanders({buttons.Length})=[{string.Join(", ", buttons.Select(button => $"{AutomationProperties.GetName(button)}:y={Canvas.GetTop(button):R},focused={button.IsFocused}"))}]";
     }
 
-    private static void TraceMessageLog(TextEditor log)
+    private static Button[] MessageExpanders(TextEditor log) => log.TextArea.LeftMargins.First()
+        .GetVisualDescendants().OfType<Button>().OrderBy(button => button.TabIndex).ToArray();
+
+    private static Button[] VisibleMessageExpanders(TextEditor log)
     {
-        var view = log.TextArea.TextView;
-        view.ScrollOffsetChanged += (_, _) => Console.WriteLine("ScrollOffsetChanged: " + MessageLogState(log));
-        view.VisualLinesChanged += (_, _) => Console.WriteLine("VisualLinesChanged: " + MessageLogState(log));
-        Console.WriteLine("Before scrolling: " + MessageLogState(log));
+        var buttons = MessageExpanders(log);
+        var state = MessageLogState(log);
+        Assert.IsTrue(log.TextArea.TextView.VisualLinesValid, "The rendered log should have valid visual lines. " + state);
+        Assert.IsNotEmpty(buttons, "Visible message headers must have expanders. " + state);
+        foreach (var button in buttons)
+        {
+            Assert.IsTrue(button.Focusable && button.IsTabStop, "Visible expanders must be keyboard accessible. " + state);
+            Assert.IsTrue(button.Bounds.Bottom > 0 && button.Bounds.Top < log.TextArea.LeftMargins.First().Bounds.Height,
+                "Every expander tab stop must intersect the viewport. " + state);
+        }
+        return buttons;
     }
 
     [TestMethod]
@@ -319,14 +329,10 @@ public sealed partial class DesktopParityTests
             model.LogDocument.Text = string.Join("\n\n", Enumerable.Range(1, 80).Select(number => $"--> 9300CNuser{number}|COpassword|"));
             Layout(window);
             var log = window.FindControl<TextEditor>("MessageLog")!;
-            TraceMessageLog(log);
             log.ScrollToEnd();
             Layout(window);
-            var buttons = log.TextArea.LeftMargins.First().GetVisualDescendants().OfType<Button>().ToArray();
-            var state = MessageLogState(log);
-            if (buttons.Length == 0) { Layout(window); Console.WriteLine("Additional layout: " + MessageLogState(log)); }
-            Assert.IsNotEmpty(buttons, "Scrolling to the end must create message expanders. " + state);
-            var last = buttons.MaxBy(button => button.TabIndex)!;
+            var last = VisibleMessageExpanders(log).Last();
+            Assert.AreEqual("Expand sent message 80", AutomationProperties.GetName(last), MessageLogState(log));
             last.Focus(NavigationMethod.Tab);
             Press(window, Key.Space);
             Layout(window);
@@ -345,7 +351,7 @@ public sealed partial class DesktopParityTests
             SaveFrame(window, "message-properties-keyboard-focus");
             Press(window, Key.Escape);
             Assert.IsFalse(panel.IsVisible);
-            Assert.IsTrue(log.TextArea.LeftMargins.First().GetVisualDescendants().OfType<Button>().Any(button => button.IsFocused));
+            Assert.IsTrue(VisibleMessageExpanders(log).Any(button => button.IsFocused), MessageLogState(log));
             Assert.IsFalse(log.TextArea.IsFocused);
         }
         finally { window.Close(); }
@@ -362,44 +368,93 @@ public sealed partial class DesktopParityTests
             model.LogDocument.Text = "Connection status\n\n" + string.Join("\n\n", Enumerable.Range(1, 80).Select(number => $"--> 9300CNuser{number}|COpassword|"));
             Layout(window);
             var log = window.FindControl<TextEditor>("MessageLog")!;
-            TraceMessageLog(log);
-            Button[] Expanders() => log.TextArea.LeftMargins.First().GetVisualDescendants().OfType<Button>().OrderBy(button => button.TabIndex).ToArray();
+            var initial = VisibleMessageExpanders(log);
+            Assert.IsTrue(initial.Length > 1 && initial.Length < 80, MessageLogState(log));
+            Assert.AreEqual("Expand sent message 1", AutomationProperties.GetName(initial[0]), MessageLogState(log));
+            window.FindControl<Button>("ExportLogButton")!.Focus(NavigationMethod.Tab);
+            foreach (var button in initial)
+            {
+                Press(window, Key.Tab);
+                Assert.IsTrue(button.IsFocused, "Tab must follow the visible messages in document order. " + MessageLogState(log));
+            }
+            initial[0].Focus(NavigationMethod.Tab);
             log.ScrollToEnd();
             Layout(window);
-            var buttons = Expanders();
-            var state = MessageLogState(log);
-            if (buttons.Length == 0) { Layout(window); Console.WriteLine("Additional layout: " + MessageLogState(log)); }
-            Assert.IsTrue(buttons.Length > 0 && buttons.Length < 80, "Only visible messages should create tab stops. " + state);
-            Assert.AreEqual("Expand sent message 80", AutomationProperties.GetName(buttons.Last()));
+            var buttons = VisibleMessageExpanders(log);
+            Assert.IsTrue(buttons.Length < 80, "Only visible messages should create tab stops. " + MessageLogState(log));
+            Assert.AreEqual("Expand sent message 80", AutomationProperties.GetName(buttons.Last()), MessageLogState(log));
+            Assert.IsTrue(buttons[0].IsFocused, "Scrolling a focused expander to the end should focus a visible expander. " + MessageLogState(log));
+            Assert.IsTrue(initial.All(button => button.GetVisualParent() == null), "Offscreen expanders must be removed.");
 
             window.Width = window.MinWidth;
             window.Height = window.MinHeight;
             Layout(window);
             log.ScrollToEnd();
             Layout(window);
-            buttons = Expanders();
-            Assert.AreEqual("Expand sent message 80", AutomationProperties.GetName(buttons.Last()));
+            buttons = VisibleMessageExpanders(log);
+            Assert.AreEqual("Expand sent message 80", AutomationProperties.GetName(buttons.Last()), MessageLogState(log));
             window.FindControl<Button>("ExportLogButton")!.Focus(NavigationMethod.Tab);
             Press(window, Key.Tab);
             Assert.IsTrue(buttons[0].IsFocused);
             log.ScrollToHome();
             Layout(window);
-            Assert.IsTrue(Expanders()[0].IsFocused, "Scrolling a focused expander out of view should focus a visible expander.");
-            Assert.AreEqual("Expand sent message 1", AutomationProperties.GetName(Expanders()[0]));
+            var home = VisibleMessageExpanders(log);
+            Assert.IsTrue(home[0].IsFocused, "Scrolling a focused expander out of view should focus a visible expander. " + MessageLogState(log));
+            Assert.AreEqual("Expand sent message 1", AutomationProperties.GetName(home[0]), MessageLogState(log));
+            Assert.IsTrue(buttons.All(button => button.GetVisualParent() == null), "Scrolling home must remove the end's expanders.");
 
             Press(window, Key.Enter);
             Layout(window);
             Assert.IsTrue(window.FindControl<MessageFieldsPanel>("MessageFields")!.IsVisible);
             window.LogInspection.Collapse();
             Layout(window);
-            Assert.IsTrue(Expanders()[0].IsFocused);
+            Assert.IsTrue(VisibleMessageExpanders(log)[0].IsFocused, MessageLogState(log));
             model.ClearLogCommand.Execute(null);
             Layout(window);
-            Assert.IsEmpty(Expanders());
+            Assert.IsEmpty(MessageExpanders(log), MessageLogState(log));
             Assert.IsTrue(window.FindControl<Button>("ClearLogButton")!.IsFocused, "Clearing the focused message should return focus to the log toolbar.");
             Press(window, Key.Tab);
             Assert.IsTrue(window.FindControl<Button>("ExportLogButton")!.IsFocused);
             Assert.IsFalse(log.IsKeyboardFocusWithin);
+        }
+        finally { window.Close(); }
+    }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
+
+    [TestMethod]
+    [DataRow(0.0625)]
+    [DataRow(0.5)]
+    public Task PartiallyVisibleMessageHeadersKeepTheirExpanders(double hiddenFraction) => ui.Dispatch(() =>
+    {
+        using var model = new MainWindowViewModel();
+        var window = new MainWindow { DataContext = model };
+        window.Show();
+        try
+        {
+            // Keep the wrapped body in view after its header leaves the viewport.
+            model.LogDocument.Text = "--> 9300CNuser|COpassword|" + string.Concat(Enumerable.Repeat("CPMAIN|", 2000)) + "\n\n<-- 941";
+            Layout(window);
+            var log = window.FindControl<TextEditor>("MessageLog")!;
+            var first = VisibleMessageExpanders(log).Single();
+            var height = first.Bounds.Height;
+            var scroll = log.TextArea.GetVisualAncestors().OfType<ScrollViewer>().First();
+            scroll.Offset = new Vector(0, height * hiddenFraction);
+            Layout(window);
+            var partial = VisibleMessageExpanders(log).Single();
+            Assert.AreSame(first, partial, "Scrolling within a visible header should retain its control.");
+            Assert.AreEqual("Expand sent message 1", AutomationProperties.GetName(partial), MessageLogState(log));
+            Assert.IsTrue(Canvas.GetTop(partial) < 0, "The header must actually be partially clipped. " + MessageLogState(log));
+            window.FindControl<Button>("ExportLogButton")!.Focus(NavigationMethod.Tab);
+            Press(window, Key.Tab);
+            Assert.IsTrue(partial.IsFocused, "A partially visible expander must remain reachable by Tab. " + MessageLogState(log));
+
+            scroll.Offset = new Vector(0, height + 1);
+            Layout(window);
+            Assert.IsEmpty(MessageExpanders(log), "The wrapped body alone must not create an offscreen tab stop. " + MessageLogState(log));
+            Assert.IsTrue(window.FindControl<Button>("ClearLogButton")!.IsFocused, "Without a visible header, focus should return to the log toolbar.");
+
+            log.ScrollToHome();
+            Layout(window);
+            Assert.AreEqual("Expand sent message 1", AutomationProperties.GetName(VisibleMessageExpanders(log).Single()), MessageLogState(log));
         }
         finally { window.Close(); }
     }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
