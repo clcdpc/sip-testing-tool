@@ -116,6 +116,8 @@ try {
         if (-not $rejected) { throw 'Windows ZIP verification ignored its embedded version.' }
     }
     if ($IsLinux) {
+        # A normal dotnet publish creates the packager's scratch parent first.
+        $null = [IO.Directory]::CreateDirectory((Join-Path $repository 'artifacts/avalonia'))
         $linuxPublish = [IO.Directory]::CreateDirectory((Join-Path $scratch.FullName 'linux-publish')).FullName
         [IO.File]::WriteAllText((Join-Path $linuxPublish 'sip-testing-tool-avalonia'), "#!/bin/sh`nexit 0`n")
         [IO.File]::WriteAllText((Join-Path $linuxPublish 'sip-testing-tool-avalonia.runtimeconfig.json'), '{"runtimeOptions":{"framework":{"name":"Microsoft.NETCore.App","version":"10.0.0"}}}')
