@@ -12,6 +12,25 @@ namespace Clc.Sip.Desktop.Tests;
 
 public sealed partial class DesktopParityTests
 {
+    private static string MessageLogState(TextEditor log)
+    {
+        var view = log.TextArea.TextView;
+        var scroll = (Avalonia.Controls.Primitives.IScrollable)view;
+        var lines = view.VisualLinesValid
+            ? string.Join(", ", view.VisualLines.Select(line => $"{line.FirstDocumentLine.LineNumber}:top={line.VisualTop:F3},y={line.VisualTop - view.VerticalOffset:F3},height={line.Height:F3}"))
+            : "invalid";
+        var buttons = log.TextArea.LeftMargins.First().GetVisualDescendants().OfType<Button>();
+        return $"valid={view.VisualLinesValid}; offset={view.VerticalOffset:F3}; viewport={scroll.Viewport}; bounds={view.Bounds}; lineHeight={view.DefaultLineHeight:F3}; extent={scroll.Extent}; lines=[{lines}]; expanders=[{string.Join(", ", buttons.Select(button => $"{AutomationProperties.GetName(button)}:y={Canvas.GetTop(button):F3}"))}]";
+    }
+
+    private static void TraceMessageLog(TextEditor log)
+    {
+        var view = log.TextArea.TextView;
+        view.ScrollOffsetChanged += (_, _) => Console.WriteLine("ScrollOffsetChanged: " + MessageLogState(log));
+        view.VisualLinesChanged += (_, _) => Console.WriteLine("VisualLinesChanged: " + MessageLogState(log));
+        Console.WriteLine("Before scrolling: " + MessageLogState(log));
+    }
+
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
@@ -300,9 +319,14 @@ public sealed partial class DesktopParityTests
             model.LogDocument.Text = string.Join("\n\n", Enumerable.Range(1, 80).Select(number => $"--> 9300CNuser{number}|COpassword|"));
             Layout(window);
             var log = window.FindControl<TextEditor>("MessageLog")!;
+            TraceMessageLog(log);
             log.ScrollToEnd();
             Layout(window);
-            var last = log.TextArea.LeftMargins.First().GetVisualDescendants().OfType<Button>().MaxBy(button => button.TabIndex)!;
+            var buttons = log.TextArea.LeftMargins.First().GetVisualDescendants().OfType<Button>().ToArray();
+            var state = MessageLogState(log);
+            if (buttons.Length == 0) { Layout(window); Console.WriteLine("Additional layout: " + MessageLogState(log)); }
+            Assert.IsNotEmpty(buttons, "Scrolling to the end must create message expanders. " + state);
+            var last = buttons.MaxBy(button => button.TabIndex)!;
             last.Focus(NavigationMethod.Tab);
             Press(window, Key.Space);
             Layout(window);
@@ -338,11 +362,14 @@ public sealed partial class DesktopParityTests
             model.LogDocument.Text = "Connection status\n\n" + string.Join("\n\n", Enumerable.Range(1, 80).Select(number => $"--> 9300CNuser{number}|COpassword|"));
             Layout(window);
             var log = window.FindControl<TextEditor>("MessageLog")!;
+            TraceMessageLog(log);
             Button[] Expanders() => log.TextArea.LeftMargins.First().GetVisualDescendants().OfType<Button>().OrderBy(button => button.TabIndex).ToArray();
             log.ScrollToEnd();
             Layout(window);
             var buttons = Expanders();
-            Assert.IsTrue(buttons.Length > 0 && buttons.Length < 80, "Only visible messages should create tab stops.");
+            var state = MessageLogState(log);
+            if (buttons.Length == 0) { Layout(window); Console.WriteLine("Additional layout: " + MessageLogState(log)); }
+            Assert.IsTrue(buttons.Length > 0 && buttons.Length < 80, "Only visible messages should create tab stops. " + state);
             Assert.AreEqual("Expand sent message 80", AutomationProperties.GetName(buttons.Last()));
 
             window.Width = window.MinWidth;
