@@ -33,6 +33,33 @@ if ($development.Version -cne '0.0.0-dev' -or $development.InformationalVersion 
     throw 'Ordinary local builds must default to the 0.0.0-dev informational version.'
 }
 $versions = @('0.0.0-dev', '3.0.0', '3.0.0-beta.5', '3.0.0-rc.1', '3.0.0-beta.10+build.001', '3.0.0+build.001')
+function Assert-InvalidPackageFiles {
+    param([string]$ValidDirectory, [string]$RuntimeIdentifier, [string]$Version)
+    $package = @(Get-ChildItem -LiteralPath $ValidDirectory -File)
+    if ($package.Count -ne 1 -or $package[0].Extension -eq '.sha256') { throw 'Packaging must produce exactly one package without a sidecar.' }
+    foreach ($scenario in @('missing', 'empty', 'malformed', 'wrong-name', 'extra-sidecar', 'extra-hidden-file')) {
+        $output = [IO.Directory]::CreateDirectory("$ValidDirectory-invalid-$scenario").FullName
+        $asset = Join-Path $output $package[0].Name
+        [IO.File]::Copy($package[0].FullName, $asset)
+        switch ($scenario) {
+            'missing' { [IO.File]::Delete($asset) }
+            'empty' { [IO.File]::WriteAllText($asset, '') }
+            'malformed' { [IO.File]::WriteAllText($asset, 'This is not an archive or AppImage.') }
+            'wrong-name' { [IO.File]::Move($asset, (Join-Path $output 'incorrect-version.zip')) }
+            'extra-sidecar' { [IO.File]::WriteAllText("$asset.sha256", 'obsolete checksum') }
+            'extra-hidden-file' {
+                $extra = Join-Path $output '.unexpected'
+                [IO.File]::WriteAllText($extra, 'extra')
+                if ($IsWindows) { [IO.File]::SetAttributes($extra, [IO.FileAttributes]::Hidden) }
+            }
+        }
+        $rejected = $false
+        try {
+            & (Join-Path $PSScriptRoot 'VerifyDesktopRelease.ps1') -Directory $output -RuntimeIdentifier $RuntimeIdentifier -Version $Version
+        } catch { $rejected = $true }
+        if (-not $rejected) { throw "Accepted invalid $RuntimeIdentifier package: $scenario" }
+    }
+}
 foreach ($profile in @('Windows-Zip', 'Linux-AppImage', 'macOS-arm64', 'macOS-x64')) {
     $properties = Get-ProjectVersionProperties -Properties @('-p:Version=3.0.0-beta.5+build.001', "-p:PublishProfile=$profile")
     if ($properties.Version -cne '3.0.0-beta.5+build.001' -or $properties.InformationalVersion -cne $properties.Version) {
@@ -70,6 +97,53 @@ try {
         $output = Join-Path $scratch.FullName $version
         & (Join-Path $PSScriptRoot 'PackageDesktop.ps1') -RuntimeIdentifier win-x64 -PublishDirectory $publish -OutputDirectory $output -Version $version
         & (Join-Path $PSScriptRoot 'VerifyDesktopRelease.ps1') -Directory $output -RuntimeIdentifier win-x64 -Version $version
+        Assert-InvalidPackageFiles -ValidDirectory $output -RuntimeIdentifier win-x64 -Version $version
+    }
+    if ($IsWindows) {
+        $output = [IO.Directory]::CreateDirectory((Join-Path $scratch.FullName 'wrong-windows-payload')).FullName
+        $asset = Join-Path $output 'SIP-Testing-Tool_win-x64_v3.0.0.zip'
+        $zip = [IO.Compression.ZipFile]::Open($asset, [IO.Compression.ZipArchiveMode]::Create)
+        try {
+            [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $assemblies['3.0.0-beta.5'], 'sip-testing-tool-avalonia.exe') | Out-Null
+        } finally { $zip.Dispose() }
+        $rejected = $false
+        try {
+            & (Join-Path $PSScriptRoot 'VerifyDesktopRelease.ps1') -Directory $output -RuntimeIdentifier win-x64 -Version '3.0.0'
+        } catch {
+            if ($_.Exception.Message -notlike '*informational version*') { throw }
+            $rejected = $true
+        }
+        if (-not $rejected) { throw 'Windows ZIP verification ignored its embedded version.' }
+    }
+    if ($IsLinux) {
+        $linuxPublish = [IO.Directory]::CreateDirectory((Join-Path $scratch.FullName 'linux-publish')).FullName
+        [IO.File]::WriteAllText((Join-Path $linuxPublish 'sip-testing-tool-avalonia'), "#!/bin/sh`nexit 0`n")
+        [IO.File]::WriteAllText((Join-Path $linuxPublish 'sip-testing-tool-avalonia.runtimeconfig.json'), '{"runtimeOptions":{"framework":{"name":"Microsoft.NETCore.App","version":"10.0.0"}}}')
+        foreach ($version in @('0.0.0-dev', '3.0.0-beta.10+build.001')) {
+            [IO.File]::Copy($assemblies[$version], (Join-Path $linuxPublish 'sip-testing-tool-avalonia.dll'), $true)
+            $output = Join-Path $scratch.FullName "linux-$version"
+            & (Join-Path $PSScriptRoot 'PackageDesktop.ps1') -RuntimeIdentifier linux-x64 -PublishDirectory $linuxPublish -OutputDirectory $output -Version $version
+            & (Join-Path $PSScriptRoot 'VerifyDesktopRelease.ps1') -Directory $output -RuntimeIdentifier linux-x64 -Version $version
+            Assert-InvalidPackageFiles -ValidDirectory $output -RuntimeIdentifier linux-x64 -Version $version
+        }
+        # Bypass the packager's version guard to test both checks inside the verifier.
+        foreach ($scenario in @('wrong-application-version', 'wrong-metadata-version')) {
+            $version = '3.0.0-beta.10+build.001'
+            $payloadVersion = if ($scenario -eq 'wrong-application-version') { '0.0.0-dev' } else { $version }
+            $metadataVersion = if ($scenario -eq 'wrong-metadata-version') { '9.9.9' } else { $version }
+            [IO.File]::Copy($assemblies[$payloadVersion], (Join-Path $linuxPublish 'sip-testing-tool-avalonia.dll'), $true)
+            $output = [IO.Directory]::CreateDirectory((Join-Path $scratch.FullName $scenario)).FullName
+            & bash (Join-Path $PSScriptRoot 'PackageAppImage.sh') $linuxPublish (Join-Path $output "SIP-Testing-Tool_linux-x64_v$version.AppImage") $metadataVersion
+            if ($LASTEXITCODE -ne 0) { throw 'Could not build the invalid AppImage fixture.' }
+            $rejected = $false
+            try {
+                & (Join-Path $PSScriptRoot 'VerifyDesktopRelease.ps1') -Directory $output -RuntimeIdentifier linux-x64 -Version $version
+            } catch {
+                if ($_.Exception.Message -notlike '*version*') { throw }
+                $rejected = $true
+            }
+            if (-not $rejected) { throw "Accepted an invalid Linux package: $scenario" }
+        }
     }
     # Every platform must reject a packaging version different from the compiled payload,
     # before invoking platform-specific packaging tools or writing a download.
@@ -92,12 +166,12 @@ try {
         } catch { $rejected = $true }
         if (-not $rejected) { throw "Application verification ignored a prerelease or metadata mismatch: $expected" }
     }
-    # Portable fixtures exercise architecture, runtime, version and checksum rejection.
+    # Portable fixtures exercise architecture, runtime and embedded version rejection.
     # Mac jobs verify real ditto archives and code signatures after publishing instead.
     if (-not $IsMacOS) {
         foreach ($rid in @('osx-arm64', 'osx-x64')) {
             foreach ($version in @('0.0.0-dev', '3.0.0', '3.0.0-beta.5', '3.0.0-beta.10+build.001')) {
-                foreach ($scenario in @('valid', 'wrong-cpu', 'missing-runtime', 'wrong-bundle-version', 'wrong-application-version', 'bad-checksum')) {
+                foreach ($scenario in @('valid', 'wrong-cpu', 'missing-runtime', 'wrong-bundle-version', 'wrong-application-version')) {
                     $output = [IO.Directory]::CreateDirectory((Join-Path $scratch.FullName "$rid/$version/$scenario")).FullName
                     $asset = Join-Path $output "SIP-Testing-Tool_${rid}_v$version.zip"
                     $cpu = if (($rid -eq 'osx-arm64') -xor ($scenario -eq 'wrong-cpu')) { 0x0c } else { 0x07 }
@@ -129,8 +203,6 @@ try {
                             } finally { $stream.Dispose() }
                         }
                     } finally { $zip.Dispose() }
-                    $hash = if ($scenario -eq 'bad-checksum') { '0' * 64 } else { (Get-FileHash -LiteralPath $asset -Algorithm SHA256).Hash.ToLowerInvariant() }
-                    [IO.File]::WriteAllText("$asset.sha256", "$hash  $([IO.Path]::GetFileName($asset))`n")
                     $rejected = $false
                     try {
                         & (Join-Path $PSScriptRoot 'VerifyDesktopRelease.ps1') -Directory $output -RuntimeIdentifier $rid -Version $version
@@ -139,6 +211,7 @@ try {
                         $rejected = $true
                     }
                     if (-not $rejected -and $scenario -ne 'valid') { throw "Accepted invalid macOS release: $rid/$version/$scenario" }
+                    if ($scenario -eq 'valid') { Assert-InvalidPackageFiles -ValidDirectory $output -RuntimeIdentifier $rid -Version $version }
                 }
             }
         }
@@ -151,4 +224,5 @@ try {
     }
     $scratch.Delete($true)
 }
-Write-Host "Verified $($cases.Count) version cases, tag-to-MSBuild injection, development defaults, all release profiles, embedded versions, and package names/checksums."
+& (Join-Path $PSScriptRoot 'TestGitHubRelease.ps1')
+Write-Host "Verified $($cases.Count) version cases, tag-to-MSBuild injection, development defaults, all release profiles, embedded versions, and single-package outputs."
