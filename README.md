@@ -2,7 +2,7 @@
 
 **Avalonia is the primary SIP Testing Tool desktop app**, targeting Windows, Linux and macOS. The **3.0** release series introduces it as the main application, starting with **3.0.0-beta.1**. The legacy Windows Forms app remains available as a fallback while the Avalonia release is validated.
 
-The main window's title shows the running release version, including prerelease identifiers, for example **SIP Testing Tool v3.0.0-beta.4**. The title and updater read the same application informational version; commit/build metadata is omitted from the title.
+The main window's title shows the running release version, including prerelease identifiers, for example **SIP Testing Tool v3.0.0-beta.6**. The title and updater read the same application informational version; commit/build metadata is omitted from the title.
 
 Open **`src/sip-testing-tool.sln`** in Visual Studio with .NET 10 and Windows desktop development support. Set **sip-testing-tool-avalonia** as the startup project. Use **Build Solution** and **Start Debugging**; NuGet restores the dependencies. The Avalonia extension for Visual Studio is optional for XAML previewing. Select **sip-testing-tool** explicitly when working on the legacy Windows Forms app.
 
@@ -110,7 +110,9 @@ dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=Linux-
 dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=Windows-SingleFile
 ```
 
-Run the Linux command on Linux. Keep the AppImage in a writable location, mark it executable once (`chmod +x <file>.AppImage`), and launch it. The native AppImage launcher supports extraction mode (`APPIMAGE_EXTRACT_AND_RUN=1`) on systems without FUSE. Both packaging profiles produce a download and a matching `.sha256` sidecar. Increment **Version** in the Avalonia `.csproj` for each release. Local publishing can rebuild the same version; the release workflow refuses to replace a published GitHub release.
+Run the Linux command on Linux. Keep the AppImage in a writable location, mark it executable once (`chmod +x <file>.AppImage`), and launch it. The native AppImage launcher supports extraction mode (`APPIMAGE_EXTRACT_AND_RUN=1`) on systems without FUSE. Both packaging profiles produce a download and a matching `.sha256` sidecar. Local publishing can rebuild the same version; the release workflow refuses to replace a published GitHub release.
+
+Local builds, Visual Studio publishing and the standalone Mac build default to **`0.0.0-dev`**, with optional SDK-added commit metadata. They work without Git tags or GitHub Actions variables, and do not infer a release version from local tags. Development packages keep that identity in their filenames and title and skip automatic update requests, including when packaged as an EXE or AppImage. For a deliberately versioned manual publish, append an explicit MSBuild version, for example `dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=Windows-Zip -p:Version=3.0.0-beta.6`. Do not edit the project file to increment a release version. Packaging verifies the embedded application version before producing a download.
 
 The app uses [StageKit.Updatum](https://github.com/sn4k3/StageKit/tree/v0.4.1/src/StageKit.Updatum) to download and install updates from published [GitHub Releases](https://github.com/clcdpc/sip-testing-tool/releases). Stable builds receive stable releases only. Prerelease builds, such as `2.1.2-beta.1`, receive newer prereleases and stable releases; installing a stable release returns the app to stable-only updates. Version selection follows [semantic version precedence](https://semver.org/), so `beta.2` precedes `beta.10`, and the final `2.1.2` follows every `2.1.2` prerelease. Commit/build metadata does not affect ordering. The app reads its full informational version to retain the beta identifier, and selects the highest compatible version regardless of publication order.
 
@@ -122,22 +124,26 @@ Updatum uses temporary download/helper files and a temporary backup during repla
 
 ### GitHub release builds
 
-The **Desktop release** GitHub Actions workflow packages the primary Avalonia app when a `vMAJOR.MINOR.PATCH` tag, optionally followed by a prerelease identifier, is pushed. The tag must exactly match **Version** in `src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj`; version `3.0.0` requires tag `v3.0.0`, and version `3.0.0-beta.4` requires tag `v3.0.0-beta.4`. Alpha, beta and release-candidate identifiers follow semantic version syntax; numeric identifiers cannot have leading zeroes (`beta.1`, not `beta.01`). Build metadata is also accepted, but changing only metadata does not create a newer update.
+The **Desktop release** GitHub Actions workflow packages the primary Avalonia app when a `vMAJOR.MINOR.PATCH` tag, optionally followed by a prerelease identifier, is pushed. **The triggering Git tag is the sole release-version authority.** The workflow validates it once through `build/ReleaseVersion.ps1`, removes the leading `v`, and passes the resulting version explicitly as `-p:Version` to builds, tests and publishing on all four platforms. For example, `v3.0.0-beta.6` embeds `3.0.0-beta.6` in the application without changing any project file. Alpha, beta and release-candidate identifiers follow semantic version syntax; numeric identifiers cannot have leading zeroes (`beta.1`, not `beta.01`). Build metadata is also accepted and retained, but changing only metadata does not create a newer update. SDK-added source revision metadata remains valid SemVer and does not affect version precedence or the title.
 
-The workflow builds Windows x64 on `windows-2025`, Linux x64 on `ubuntu-22.04`, macOS Apple Silicon on `macos-15` and macOS Intel on `macos-15-intel`. All four jobs run the Avalonia tests and publish-profile checks; Windows also runs the shared protocol and Windows Forms tests. The existing profiles package the single-EXE ZIP and framework-dependent AppImage. Each Mac job publishes its self-contained profile and packages **`SIP Testing Tool.app`** as `SIP-Testing-Tool_osx-arm64_v<version>.zip` or `SIP-Testing-Tool_osx-x64_v<version>.zip`, including the .NET runtime. Mac bundles use the same packaging script as the standalone Mac build below. Before upload, verification checks the expected asset names, archive/AppImage structure and SHA-256 sidecars; Mac verification also checks the executable architecture, bundle version, bundled runtime and the code signature after extracting the ZIP. Keep the `SIP-Testing-Tool_<rid>_v<version>` asset naming convention: the Windows/Linux updater selects the appropriate runtime and format from those names.
+The workflow builds Windows x64 on `windows-2025`, Linux x64 on `ubuntu-22.04`, macOS Apple Silicon on `macos-15` and macOS Intel on `macos-15-intel`. All four jobs run the Avalonia tests and publish-profile checks; Windows also runs the shared protocol and Windows Forms tests. Verification checks the compiled informational version against the tag before publishing, and packaging checks the payload again. The existing profiles package the single-EXE ZIP and framework-dependent AppImage. Each Mac job publishes its self-contained profile and packages **`SIP Testing Tool.app`** as `SIP-Testing-Tool_osx-arm64_v<version>.zip` or `SIP-Testing-Tool_osx-x64_v<version>.zip`, including the .NET runtime. Mac bundles use the same packaging script as the standalone Mac build below. Before upload, verification checks the expected asset names, embedded versions, archive/AppImage structure and SHA-256 sidecars; Linux verification also extracts the AppImage and checks `X-AppImage-Version`, and Mac verification checks the executable architecture, bundle version, bundled runtime and extracted code signature. Both Mac bundle version fields use only `MAJOR.MINOR.PATCH`; the managed assembly and asset filename retain the full prerelease version and tag metadata. Windows native EXE version resources are checked on Windows; the final Linux job rechecks that ZIP's structure and checksum. Keep the `SIP-Testing-Tool_<rid>_v<version>` asset naming convention: the Windows/Linux updater selects the appropriate runtime and format from those names.
 
 After all four jobs succeed, a final job verifies all downloads again, creates a temporary **draft** GitHub Release and uploads exactly eight assets: Windows ZIP, Linux AppImage, two macOS ZIPs, and their four checksum sidecars. After every upload succeeds, it **publishes automatically**. A build, verification or upload failure prevents publication; an upload failure leaves the draft available for investigation and retry. Prerelease versions automatically set GitHub's **Pre-release** flag and are explicitly excluded from **Latest**. The full version suffix remains in all download names and their checksum sidecars. The workflow uses the automatically supplied `GITHUB_TOKEN`, with `contents: write` limited to the release job. A rerun can refresh an unfinished draft; it refuses to replace a published release.
 
 The Mac ZIPs require **macOS 14 or later**. Extract the ZIP for your Mac's architecture, then copy **SIP Testing Tool.app** to Applications. The app has an **ad-hoc signature**, with no Developer ID certificate or Apple notarization configured; macOS Gatekeeper can block the first launch of an internet download. If you trust the release, follow [Apple's instructions](https://support.apple.com/en-us/102445) to approve it in **System Settings → Privacy & Security → Open Anyway** after attempting to open it. Developer ID signing and notarization require an Apple Developer account and signing/notarization credentials in GitHub Actions secrets. Mac apps update by downloading a newer release and replacing the app; in-app updates remain available on Windows/Linux.
 
-To release, commit and push the changes with the desired project version, merge them into `master`, then tag that merged commit. **Pushing the matching tag approves automatic publication**; no separate GitHub Publish button is required. For version `3.0.0-beta.4`:
+To release, merge the desired changes into `master`, then create a new semantic-version tag against the intended commit and push it. GitHub Actions builds with the tag-derived version, verifies the artifacts and publishes automatically. **Pushing the tag approves automatic publication**; no separate GitHub Publish button is required. For example:
 
 ```text
-git tag -a v3.0.0-beta.4 -m "Release 3.0.0-beta.4"
-git push origin v3.0.0-beta.4
+git switch master
+git pull --ff-only
+git tag -a v3.0.0-beta.6 -m "Release 3.0.0-beta.6"
+git push origin v3.0.0-beta.6
 ```
 
-After publication, check all four downloads, including launch on both Mac architectures and Windows/Linux two-version update checks. For the beta update test, run the existing `3.0.0-beta.2` EXE/AppImage, choose **Updates → Check for updates**, then **Restart to update**; the restarted title should show **v3.0.0-beta.4**. Drafts are always excluded from in-app updates; published prereleases are offered only to prerelease builds. Published releases are available to eligible portable builds using that GitHub repository; no separate update server, index, installer or delta package is needed. The initial beta.1 tag used the earlier workflow and retains its manual draft-publication step.
+Use a new tag after merging this versioning change; do not move or reuse `v3.0.0-beta.5`, which points to the failed release workflow's original commit.
+
+After publication, check all four downloads, including launch on both Mac architectures and Windows/Linux two-version update checks. For the beta update test, run an older published prerelease EXE/AppImage, choose **Updates → Check for updates**, then **Restart to update**; the restarted title should show the new tag's version. Drafts are always excluded from in-app updates; published prereleases are offered only to prerelease builds. Published releases are available to eligible portable builds using that GitHub repository; no separate update server, index, installer or delta package is needed. The initial beta.1 tag used the earlier workflow and retains its manual draft-publication step.
 
 ## Build on a Mac
 
@@ -159,12 +165,13 @@ Run the same script again to build the latest `master`; the private SDK and NuGe
 The `macOS-arm64` and `macOS-x64` publish profiles also support direct `dotnet publish` commands with an existing .NET 10 SDK. They produce self-contained application folders under the repository's `artifacts/avalonia/publish` directory. The standalone script adds the [macOS `.app` packaging](https://docs.avaloniaui.net/docs/deployment/macos), icon and local signing on the Mac through `build/PackageMacOS.sh`. To create the same ZIP and checksum as GitHub Actions with an existing SDK and PowerShell 7 on a Mac, run:
 
 ```powershell
-dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=macOS-arm64
-./build/PackageDesktop.ps1 -RuntimeIdentifier osx-arm64 -PublishDirectory artifacts/avalonia/publish/osx-arm64 -OutputDirectory artifacts/avalonia/releases/osx-arm64 -Version 3.0.0-beta.4
-./build/VerifyDesktopRelease.ps1 -Directory artifacts/avalonia/releases/osx-arm64 -RuntimeIdentifier osx-arm64 -Version 3.0.0-beta.4
+$version = '0.0.0-dev' # Set an explicit version here for a deliberately versioned manual publish.
+dotnet publish src/sip-testing-tool-avalonia -c Release -p:PublishProfile=macOS-arm64 -p:Version=$version
+./build/PackageDesktop.ps1 -RuntimeIdentifier osx-arm64 -PublishDirectory artifacts/avalonia/publish/osx-arm64 -OutputDirectory artifacts/avalonia/releases/osx-arm64 -Version $version
+./build/VerifyDesktopRelease.ps1 -Directory artifacts/avalonia/releases/osx-arm64 -RuntimeIdentifier osx-arm64 -Version $version
 ```
 
-Use `macOS-x64` and `osx-x64` for Intel. Match `-Version` to the published project's version.
+Use `macOS-x64` and `osx-x64` for Intel. Pass the same version to publishing, packaging and verification; mismatches are rejected. The standalone build of `master` also uses the development version.
 
 ## Legacy Windows Forms publishing
 
@@ -193,6 +200,8 @@ dotnet test src/sip-testing-tool.sln
 ```
 
 Run `dotnet msbuild build/VerifyPublishPaths.proj` to check all eight publish profiles, including Visual Studio's XML-stream reader that has no profile file location. This checks their output destinations without building, signing or packaging a release.
+
+Run `pwsh -File build/TestReleaseVersion.ps1` with the .NET 10 SDK to check semantic tags, development defaults, version injection through all four release profiles, compiled informational-version fixtures, package names and checksums, and rejection of inconsistent payload versions. It creates no Git tags or GitHub releases. To verify an application build directly, use `pwsh -File build/VerifyDesktopRelease.ps1 -ApplicationPath <application.dll> -Version <expected-version>`.
 
 Run `bash build/TestMacBuild.sh` on macOS, Linux or Git Bash to exercise the standalone Mac bootstrap with local tool/download fixtures. These checks cover architecture selection, paths with spaces, signed-bundle directory rules, relative links after copying the app, preserving previous builds and failure handling. Git Bash uses MSYS symbolic-link emulation for these fixtures. They use no network or installed SDK and leave diagnostics under `artifacts/mac build tests-…`; actual macOS launch and code-signing verification still require a Mac.
 

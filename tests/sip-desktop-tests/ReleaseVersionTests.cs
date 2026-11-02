@@ -1,3 +1,4 @@
+using System.Reflection;
 using System.Text.Json;
 using Clc.Sip.Desktop.Services;
 
@@ -6,6 +7,22 @@ namespace Clc.Sip.Desktop.Tests;
 [TestClass]
 public sealed class ReleaseVersionTests
 {
+    [TestMethod]
+    public void RunningVersionRetainsTheCompiledInformationalVersion()
+    {
+        var informationalVersion = typeof(ReleaseVersion).Assembly
+            .GetCustomAttribute<AssemblyInformationalVersionAttribute>()!.InformationalVersion;
+        Assert.AreEqual(informationalVersion, ReleaseVersion.Current.Value);
+        // CI supplies the validated tag version; local tests also support explicit -p:Version.
+        if (Environment.GetEnvironmentVariable("EXPECTED_DESKTOP_VERSION") is { Length: > 0 } expected)
+        {
+            var separator = expected.Contains('+') ? "." : "+";
+            Assert.IsTrue(informationalVersion == expected || informationalVersion.StartsWith(expected + separator, StringComparison.Ordinal),
+                $"Expected {expected}, compiled {informationalVersion}");
+            Assert.AreEqual(ReleaseVersion.Parse(expected).DisplayValue, ReleaseVersion.Current.DisplayValue);
+        }
+    }
+
     [TestMethod]
     public void ApplicationAndPackagingAcceptTheSameVersionSyntax()
     {
@@ -47,6 +64,9 @@ public sealed class ReleaseVersionTests
     [DataRow("2.1.2-beta.2", "2.1.2-beta.2.1", -1)]
     [DataRow("2.1.2-Beta.1", "2.1.2-beta.1", -1)]
     [DataRow("2.1.10-beta.1", "2.1.9", 1)]
+    [DataRow("3.0.0-beta.5", "3.0.0-beta.6", -1)]
+    [DataRow("3.0.0-beta.10", "3.0.0-beta.9", 1)]
+    [DataRow("3.0.0", "3.0.0-rc.1", 1)]
     public void ComparisonUsesSemanticVersionRules(string left, string right, int expected)
     {
         Assert.AreEqual(expected, Math.Sign(ReleaseVersion.Parse(left).CompareTo(ReleaseVersion.Parse(right))));

@@ -18,8 +18,33 @@ env:
   AVALONIA_TELEMETRY_OPTOUT: '1'
 
 jobs:
+  version:
+    name: Resolve release version
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+    steps:
+      - name: Check out version validation
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate the triggering tag
+        id: version
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          . ./build/ReleaseVersion.ps1
+          $releaseVersion = Get-DesktopReleaseVersion -Version $env:RELEASE_TAG -Tag
+          "version=$($releaseVersion.Version)" >> $env:GITHUB_OUTPUT
+          "prerelease=$($releaseVersion.IsPrerelease.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+
   build:
     name: Build and test ${{ matrix.rid }}
+    needs: version
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 45
     strategy:
@@ -42,7 +67,7 @@ jobs:
       run:
         shell: pwsh
     env:
-      RELEASE_TAG: ${{ github.ref_name }}
+      RELEASE_VERSION: ${{ needs.version.outputs.version }}
       PUBLISH_PROFILE: ${{ matrix.profile }}
       RELEASE_RID: ${{ matrix.rid }}
 
@@ -51,16 +76,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-
-      - name: Validate release version
-        run: |
-          . ./build/ReleaseVersion.ps1
-          $releaseVersion = Get-DesktopReleaseVersion -Version $env:RELEASE_TAG -Tag
-          [xml]$project = Get-Content -LiteralPath 'src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj' -Raw
-          $version = $project.SelectSingleNode('/Project/PropertyGroup/Version').InnerText.Trim()
-          if ($releaseVersion.Version -cne $version) {
-            throw "Tag $env:RELEASE_TAG does not match project version $version."
-          }
 
       - name: Install .NET 10
         id: dotnet
@@ -100,21 +115,26 @@ jobs:
         run: bash build/TestMacBuild.sh
 
       - name: Run Avalonia tests
-        run: dotnet test tests/sip-desktop-tests/sip-desktop-tests.csproj --configuration Release
+        env:
+          EXPECTED_DESKTOP_VERSION: ${{ needs.version.outputs.version }}
+        run: dotnet test tests/sip-desktop-tests/sip-desktop-tests.csproj --configuration Release -p:Version=$env:RELEASE_VERSION
+
+      - name: Verify the compiled application version
+        run: ./build/VerifyDesktopRelease.ps1 -ApplicationPath src/sip-testing-tool-avalonia/bin/Release/net10.0/sip-testing-tool-avalonia.dll -Version $env:RELEASE_VERSION
 
       - name: Run shared protocol and Windows Forms tests
         if: runner.os == 'Windows'
-        run: dotnet test tests/sip-tests/sip-tests.csproj --configuration Release
+        run: dotnet test tests/sip-tests/sip-tests.csproj --configuration Release -p:Version=$env:RELEASE_VERSION
 
       - name: Publish and package
-        run: dotnet publish src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj --configuration Release -p:PublishProfile=$env:PUBLISH_PROFILE
+        run: dotnet publish src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj --configuration Release -p:PublishProfile=$env:PUBLISH_PROFILE -p:Version=$env:RELEASE_VERSION
 
       - name: Package macOS release
         if: runner.os == 'macOS'
-        run: ./build/PackageDesktop.ps1 -PublishDirectory "artifacts/avalonia/publish/$env:RELEASE_RID" -OutputDirectory "artifacts/avalonia/releases/$env:RELEASE_RID" -RuntimeIdentifier $env:RELEASE_RID -Version ($env:RELEASE_TAG.Substring(1))
+        run: ./build/PackageDesktop.ps1 -PublishDirectory "artifacts/avalonia/publish/$env:RELEASE_RID" -OutputDirectory "artifacts/avalonia/releases/$env:RELEASE_RID" -RuntimeIdentifier $env:RELEASE_RID -Version $env:RELEASE_VERSION
 
       - name: Verify release downloads
-        run: ./build/VerifyDesktopRelease.ps1 -Directory "artifacts/avalonia/releases/$env:RELEASE_RID" -RuntimeIdentifier $env:RELEASE_RID -Version ($env:RELEASE_TAG.Substring(1))
+        run: ./build/VerifyDesktopRelease.ps1 -Directory "artifacts/avalonia/releases/$env:RELEASE_RID" -RuntimeIdentifier $env:RELEASE_RID -Version $env:RELEASE_VERSION
 
       - name: Save release assets
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
@@ -128,7 +148,7 @@ jobs:
 
   release:
     name: Publish release
-    needs: build
+    needs: [version, build]
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     permissions:
@@ -152,13 +172,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
+          RELEASE_VERSION: ${{ needs.version.outputs.version }}
+          RELEASE_PRERELEASE: ${{ needs.version.outputs.prerelease }}
         run: |
-          . ./build/ReleaseVersion.ps1
-          $releaseVersion = Get-DesktopReleaseVersion -Version $env:RELEASE_TAG -Tag
-          $releaseOptions = @('--prerelease=' + $releaseVersion.IsPrerelease.ToString().ToLowerInvariant())
-          if ($releaseVersion.IsPrerelease) { $releaseOptions += '--latest=false' }
+          $releaseOptions = @('--prerelease=' + $env:RELEASE_PRERELEASE)
+          if ($env:RELEASE_PRERELEASE -eq 'true') { $releaseOptions += '--latest=false' }
           foreach ($rid in @('win-x64', 'linux-x64', 'osx-arm64', 'osx-x64')) {
-            ./build/VerifyDesktopRelease.ps1 -Directory "artifacts/release/desktop-$rid" -RuntimeIdentifier $rid -Version ($env:RELEASE_TAG.Substring(1))
+            ./build/VerifyDesktopRelease.ps1 -Directory "artifacts/release/desktop-$rid" -RuntimeIdentifier $rid -Version $env:RELEASE_VERSION
           }
           $assets = @(Get-ChildItem -LiteralPath 'artifacts/release' -Recurse -File)
           $duplicates = @($assets | Group-Object Name | Where-Object Count -gt 1)
