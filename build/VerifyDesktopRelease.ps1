@@ -1,18 +1,38 @@
+[CmdletBinding(DefaultParameterSetName = 'Package')]
 param(
-    [Parameter(Mandatory)][string]$Directory,
-    [Parameter(Mandatory)][ValidateSet('win-x64', 'linux-x64', 'osx-arm64', 'osx-x64')][string]$RuntimeIdentifier,
-    [Parameter(Mandatory)][string]$Version
+    [Parameter(Mandatory, ParameterSetName = 'Package')][string]$Directory,
+    [Parameter(Mandatory, ParameterSetName = 'Package')][ValidateSet('win-x64', 'linux-x64', 'osx-arm64', 'osx-x64')][string]$RuntimeIdentifier,
+    [Parameter(Mandatory)][string]$Version,
+    [Parameter(Mandatory, ParameterSetName = 'Application')][string]$ApplicationPath
 )
 $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'ReleaseVersion.ps1')
 $null = Get-DesktopReleaseVersion -Version $Version
+if ($PSCmdlet.ParameterSetName -eq 'Application') {
+    Assert-DesktopApplicationVersion -ApplicationPath $ApplicationPath -Version $Version
+    return
+}
+
+function Assert-ArchiveApplicationVersion {
+    param([IO.Compression.ZipArchiveEntry]$Entry)
+    $scratch = [IO.Directory]::CreateTempSubdirectory('sip-assembly-verify-')
+    $path = Join-Path $scratch.FullName $Entry.Name
+    try {
+        [IO.Compression.ZipFileExtensions]::ExtractToFile($Entry, $path)
+        Assert-DesktopApplicationVersion -ApplicationPath $path -Version $Version
+    } finally {
+        [IO.File]::Delete($path)
+        $scratch.Delete()
+    }
+}
+
 $extension = if ($RuntimeIdentifier -eq 'linux-x64') { 'AppImage' } else { 'zip' }
 $name = "SIP-Testing-Tool_${RuntimeIdentifier}_v$Version.$extension"
 $files = @(Get-ChildItem -LiteralPath $Directory -Recurse -File)
 if ($files.Count -ne 2 -or $name -cnotin $files.Name -or "$name.sha256" -cnotin $files.Name) {
     throw "Expected only $name and its SHA-256 sidecar."
 }
-$asset = Join-Path $Directory $name
+$asset = [IO.Path]::GetFullPath((Join-Path $Directory $name))
 if ((Get-Item -LiteralPath $asset).Length -eq 0) { throw 'The release download is empty.' }
 $actualHash = (Get-FileHash -LiteralPath $asset -Algorithm SHA256).Hash.ToLowerInvariant()
 $checksum = (Get-Content -LiteralPath "$asset.sha256" -Raw).TrimEnd()
@@ -23,6 +43,9 @@ if ($RuntimeIdentifier -eq 'win-x64') {
         if ($zip.Entries.Count -ne 1 -or $zip.Entries[0].FullName -cne 'sip-testing-tool-avalonia.exe' -or $zip.Entries[0].Length -eq 0) {
             throw 'The Windows ZIP must contain exactly one application EXE at its root.'
         }
+        # Native PE version resources require Windows. The Windows build job checks
+        # these bytes before upload; the final Linux job rechecks the ZIP's checksum.
+        if ($IsWindows) { Assert-ArchiveApplicationVersion -Entry $zip.Entries[0] }
     } finally { $zip.Dispose() }
 } elseif ($RuntimeIdentifier.StartsWith('osx-', [StringComparison]::Ordinal)) {
     $zip = [IO.Compression.ZipFile]::OpenRead($asset)
@@ -41,6 +64,7 @@ if ($RuntimeIdentifier -eq 'win-x64') {
                 throw "Unexpected macOS ZIP entry: $($entry.FullName)"
             }
         }
+        Assert-ArchiveApplicationVersion -Entry $zip.GetEntry($root + 'Resources/sip-testing-tool-avalonia.dll')
         $stream = $zip.GetEntry($root + 'MacOS/sip-testing-tool-avalonia').Open()
         try {
             $header = [byte[]]::new(8)
@@ -88,5 +112,30 @@ if ($RuntimeIdentifier -eq 'win-x64') {
             throw 'The Linux download is not a type 2 AppImage.'
         }
     } finally { $stream.Dispose() }
+    if ($IsLinux) {
+        $scratch = [IO.Directory]::CreateTempSubdirectory('sip-appimage-verify-')
+        try {
+            & chmod +x $asset
+            if ($LASTEXITCODE -ne 0) { throw 'Could not make the AppImage executable for verification.' }
+            Push-Location -LiteralPath $scratch.FullName
+            try {
+                & $asset --appimage-extract > $null
+                if ($LASTEXITCODE -ne 0) { throw 'Could not extract the AppImage for version verification.' }
+            } finally { Pop-Location }
+            $appDir = Join-Path $scratch.FullName 'squashfs-root'
+            Assert-DesktopApplicationVersion -ApplicationPath (Join-Path $appDir 'usr/bin/sip-testing-tool-avalonia.dll') -Version $Version
+            $metadata = @(Get-Content -LiteralPath (Join-Path $appDir 'sip-testing-tool.desktop') | Where-Object { $_.StartsWith('X-AppImage-Version=', [StringComparison]::Ordinal) })
+            if ($metadata.Count -ne 1 -or $metadata[0] -cne "X-AppImage-Version=$Version") {
+                throw 'The AppImage version metadata does not match the release version.'
+            }
+        } finally {
+            $temporaryRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+            if (-not $scratch.FullName.StartsWith($temporaryRoot, [StringComparison]::Ordinal) -or
+                -not $scratch.Name.StartsWith('sip-appimage-verify-', [StringComparison]::Ordinal)) {
+                throw 'The verification scratch directory is outside the expected temporary location.'
+            }
+            $scratch.Delete($true)
+        }
+    }
 }
 Write-Host "Verified $name"

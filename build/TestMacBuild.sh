@@ -90,7 +90,7 @@ case "$tool" in
                 printf '{}\n' > "$output/sip-testing-tool-avalonia.deps.json"
                 printf 'satellite\n' > "$output/zh-Hans/Avalonia.resources.dll"
                 printf 'hidden resource\n' > "$output/.app-data" ;;
-            msbuild) printf '2.1.1-beta.1\n' ;;
+            msbuild) printf '%s\n' "${MOCK_VERSION:-0.0.0-dev}" ;;
             *) exit 91 ;;
         esac ;;
     sips)
@@ -102,7 +102,9 @@ case "$tool" in
         printf 'icon\n' > "$5" ;;
     plutil)
         [ "$1" = "-lint" ]
-        [ "$(sed -n 's/.*<string>\(2\.1\.1\)<\/string>.*/\1/p' "$2" | wc -l | tr -d ' ')" = "2" ]
+        expected_version="${MOCK_VERSION:-0.0.0-dev}"
+        expected_version="${expected_version%%[-+]*}"
+        [ "$(grep -Fc "<string>$expected_version</string>" "$2")" = "2" ]
         ! grep -q '__APP_VERSION__' "$2" ;;
     file)
         case "$2" in
@@ -205,11 +207,13 @@ cp -R "$first_app" "$test_root/Relocated.app"
 [ -x "$test_root/Relocated.app/Contents/Frameworks/createdump" ]
 printf 'keep source edits\n' > "${first_app%/*}/source/sentinel.txt"
 printf 'keep work folder\n' > "$test_root/Apple Silicon/sip-testing-tool-macos/sentinel.txt"
+export MOCK_VERSION=3.0.0-beta.6+build.001
 run_build "$test_root/Apple Silicon"
 second_app="$(cat "$test_root/Apple Silicon/sip-testing-tool-macos/latest-app.txt")"
 [ "$first_app" != "$second_app" ] && [ -d "$first_app" ] && [ -d "$second_app" ]
 [ -f "${first_app%/*}/source/sentinel.txt" ]
 [ -f "$test_root/Apple Silicon/sip-testing-tool-macos/sentinel.txt" ]
+unset MOCK_VERSION
 
 export MOCK_ARCH=x64 MOCK_CPU=x86_64 MOCK_ARM_HARDWARE=0
 run_build "$test_root/Intel"
@@ -236,4 +240,4 @@ if run_build "$test_root/Apple Silicon"; then exit 1; fi
 [ "$(cat "$test_root/Apple Silicon/sip-testing-tool-macos/latest-app.txt")" = "$second_app" ]
 unset MOCK_SIGN_FAIL
 
-printf 'Mac bootstrap checks passed (Intel, Apple Silicon, Rosetta, reruns and failures).\nDiagnostics: %s\n' "$test_root"
+printf 'Mac bootstrap checks passed (development/prerelease versions, Intel, Apple Silicon, Rosetta, reruns and failures).\nDiagnostics: %s\n' "$test_root"

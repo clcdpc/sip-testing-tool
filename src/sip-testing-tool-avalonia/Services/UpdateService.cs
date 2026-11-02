@@ -56,6 +56,7 @@ public sealed class UpdateService : IDisposable
     {
         ObjectDisposedException.ThrowIf(disposed, this);
         if (string.IsNullOrWhiteSpace(repositoryUrl)) { return "No update repository configured."; }
+        if (currentVersion.DisplayValue == "0.0.0-dev") { return "Updates are disabled for development builds."; }
         if (!supportsUpdates) { return "Updates are available in the portable Windows EXE and Linux AppImage."; }
         using var linked = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, shutdown.Token);
         linked.CancelAfter(TimeSpan.FromMinutes(5));

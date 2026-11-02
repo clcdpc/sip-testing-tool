@@ -5,7 +5,8 @@
     <RootNamespace>Clc.Sip.Desktop</RootNamespace>
     <AssemblyName>sip-testing-tool-avalonia</AssemblyName>
     <ApplicationIcon>Assets/app.ico</ApplicationIcon>
-    <Version>3.0.0-beta.4</Version>
+    <!-- Release builds supply -p:Version from the validated Git tag. -->
+    <Version Condition="'$(Version)' == ''">0.0.0-dev</Version>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>

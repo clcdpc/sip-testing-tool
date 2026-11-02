@@ -8,6 +8,8 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'ReleaseVersion.ps1')
 $null = Get-DesktopReleaseVersion -Version $Version
 $publishPath = (Resolve-Path -LiteralPath $PublishDirectory).Path
+$application = if ($RuntimeIdentifier -eq 'win-x64') { 'sip-testing-tool-avalonia.exe' } else { 'sip-testing-tool-avalonia.dll' }
+Assert-DesktopApplicationVersion -ApplicationPath (Join-Path $publishPath $application) -Version $Version
 $outputPath = [IO.Path]::GetFullPath($OutputDirectory)
 if ($outputPath.TrimEnd([IO.Path]::DirectorySeparatorChar) -eq $publishPath.TrimEnd([IO.Path]::DirectorySeparatorChar)) {
     throw 'Keep the package destination separate from the publish directory.'
