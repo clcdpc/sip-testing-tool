@@ -173,8 +173,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
           RELEASE_VERSION: ${{ needs.version.outputs.version }}
+          RELEASE_COMMIT: ${{ github.sha }}
         run: |
           foreach ($rid in @('win-x64', 'linux-x64', 'osx-arm64', 'osx-x64')) {
             ./build/VerifyDesktopRelease.ps1 -Directory "artifacts/release/desktop-$rid" -RuntimeIdentifier $rid -Version $env:RELEASE_VERSION
           }
-          ./build/PublishDesktopRelease.ps1 -Directory artifacts/release -Repository $env:GITHUB_REPOSITORY -Tag $env:RELEASE_TAG -Version $env:RELEASE_VERSION
+          ./build/PublishDesktopRelease.ps1 -Directory artifacts/release -Repository $env:GITHUB_REPOSITORY -Tag $env:RELEASE_TAG -Version $env:RELEASE_VERSION -ExpectedCommit $env:RELEASE_COMMIT
