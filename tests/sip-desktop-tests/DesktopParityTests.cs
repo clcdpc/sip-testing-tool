@@ -780,14 +780,14 @@ public sealed partial class DesktopParityTests
             model.AppendTransaction(new() { Message = "9300CNuser|", Response = "941" });
             var raw = model.LogDocument.Text;
             Layout(window);
-            Press(window, Key.D, RawInputModifiers.Control | RawInputModifiers.Shift);
+            Press(window, Key.D, ShortcutModifier | RawInputModifiers.Shift);
             await model.ToggleThemeCommand.ExecutionTask!;
             Assert.IsTrue((await store.LoadAsync()).DarkTheme);
             Assert.AreEqual(ThemeVariant.Dark, window.ActualThemeVariant);
             Assert.AreEqual("P123", model.Fields.PatronBarcode);
             Assert.AreEqual("preserve-options", model.Options.ItemProperties);
             Assert.AreEqual(raw, model.LogDocument.Text);
-            Press(window, Key.D, RawInputModifiers.Control | RawInputModifiers.Shift);
+            Press(window, Key.D, ShortcutModifier | RawInputModifiers.Shift);
             await model.ToggleThemeCommand.ExecutionTask!;
             Assert.IsFalse((await store.LoadAsync()).DarkTheme);
         }

@@ -31,7 +31,7 @@ Patron status, summary and supported-message (**BX**) flags can be inspected ind
 
 Click **+** beside a log message in either interface to open its field table beneath the transcript. Each field has a name, brief description and value in message order, including repeated fields and the sequence/checksum trailer. Patron status, summary and supported-message fields have a parent row followed by an indented row for every flag, with explicit **SET**, **Not set**, reserved or invalid states. Unknown fields and incomplete data retain their original values. The table shows one message at a time; another **+** switches messages. Drag the divider to resize the table, click **−** or **Collapse** to close it, or press **Escape** while the table has focus. Table cells can be selected and copied, and raw log selection and export keep their existing behavior.
 
-In Avalonia, **Ctrl+Shift+M** (**⌘+Shift+M** on macOS) or **View → Sent / received messages** jumps to open properties or the first visible message expander; an empty log focuses **Clear log**. **Tab** and **Shift+Tab** reach the visible message expanders and skip the read-only transcript. The transcript still supports mouse selection and copying; **Ctrl+Enter** inspects the message at its caret. Press **Enter** or **Space** to toggle a focused expander. Expanding a message immediately focuses its properties. Use the arrow keys to browse property rows; **Escape** closes the properties and returns focus to an expander. Clearing the log returns focus to **Clear log** when the focused message disappears.
+In Avalonia, **View → Focus messages** jumps to open properties or the first visible message expander; an empty log focuses **Clear log**. **Tab** and **Shift+Tab** reach the visible message expanders and skip the read-only transcript. The transcript still supports mouse selection, copying and inspecting the message at its caret. Press **Enter** or **Space** to toggle a focused expander. Expanding a message immediately focuses its properties. Use the arrow keys to browse property rows; **Escape** closes the properties and returns focus to an expander. Clearing the log returns focus to **Clear log** when the focused message disappears. See the [keyboard shortcuts](#desktop-keyboard-shortcuts) below.
 
 Polaris field help uses the supplied **SIP Message Documentation** (July 2010, pages 2–4), **RPA via SIP for Vendors 2012**, and **Polaris SIP2 Custom Extensions & Enhancements** (revised 23 October 2026) references. The last document is an unofficial static analysis of SIPService.exe **8.1.7065.1**. The reference names birth/expiration dates, patron codes and home branches, statistical classes, postal codes, and checkin collection/call-number/hold fields. **U1–U5** are library-defined **User1–User5** attributes, identified together in the 8.1 reference; their configured text is preserved. Checkin **CV** alert codes remain distinct from the historical Polaris 3.6 login field; the 8.1 reference does not establish CV as a login alias. Login **CP** authentication overrides and the patron username/barcode behavior of **AA** are explained in their message context.
 
@@ -48,6 +48,24 @@ In the sample, `version` identifies the JSON format. Each `fields` entry has a `
 Both interfaces use ordinary, unmasked textboxes for passwords and PINs, including default settings. **Tab** and **Shift+Tab** select the entire existing textbox value on every visit, ready to overwrite; mouse clicks still place the caret normally. This applies to the ribbon, command options and dialog textboxes. Dark mode uses muted textbox borders and a subdued focus outline.
 
 Checkout defaults preserve the previous request: renewals allowed, no-block off, blank due date, empty AC, no CH or BI, and BO=N. Values stay in place while switching commands. **Reset checkout options** restores those defaults without changing the shared values or message history.
+
+## Desktop keyboard shortcuts
+
+These shortcuts apply to the Avalonia app. On macOS, **Cmd** means the Command (⌘) key.
+
+| Action | Windows / Linux | macOS |
+| --- | --- | --- |
+| Execute the selected SIP command | F5 | F5 |
+| Focus the command dropdown | Ctrl+K | Cmd+K |
+| Focus and select patron barcode (AA) | Ctrl+Shift+P | Cmd+Shift+P |
+| Focus and select item barcode (AB) | Ctrl+Shift+I | Cmd+Shift+I |
+| Focus and select server address | Ctrl+L | Cmd+L |
+| Export the message log | Ctrl+Shift+S | Cmd+Shift+S |
+| Focus messages | Ctrl+Shift+M | Cmd+Shift+M |
+| Toggle dark mode | Ctrl+Shift+D | Cmd+Shift+D |
+| Inspect the message at the raw-log caret | Ctrl+Enter | Ctrl+Enter |
+
+Focus shortcuts preserve values until you type, paste or scan a replacement. For repeated tests, focus a barcode, enter it, press **F5**, inspect the response and repeat. Execution uses the selected command's existing validation and runs only while connected and idle. Holding a shortcut key does not repeat its action. Shortcuts leave modal dialogs in control. Hints appear in control tooltips, the View menu and beside the message-log heading; **View → Export message log** shares the Export log button's save dialog.
 
 ## Command options
 
@@ -81,7 +99,7 @@ In Windows Forms, **View → Dark mode** (**Ctrl+Shift+D**) switches the current
 
 The checkout date/time field and its calendar popup follow the selected theme, including on Windows 10. Check the field to include it, type `yyyy-MM-dd HH:mm:ss`, or choose a calendar date while retaining the time. **Up/Down** adjusts the date/time part at the caret, **F4** or **Alt+Down** opens the calendar, and **Escape** restores the last valid date. Calendar arrow keys move by day/week, **Page Up/Down** by month, and **Enter** selects the focused date. Incomplete or impossible checked dates stop checkout with a validation message; unchecked dates are omitted.
 
-Avalonia also provides **View → Dark mode** (**Ctrl+Shift+D**) and previews theme changes in the settings dialog; cancelling restores the original theme. Its field table uses virtualized rows, selectable cells and **Copy table** for tab-separated output. **Ctrl+Enter** in the raw log, or **Inspect message fields** in its context menu, inspects the message at the caret. Hover and pinned outlines use a separate drawing layer so moving the pointer preserves text, selection and colors.
+Avalonia also provides **View → Dark mode** and previews theme changes in the settings dialog; cancelling restores the original theme. Its field table uses virtualized rows, selectable cells and **Copy table** for tab-separated output. **Inspect message fields** in the raw log's context menu inspects the message at the caret. Hover and pinned outlines use a separate drawing layer so moving the pointer preserves text, selection and colors.
 
 The Avalonia app uses cancellable asynchronous connection attempts with a **two-minute connection timeout**, including name resolution. **Cancel** appears beside Connect while an attempt is pending; cancelling or a failed attempt releases the connection controls for an immediate retry. The log and window remain usable while connecting, and errors distinguish name-resolution failures, refused connections and unreachable networks. SIP commands permit one operation at a time and retain a 30-second response timeout. The app supports the existing encoding/checksum settings, light/dark themes, Always on Top, settings import/export and log copy/export. Saved defaults live outside the installation in the current user's application-data directory: `%APPDATA%\Clc\SipTestingTool\settings.json` on Windows, normally `~/.config/Clc/SipTestingTool/settings.json` on Linux. Use **Settings → Import settings** to bring across a `.sipc` file from the Windows Forms app. Defaults start with automatic connection disabled and empty connection details.
 
@@ -191,7 +209,7 @@ ClickOnce signing uses DigiCert KeyLocker through the Windows current-user Perso
 
 ## Verification
 
-Both test projects use MSTest.Sdk 4.5.1. Open `src/sip-testing-tool.sln`, build the solution, then use **Test > Test Explorer > Run All**. The Windows Forms project exposes 211 regression tests, 24 focused command-option tests and 116 individually named form-to-submission cases; the Avalonia project exposes 112 tests. Windows Forms UI tests run on an STA thread; Avalonia UI tests use its headless dispatcher. Each assembly runs sequentially because its checks share UI and process state.
+Both test projects use MSTest.Sdk 4.5.1. Open `src/sip-testing-tool.sln`, build the solution, then use **Test > Test Explorer > Run All**. Windows Forms UI tests run on an STA thread; Avalonia UI tests use its headless dispatcher. Each assembly runs sequentially because its checks share UI and process state.
 
 From the repository root, the equivalent command is:
 
@@ -208,6 +226,8 @@ Run `bash build/TestMacBuild.sh` on macOS, Linux or Git Bash to exercise the sta
 Tests are ordinary MSTest methods grouped by behavior: checksums, connections, console output, workbench behavior, checkout, themes, command-option state, settings, updates and desktop sessions. Test classes use MSTest lifecycle methods; the shared test support is limited to UI setup, test data and loopback SIP peers. Both projects use MSTest assertions directly.
 
 The tests use loopback SIP servers and Avalonia's headless platform; they never contact a production SIP endpoint. Windows Forms tests submit through public buttons and verify the captured packets and message log.
+
+The **Desktop tests** pull-request workflow runs the complete Avalonia suite on Windows, Linux and macOS. Shortcut tests send headless keystrokes, capture SIP requests, check focus and selection, exercise export through its storage provider, and verify theme persistence and modal safety. The gesture factory also tests Control and Command deterministically on every platform. Run `dotnet test tests/sip-desktop-tests/sip-desktop-tests.csproj --configuration Release` locally; Windows also supports `dotnet test tests/sip-tests/sip-tests.csproj --configuration Release` for the shared protocol and legacy UI checks.
 
 Avalonia layout checks in `DesktopParityTests.Layout.cs` render every command in both themes at default and minimum window sizes, check for unnecessary scrolling and clipped choices, and verify ribbon, date-editor, settings and field-table alignment. Their PNG previews are saved under `artifacts/layout-comparison/avalonia`. They share the existing parity test class's UI session because AvaloniaEdit key bindings retain dispatcher ownership.
 
