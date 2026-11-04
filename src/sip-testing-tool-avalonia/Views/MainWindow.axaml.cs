@@ -40,10 +40,13 @@ public partial class MainWindow : Window
         LogInspection.FocusFallbackRequested += () => ClearLogButton.Focus(NavigationMethod.Tab);
         exportLogCommand = new AsyncRelayCommand(ExportLogAsync, () => WindowActionsAvailable);
         ConfigureShortcuts(shortcuts);
-        Opened += (_, _) => RefreshActionCommands();
+        Opened += (_, _) => { ConfigureLogSearch(); RefreshActionCommands(); };
         AddHandler(KeyUpEvent, (_, args) => shortcutKeysDown.Remove(args.Key), RoutingStrategies.Tunnel, handledEventsToo: true);
         // A key released in another window will not send KeyUp to this one.
-        Deactivated += (_, _) => shortcutKeysDown.Clear();
+        Deactivated += (_, _) =>
+        {
+            if (!confirmationOpen) { shortcutKeysDown.Clear(); }
+        };
         PropertyChanged += (_, args) =>
         {
             if (args.Property == ActualThemeVariantProperty) { RefreshLogTheme(); }
@@ -73,6 +76,10 @@ public partial class MainWindow : Window
                 model.ThemeChanged -= ApplyTheme;
                 model.ValidationFailed -= FocusInvalidField;
                 model.ExecuteCommand.CanExecuteChanged -= ExecuteAvailabilityChanged;
+                model.ConnectCommand.CanExecuteChanged -= ExecuteAvailabilityChanged;
+                model.LoginCommand.CanExecuteChanged -= ExecuteAvailabilityChanged;
+                model.ResetOptionsCommand.CanExecuteChanged -= ExecuteAvailabilityChanged;
+                model.LogDocument.TextChanged -= LogTextChanged;
             }
             model = DataContext as MainWindowViewModel;
             if (model != null)
@@ -81,6 +88,10 @@ public partial class MainWindow : Window
                 model.ThemeChanged += ApplyTheme;
                 model.ValidationFailed += FocusInvalidField;
                 model.ExecuteCommand.CanExecuteChanged += ExecuteAvailabilityChanged;
+                model.ConnectCommand.CanExecuteChanged += ExecuteAvailabilityChanged;
+                model.LoginCommand.CanExecuteChanged += ExecuteAvailabilityChanged;
+                model.ResetOptionsCommand.CanExecuteChanged += ExecuteAvailabilityChanged;
+                model.LogDocument.TextChanged += LogTextChanged;
                 ApplyTheme();
             }
             RefreshActionCommands();
@@ -94,14 +105,21 @@ public partial class MainWindow : Window
                 model.ThemeChanged -= ApplyTheme;
                 model.ValidationFailed -= FocusInvalidField;
                 model.ExecuteCommand.CanExecuteChanged -= ExecuteAvailabilityChanged;
+                model.ConnectCommand.CanExecuteChanged -= ExecuteAvailabilityChanged;
+                model.LoginCommand.CanExecuteChanged -= ExecuteAvailabilityChanged;
+                model.ResetOptionsCommand.CanExecuteChanged -= ExecuteAvailabilityChanged;
+                model.LogDocument.TextChanged -= LogTextChanged;
                 model.Dispose();
             }
         };
     }
 
-    private void ScrollLog() => MessageLog.ScrollToEnd();
+    private void ScrollLog()
+    {
+        if (MessageLog.SearchPanel?.IsOpened != true) { MessageLog.ScrollToEnd(); }
+    }
 
-    private bool WindowActionsAvailable => IsEffectivelyEnabled && IsEffectivelyVisible && !filePickerOpen
+    private bool WindowActionsAvailable => IsEffectivelyEnabled && IsEffectivelyVisible && !filePickerOpen && !confirmationOpen
         && !OwnedWindows.Any(window => window.IsVisible && window.IsDialog);
 
     private void RefreshActionCommands()
@@ -119,7 +137,7 @@ public partial class MainWindow : Window
 
     private void ConfigureShortcuts(DesktopShortcuts shortcuts)
     {
-        var execute = new AsyncRelayCommand(ExecuteSelectedAsync,
+        var execute = new AsyncRelayCommand(() => RunSessionCommandAsync(current => current.ExecuteCommand),
             () => WindowActionsAvailable && model?.ExecuteCommand.CanExecute(null) == true);
         actionCommands.Add(execute);
         actionCommands.Add(exportLogCommand);
@@ -132,6 +150,7 @@ public partial class MainWindow : Window
         AddFocusShortcut(shortcuts.FocusServer, ServerField, FocusServerMenuItem);
         AddShortcut(shortcuts.ToggleTheme, () => model?.ToggleThemeCommand);
         AddShortcut(shortcuts.ExportLog, () => exportLogCommand);
+        ConfigureAdditionalActions(shortcuts);
 
         var focusMessages = new RelayCommand(() =>
         {
@@ -139,7 +158,7 @@ public partial class MainWindow : Window
         }, () => WindowActionsAvailable && CanFocusInput(MessageLog));
         actionCommands.Add(focusMessages);
         FocusMessagesMenuItem.Command = focusMessages;
-        AddShortcut(shortcuts.FocusMessages, () => FocusMessagesMenuItem.Command);
+        AddShortcut(shortcuts.FocusMessages, () => FocusMessagesMenuItem.Command, suppressRepeat: false);
         FocusMessagesMenuItem.InputGesture = shortcuts.FocusMessages;
         DarkModeMenuItem.InputGesture = shortcuts.ToggleTheme;
         ExportLogButton.Command = ExportLogMenuItem.Command = exportLogCommand;
@@ -159,7 +178,7 @@ public partial class MainWindow : Window
         ToolTip.SetTip(ExportLogButton, "Export message log (" + DesktopShortcuts.Label(shortcuts.ExportLog) + ")");
         // Effective enabled state propagates to each input. Visibility also depends on
         // its ancestors, so refresh availability when any of those are shown or hidden.
-        foreach (var visual in new Control[] { CommandPicker, ServerField, PatronField, ItemField, MessageLog }
+        foreach (var visual in new Control[] { CommandPicker, ServerField, UsernameField, PatronField, ItemField, MessageLog }
             .SelectMany(control => control.GetVisualAncestors().Prepend(control)).Distinct())
         {
             visual.PropertyChanged += (_, args) =>
@@ -187,10 +206,10 @@ public partial class MainWindow : Window
         actionCommands.Add(command);
         menu.Command = command;
         menu.InputGesture = gesture;
-        AddShortcut(gesture, () => command);
+        AddShortcut(gesture, () => command, suppressRepeat: false);
     }
 
-    private void AddShortcut(KeyGesture gesture, Func<ICommand?> command)
+    private void AddShortcut(KeyGesture gesture, Func<ICommand?> command, bool suppressRepeat = true, Func<bool>? canHandle = null)
     {
         KeyBindings.Add(new KeyBinding
         {
@@ -199,19 +218,21 @@ public partial class MainWindow : Window
             {
                 // KeyBinding handles KeyDown before routed handlers. Latch here, even if the
                 // underlying command is disabled, so a held key cannot run it when it becomes enabled.
-                if (!WindowActionsAvailable || !shortcutKeysDown.Add(gesture.Key)) { return; }
+                if (!WindowActionsAvailable || (suppressRepeat && !shortcutKeysDown.Add(gesture.Key))) { return; }
                 var action = command();
                 if (action?.CanExecute(null) == true) { action.Execute(null); }
-            })
+            }, () => canHandle?.Invoke() ?? true)
         });
     }
 
-    private async Task ExecuteSelectedAsync()
+    private async Task RunSessionCommandAsync(Func<MainWindowViewModel, IAsyncRelayCommand> selectCommand)
     {
         var current = model;
-        if (!WindowActionsAvailable || current?.ExecuteCommand.CanExecute(null) != true) { return; }
+        if (!WindowActionsAvailable || current == null) { return; }
+        var command = selectCommand(current);
+        if (!command.CanExecute(null)) { return; }
         var focused = FocusManager.GetFocusedElement() as Control;
-        await current.ExecuteCommand.ExecuteAsync(null);
+        await command.ExecuteAsync(null);
         // Busy state disables inputs and clears their focus. Restore it only if neither
         // validation nor the user has focused something else while the request was running.
         if (ReferenceEquals(current, model) && !current.HasError && WindowActionsAvailable && IsActive
@@ -238,6 +259,18 @@ public partial class MainWindow : Window
 
     private async void SessionKeyDown(object? sender, KeyEventArgs args)
     {
+        if (args.Key == Key.Escape && args.KeyModifiers == KeyModifiers.None
+            && MessageLog.SearchPanel?.IsOpened == true && MessageLog.IsKeyboardFocusWithin)
+        {
+            args.Handled = true;
+            if (WindowActionsAvailable)
+            {
+                MessageLog.SearchPanel.Close();
+                RefreshActionCommands();
+            }
+            return;
+        }
+        if (!WindowActionsAvailable) { return; }
         if (args.Key != Key.Enter || args.KeyModifiers != KeyModifiers.None || args.Source is not Control source || source is Button) { return; }
         var ancestors = source.GetVisualAncestors().Prepend(source).ToArray();
         Button? button = ancestors.Contains(ConnectionGroup) ? ConnectButton :
@@ -256,8 +289,14 @@ public partial class MainWindow : Window
             this.GetVisualDescendants().OfType<Control>().FirstOrDefault(field => field.Name == property + "Field");
         if (control == null || !control.IsEffectivelyVisible)
         {
-            Model.SelectedCommand = CommandChoice.All.Single(choice => choice.Command == SipCommand.Login);
-            control = this.GetVisualDescendants().OfType<Control>().FirstOrDefault(field => field.Name == property + "Field");
+            // Login can run independently of the picker. Keep its selection when an
+            // algorithm option is hidden, and direct the user to the relevant credentials.
+            control = property switch
+            {
+                nameof(Models.CommandOptions.UidAlgorithm) => UsernameField,
+                nameof(Models.CommandOptions.PwdAlgorithm) => PasswordField,
+                _ => control
+            };
         }
         control?.BringIntoView();
         if (control is OptionalDateTimeInput date) { date.FocusEditor(); }

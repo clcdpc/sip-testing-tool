@@ -186,9 +186,11 @@ public sealed partial class DesktopParityTests
             await model.LoginCommand.ExecutionTask!;
             Layout(window);
             Assert.IsTrue(model.HasError);
-            Assert.AreEqual(SipCommand.Login, model.SelectedCommand.Command);
-            Assert.IsTrue(Field<TextBox>(window, "UidAlgorithmField").IsFocused);
+            Assert.AreEqual(SipCommand.Checkout, model.SelectedCommand.Command);
+            Assert.IsTrue(window.FindControl<TextBox>("UsernameField")!.IsFocused);
+            model.SelectedCommand = Choice(SipCommand.Login);
             model.Options.UidAlgorithm = "0";
+            model.SelectedCommand = Choice(SipCommand.Checkout);
             await model.LoginCommand.ExecuteAsync(null);
             await server.Completion;
         }
@@ -749,6 +751,8 @@ public sealed partial class DesktopParityTests
             var reset = window.GetVisualDescendants().OfType<Button>().Single(button => button.Content as string == "Reset checkout options");
             reset.Focus();
             Press(window, Key.Enter);
+            RespondToConfirmation(window, true);
+            await ((CommunityToolkit.Mvvm.Input.IAsyncRelayCommand)reset.Command!).ExecutionTask!;
             window.FindControl<Button>("ExecuteButton")!.Focus();
             Press(window, Key.Enter);
             await model.ExecuteCommand.ExecutionTask!;
@@ -801,7 +805,10 @@ public sealed partial class DesktopParityTests
     {
         var physical = key == Key.Enter ? PhysicalKey.Enter : key == Key.Tab ? PhysicalKey.Tab : PhysicalKey.None;
         window.KeyPress(key, modifiers, physical, null);
-        window.KeyRelease(key, modifiers, physical, null);
+        // A shortcut can synchronously open a modal. Real input releases in the dialog,
+        // rather than delivering KeyUp to its now-disabled owner.
+        var releaseTarget = window.OwnedWindows.LastOrDefault(owned => owned.IsVisible && owned.IsDialog) ?? window;
+        releaseTarget.KeyRelease(key, modifiers, physical, null);
     }
     private static void Layout(TopLevel window)
     {

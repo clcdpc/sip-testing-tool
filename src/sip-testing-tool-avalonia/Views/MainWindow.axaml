@@ -17,6 +17,8 @@
         <MenuItem Header="_Reload default values" Click="ReloadDefaults_Click" />
       </MenuItem>
       <MenuItem x:Name="ActionsMenu" Header="_Actions">
+        <MenuItem x:Name="ConnectMenuItem" Header="_Connect / Reconnect" />
+        <MenuItem x:Name="LoginMenuItem" Header="_Login" />
         <MenuItem x:Name="ExecuteMenuItem" Header="_Execute selected command" />
         <Separator />
         <MenuItem x:Name="FocusCommandMenuItem" Header="Focus SIP _command" />
@@ -24,8 +26,16 @@
         <MenuItem x:Name="FocusPatronMenuItem" Header="Focus _patron barcode" />
         <MenuItem x:Name="FocusItemMenuItem" Header="Focus _item barcode" />
         <MenuItem x:Name="FocusMessagesMenuItem" Header="_Focus messages" />
+        <MenuItem x:Name="NextPanelMenuItem" Header="_Next panel" />
+        <MenuItem x:Name="PreviousPanelMenuItem" Header="Previous panel" />
         <Separator />
+        <MenuItem x:Name="FindLogMenuItem" Header="Find in message log" />
+        <MenuItem x:Name="FindNextMenuItem" Header="Find next" />
+        <MenuItem x:Name="FindPreviousMenuItem" Header="Find previous" />
         <MenuItem x:Name="ExportLogMenuItem" Header="Export message _log…" />
+        <MenuItem x:Name="ClearLogMenuItem" Header="Clear message log" />
+        <Separator />
+        <MenuItem x:Name="ResetOptionsMenuItem" Header="Reset selected options" />
       </MenuItem>
       <MenuItem x:Name="ViewMenu" Header="_View">
         <MenuItem Header="Always on top" ToggleType="CheckBox" IsChecked="{Binding AlwaysOnTop, Mode=TwoWay}" />
@@ -51,7 +61,7 @@
               <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Terminal (AP)" /><TextBox x:Name="ApField" Text="{Binding Fields.Ap}" AutomationProperties.Name="Terminal AP" /></StackPanel>
             </Grid>
             <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
-              <Button x:Name="ConnectButton" Content="Connect" Command="{Binding ConnectCommand}" MinWidth="88" />
+              <Button x:Name="ConnectButton" Content="Connect" MinWidth="88" />
               <Button x:Name="CancelConnectButton" Content="Cancel" Command="{Binding CancelConnectCommand}" IsVisible="{Binding IsConnecting}" MinWidth="80" />
             </StackPanel>
           </Grid>
@@ -76,17 +86,17 @@
                 </AutoCompleteBox>
               </StackPanel>
             </Grid>
-            <Button x:Name="LoginButton" Grid.Row="3" Content="Login" Command="{Binding LoginCommand}" Margin="0,8,0,0" MinWidth="88" />
+            <Button x:Name="LoginButton" Grid.Row="3" Content="Login" Margin="0,8,0,0" MinWidth="88" />
           </Grid>
         </Border>
-        <Border Grid.Column="2" Padding="12,8" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,1,0" IsEnabled="{Binding !IsBusy}">
+        <Border x:Name="PatronGroup" Grid.Column="2" Padding="12,8" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,1,0" IsEnabled="{Binding !IsBusy}">
           <Grid RowDefinitions="Auto,Auto,Auto,*">
             <TextBlock Classes="groupTitle" Text="Patron" />
             <StackPanel Grid.Row="1" Classes="field"><TextBlock x:Name="PatronLabel" Classes="fieldLabel" Text="Barcode (AA)" /><TextBox x:Name="PatronField" Text="{Binding Fields.PatronBarcode}" AutomationProperties.Name="Patron Barcode" /></StackPanel>
             <StackPanel Grid.Row="2" Classes="field" Margin="0,8,0,0"><TextBlock Classes="fieldLabel" Text="PIN (AD)" /><TextBox x:Name="PatronPinField" Text="{Binding Fields.PatronPin}" AutomationProperties.Name="Patron PIN" /></StackPanel>
           </Grid>
         </Border>
-        <Border Grid.Column="3" Padding="12,8" IsEnabled="{Binding !IsBusy}">
+        <Border x:Name="ItemGroup" Grid.Column="3" Padding="12,8" IsEnabled="{Binding !IsBusy}">
           <Grid RowDefinitions="Auto,Auto,*">
             <TextBlock Classes="groupTitle" Text="Item" />
             <StackPanel Grid.Row="1" Classes="field"><TextBlock x:Name="ItemLabel" Classes="fieldLabel" Text="Barcode (AB)" /><TextBox x:Name="ItemField" Text="{Binding Fields.ItemBarcode}" AutomationProperties.Name="Item Barcode" /></StackPanel>
@@ -108,7 +118,7 @@
         <ColumnDefinition Width="6" />
         <ColumnDefinition Width="*" MinWidth="440" />
       </Grid.ColumnDefinitions>
-      <Border Grid.Column="0" Background="{DynamicResource RibbonBrush}" Padding="12">
+      <Border x:Name="CommandGroup" Grid.Column="0" Background="{DynamicResource RibbonBrush}" Padding="12">
         <Grid RowDefinitions="Auto,*,Auto">
           <Grid RowDefinitions="Auto,Auto">
             <ComboBox x:Name="CommandPicker" ItemsSource="{Binding Commands}" SelectedItem="{Binding SelectedCommand}" HorizontalAlignment="Stretch" AutomationProperties.Name="SIP Command" />
@@ -144,12 +154,13 @@
         </Grid>
       </Border>
       <GridSplitter Grid.Column="1" ResizeDirection="Columns" HorizontalAlignment="Stretch" Background="{DynamicResource LineBrush}" />
-      <Grid Grid.Column="2" RowDefinitions="Auto,*">
+      <Grid x:Name="MessagesGroup" Grid.Column="2" RowDefinitions="Auto,*">
         <Grid x:Name="MessageLogHeader" ColumnDefinitions="Auto,*,Auto" Background="{DynamicResource RibbonBrush}" Margin="0,0,0,0">
           <TextBlock Classes="groupTitle" Text="Sent / received messages" Margin="12,0,8,0" VerticalAlignment="Center" />
           <TextBlock x:Name="FocusMessagesHint" Grid.Column="1" FontSize="11" Opacity="0.65" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Focusable="False" IsTabStop="False" />
           <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" Margin="8">
-            <Button x:Name="ClearLogButton" Content="Clear log" Command="{Binding ClearLogCommand}" />
+            <Button x:Name="FindLogButton" Content="Find" />
+            <Button x:Name="ClearLogButton" Content="Clear log" />
             <Button x:Name="ExportLogButton" Content="Export log…" />
           </StackPanel>
         </Grid>

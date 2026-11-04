@@ -15,6 +15,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     private CancellationTokenSource? connectionCancellation;
     private readonly Dictionary<SipCommand, CommandOptions> commandOptions = CommandChoice.All
         .ToDictionary(choice => choice.Command, choice => CommandOptions.Create(choice.Command));
+    private readonly Dictionary<SipCommand, CommandOptions> defaultOptions;
 
     [ObservableProperty] private SessionFields fields = new();
     [ObservableProperty] private AppPreferences preferences = new();
@@ -26,7 +27,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     private SummaryChoice selectedSummary = SummaryChoice.All[0];
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanRun), nameof(CanConnect), nameof(CanRestartUpdate))]
-    [NotifyCanExecuteChangedFor(nameof(ConnectCommand), nameof(ExecuteCommand), nameof(LoginCommand), nameof(RestartUpdateCommand), nameof(CheckUpdatesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(ConnectCommand), nameof(ExecuteCommand), nameof(LoginCommand), nameof(ResetOptionsCommand), nameof(RestartUpdateCommand), nameof(CheckUpdatesCommand))]
     private bool isBusy;
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanRun), nameof(CanConnect))]
@@ -74,6 +75,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     public bool UsesRange => SelectedSummary.Key != "none";
     public bool CanRun => IsConnected && !IsBusy;
     public bool CanConnect => !IsBusy;
+    public bool CanResetOptions => !IsBusy;
     public bool CanRestartUpdate => UpdateReady && !IsBusy && !CheckingUpdates;
     public bool HasError => !string.IsNullOrEmpty(ErrorMessage);
     public string ExecuteLabel => "Execute " + SelectedCommand.Name;
@@ -84,11 +86,22 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
     public event Action<string>? ValidationFailed;
     public event Action? RestartRequested;
 
-    [RelayCommand]
+    // Compare values at the point of reset, including fields outside CommandOptions.
+    // Retain the original date default so an untouched renewal does not become dirty as time passes.
+    public bool HasModifiedOptions => !Options.HasSameValues(defaultOptions[SelectedCommand.Command]) || SelectedCommand.Command switch
+    {
+        SipCommand.PatronInformation => SelectedSummary.Key != SummaryChoice.All[0].Key || Fields.Bp.Trim() != "1" || Fields.Bq.Trim() != "5",
+        SipCommand.FeePaid => new[] { FeeType, PaymentType, Amount, FeeIdentifier, TransactionId }.Any(value => value.Length != 0),
+        SipCommand.NoticeUpdate => SelectedNoticeStatus != default || SelectedNoticeMedium != default || SelectedNoticeType != default || NoticeComment.Length != 0,
+        _ => false
+    };
+
+    [RelayCommand(CanExecute = nameof(CanResetOptions))]
     private void ResetOptions()
     {
         var command = SelectedCommand.Command;
         commandOptions[command] = CommandOptions.Create(command);
+        defaultOptions[command] = commandOptions[command].Copy();
         if (command == SipCommand.PatronInformation)
         {
             SelectedSummary = SummaryChoice.All[0];
@@ -123,6 +136,7 @@ public partial class MainWindowViewModel : ObservableObject, IDisposable
         this.session = session ?? new SipSession();
         this.settingsStore = settingsStore ?? new SettingsStore();
         this.updates = updates ?? new UpdateService();
+        defaultOptions = commandOptions.ToDictionary(pair => pair.Key, pair => pair.Value.Copy());
     }
 
     public async Task InitializeAsync()

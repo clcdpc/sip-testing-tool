@@ -51,21 +51,39 @@ Checkout defaults preserve the previous request: renewals allowed, no-block off,
 
 ## Desktop keyboard shortcuts
 
-These shortcuts apply to the Avalonia app. On macOS, **Cmd** means the Command (⌘) key.
+These shortcuts apply to the Avalonia app. Application actions use **Ctrl+Shift+letter** on Windows/Linux and **Cmd+Shift+letter** on macOS, where **Cmd** means Command (⌘). Function keys handle execution and navigation. Existing **Ctrl+Enter** message inspection remains available on all platforms.
 
 | Action | Windows / Linux | macOS |
 | --- | --- | --- |
 | Execute the selected SIP command | F5 | F5 |
-| Focus the command dropdown | Ctrl+K | Cmd+K |
+| Connect / reconnect | Ctrl+Shift+C | Cmd+Shift+C |
+| Execute SIP Login | Ctrl+Shift+G | Cmd+Shift+G |
+| Focus the command dropdown | Ctrl+Shift+K | Cmd+Shift+K |
+| Focus and select server address | Ctrl+Shift+L | Cmd+Shift+L |
 | Focus and select patron barcode (AA) | Ctrl+Shift+P | Cmd+Shift+P |
 | Focus and select item barcode (AB) | Ctrl+Shift+I | Cmd+Shift+I |
-| Focus and select server address | Ctrl+L | Cmd+L |
-| Export the message log | Ctrl+Shift+S | Cmd+Shift+S |
 | Focus messages | Ctrl+Shift+M | Cmd+Shift+M |
+| Next application panel | F6 | F6 |
+| Previous application panel | Shift+F6 | Shift+F6 |
+| Find in message log | Ctrl+Shift+F | Cmd+Shift+F |
+| Find next occurrence (active search) | F3 | F3 |
+| Find previous occurrence (active search) | Shift+F3 | Shift+F3 |
+| Close search (search input or transcript focused) | Escape | Escape |
+| Export the message log | Ctrl+Shift+S | Cmd+Shift+S |
+| Clear the message log | Ctrl+Shift+X | Cmd+Shift+X |
+| Reset selected command options | Ctrl+Shift+R | Cmd+Shift+R |
 | Toggle dark mode | Ctrl+Shift+D | Cmd+Shift+D |
 | Inspect the message at the raw-log caret | Ctrl+Enter | Ctrl+Enter |
 
-Focus shortcuts preserve values until you type, paste or scan a replacement. For repeated tests, focus a barcode, enter it, press **F5**, inspect the response and repeat. Execution uses the selected command's existing validation and runs only while connected and idle. Holding a shortcut key does not repeat its action. Shortcuts leave modal dialogs in control. Discover commands and their shortcuts in **Actions**, with dark mode under **View**. Contextual hints appear on the Execute button, beside the command dropdown and beside the message-log heading; control and field-label tooltips also show shortcuts. **Actions → Export message log** shares the Export log button's save dialog.
+Discover the complete action list and shortcuts in **Actions**, with dark mode under **View**. Contextual hints appear on the Execute button, beside the command dropdown and beside the message-log heading; control and field-label tooltips also show shortcuts. Menus, buttons and shortcuts share their action implementations and availability rules. Shortcuts leave modal dialogs and native file pickers in control.
+
+Dedicated field-focus shortcuts select the current value for replacement. For repeated tests, focus a barcode, enter it, press **F5**, inspect the response and repeat. Execution uses the selected command's existing validation and runs only while connected and idle. **Login** always sends SIP Login without changing the selected command; Connect/reconnect uses the Connect button's validated, cancellable workflow. Holding an execution, connection, login, destructive, export or theme key does not repeat the action.
+
+**F6** and **Shift+F6** cycle forward and backward through Connection, Login, Patron, Item, Command / Options and Messages, wrapping and skipping unavailable panels. Panel navigation preserves field values and selections, keeps normal Tab navigation, and returns to an expanded inspector when navigating to Messages.
+
+**Find** in the message-log header or **Actions → Find in message log** opens AvaloniaEdit's search within the read-only transcript and focuses its input. Reopening selects the existing term. Search highlights sent and received text, supports case-sensitive, whole-word and regular-expression matching, and wraps through results with **F3 / Shift+F3** even after focus returns to the transcript. New messages remain searchable without pulling the viewport away from an active search. Escape in search or the transcript closes search and retains the current selection; automatic scrolling resumes on the next appended transaction. Escape in the inspector retains its usual collapse behavior. Replacement is unavailable.
+
+Clearing a nonempty log and resetting modified command options require confirmation, with **Cancel** focused by default. Empty logs and default options need no confirmation. Reset affects only the selected command, including its range, fee or notice fields, while preserving shared connection, patron and item details and other commands' options. Clearing closes stale search results and inspectors. **Actions → Export message log** shares the Export log button's save dialog.
 
 ## Command options
 

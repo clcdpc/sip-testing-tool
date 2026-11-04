@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Globalization;
+using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Automation;
@@ -13,6 +14,12 @@ namespace Clc.Sip.Desktop.Views;
 
 public sealed class CommandOptionsView : UserControl
 {
+    public static readonly StyledProperty<ICommand?> ResetCommandProperty =
+        AvaloniaProperty.Register<CommandOptionsView, ICommand?>(nameof(ResetCommand));
+    public static readonly StyledProperty<string?> ResetToolTipProperty =
+        AvaloniaProperty.Register<CommandOptionsView, string?>(nameof(ResetToolTip));
+    public ICommand? ResetCommand { get => GetValue(ResetCommandProperty); set => SetValue(ResetCommandProperty, value); }
+    public string? ResetToolTip { get => GetValue(ResetToolTipProperty); set => SetValue(ResetToolTipProperty, value); }
     private MainWindowViewModel? model;
     private readonly StackPanel fields = new() { Spacing = 14 };
 
@@ -96,8 +103,9 @@ public sealed class CommandOptionsView : UserControl
         };
         fields.Children.AddRange(controls);
         var caption = command == SipCommand.AcsStatus ? "ACS status" : model.SelectedCommand.Name.ToLowerInvariant();
-        var reset = new Button { Content = "Reset " + caption + " options", HorizontalAlignment = HorizontalAlignment.Left };
-        reset.Bind(Button.CommandProperty, new Binding(nameof(MainWindowViewModel.ResetOptionsCommand)));
+        var reset = new Button { Name = "ResetOptionsButton", Content = "Reset " + caption + " options", HorizontalAlignment = HorizontalAlignment.Left };
+        reset.Bind(Button.CommandProperty, new Binding(nameof(ResetCommand)) { Source = this });
+        reset.Bind(ToolTip.TipProperty, new Binding(nameof(ResetToolTip)) { Source = this });
         fields.Children.Add(reset);
     }
 

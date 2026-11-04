@@ -48,8 +48,9 @@ public sealed partial class DesktopParityTests
             var actions = window.FindControl<MenuItem>("ActionsMenu")!;
             CollectionAssert.AreEqual(new[]
             {
-                "_Execute selected command", "separator", "Focus SIP _command", "Focus _server address",
-                "Focus _patron barcode", "Focus _item barcode", "_Focus messages", "separator", "Export message _log…"
+                "_Connect / Reconnect", "_Login", "_Execute selected command", "separator", "Focus SIP _command", "Focus _server address",
+                "Focus _patron barcode", "Focus _item barcode", "_Focus messages", "_Next panel", "Previous panel", "separator",
+                "Find in message log", "Find next", "Find previous", "Export message _log…", "Clear message log", "separator", "Reset selected options"
             }, actions.Items.Cast<Control>().Select(item => item is Separator ? "separator" : (string)((MenuItem)item).Header!).ToArray());
             CollectionAssert.AreEqual(new[] { "Always on top", "_Dark mode" },
                 window.FindControl<MenuItem>("ViewMenu")!.Items.Cast<MenuItem>().Select(item => (string)item.Header!).ToArray());
@@ -58,10 +59,14 @@ public sealed partial class DesktopParityTests
                 ("ExecuteMenuItem", shortcuts.Execute), ("FocusCommandMenuItem", shortcuts.FocusCommand),
                 ("FocusServerMenuItem", shortcuts.FocusServer), ("FocusPatronMenuItem", shortcuts.FocusPatron),
                 ("FocusItemMenuItem", shortcuts.FocusItem), ("FocusMessagesMenuItem", shortcuts.FocusMessages),
-                ("ExportLogMenuItem", shortcuts.ExportLog), ("DarkModeMenuItem", shortcuts.ToggleTheme)
+                ("ExportLogMenuItem", shortcuts.ExportLog), ("DarkModeMenuItem", shortcuts.ToggleTheme),
+                ("ConnectMenuItem", shortcuts.Connect), ("LoginMenuItem", shortcuts.Login),
+                ("FindLogMenuItem", shortcuts.FindLog), ("FindNextMenuItem", shortcuts.FindNext), ("FindPreviousMenuItem", shortcuts.FindPrevious),
+                ("ClearLogMenuItem", shortcuts.ClearLog), ("ResetOptionsMenuItem", shortcuts.ResetOptions),
+                ("NextPanelMenuItem", shortcuts.NextPanel), ("PreviousPanelMenuItem", shortcuts.PreviousPanel)
             };
-            Assert.HasCount(8, window.KeyBindings);
-            Assert.AreEqual(8, window.KeyBindings.Select(binding => binding.Gesture).Distinct().Count());
+            Assert.HasCount(17, window.KeyBindings);
+            Assert.AreEqual(17, window.KeyBindings.Select(binding => binding.Gesture).Distinct().Count());
             foreach (var (name, gesture) in entries)
             {
                 var item = window.FindControl<MenuItem>(name)!;
@@ -74,7 +79,7 @@ public sealed partial class DesktopParityTests
             Assert.AreSame(model.ToggleThemeCommand, window.FindControl<MenuItem>("DarkModeMenuItem")!.Command);
             Assert.AreEqual(MenuItemToggleType.CheckBox, window.FindControl<MenuItem>("DarkModeMenuItem")!.ToggleType);
             Assert.AreEqual(model.ExecuteLabel + " (F5)", window.FindControl<Button>("ExecuteButton")!.Content);
-            Assert.AreEqual(isMacOS ? "Cmd+K" : "Ctrl+K", window.FindControl<TextBlock>("FocusCommandHint")!.Text);
+            Assert.AreEqual(isMacOS ? "Cmd+Shift+K" : "Ctrl+Shift+K", window.FindControl<TextBlock>("FocusCommandHint")!.Text);
             Assert.AreEqual((isMacOS ? "Cmd" : "Ctrl") + "+Shift+M to focus", window.FindControl<TextBlock>("FocusMessagesHint")!.Text);
             foreach (var (field, label, description, gesture, accessibleName) in new[]
             {
@@ -107,10 +112,10 @@ public sealed partial class DesktopParityTests
     }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
 
     [TestMethod]
-    [DataRow(false, "CommandPicker", "FocusCommandMenuItem", Key.K, false)]
-    [DataRow(true, "CommandPicker", "FocusCommandMenuItem", Key.K, false)]
-    [DataRow(false, "ServerField", "FocusServerMenuItem", Key.L, false)]
-    [DataRow(true, "ServerField", "FocusServerMenuItem", Key.L, false)]
+    [DataRow(false, "CommandPicker", "FocusCommandMenuItem", Key.K, true)]
+    [DataRow(true, "CommandPicker", "FocusCommandMenuItem", Key.K, true)]
+    [DataRow(false, "ServerField", "FocusServerMenuItem", Key.L, true)]
+    [DataRow(true, "ServerField", "FocusServerMenuItem", Key.L, true)]
     [DataRow(false, "PatronField", "FocusPatronMenuItem", Key.P, true)]
     [DataRow(true, "PatronField", "FocusPatronMenuItem", Key.P, true)]
     [DataRow(false, "ItemField", "FocusItemMenuItem", Key.I, true)]
@@ -308,6 +313,9 @@ public sealed partial class DesktopParityTests
         try
         {
             Layout(window);
+            Press(window, Key.F, ShortcutModifier | RawInputModifiers.Shift);
+            Layout(window);
+            window.FindControl<TextEditor>("MessageLog")!.SearchPanel.SearchPattern = "test";
             var operation = dialog.ShowDialog(window);
             Layout(dialog);
             var field = dialog.GetVisualDescendants().OfType<TextBox>().First();
