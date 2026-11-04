@@ -28,6 +28,13 @@ public partial class MainWindow
         var find = new RelayCommand(OpenLogSearch, () => WindowActionsAvailable && CanFocusInput(MessageLog));
         var next = new RelayCommand(() => NavigateSearch(false), CanNavigateSearch);
         var previous = new RelayCommand(() => NavigateSearch(true), CanNavigateSearch);
+        var inspect = new RelayCommand(() =>
+        {
+            if (WindowActionsAvailable && CanFocusInput(MessageLog))
+            {
+                LogInspection.ExpandMessageAtOffset(MessageLog.CaretOffset);
+            }
+        }, () => WindowActionsAvailable && CanFocusInput(MessageLog));
         var nextPanel = new RelayCommand(() => NavigatePanel(1), CanNavigatePanels);
         var previousPanel = new RelayCommand(() => NavigatePanel(-1), CanNavigatePanels);
         RegisterAction(ConnectMenuItem, shortcuts.Connect, connect);
@@ -35,12 +42,28 @@ public partial class MainWindow
         RegisterAction(ClearLogMenuItem, shortcuts.ClearLog, clear);
         RegisterAction(ResetOptionsMenuItem, shortcuts.ResetOptions, reset);
         RegisterAction(FindLogMenuItem, shortcuts.FindLog, find, suppressRepeat: false);
-        // Consume F3 while search is open, including behind a native picker, so the
+        // Consume navigation while search is open, including behind a native picker, so the
         // editor's scoped handler cannot bypass the window's modal guard.
         RegisterAction(FindNextMenuItem, shortcuts.FindNext, next, suppressRepeat: false,
             canHandle: () => MessageLog.SearchPanel?.IsOpened == true);
         RegisterAction(FindPreviousMenuItem, shortcuts.FindPrevious, previous, suppressRepeat: false,
             canHandle: () => MessageLog.SearchPanel?.IsOpened == true);
+        AddShortcut(shortcuts.FindNextAlternative, () => next, suppressRepeat: false,
+            canHandle: () => MessageLog.SearchPanel?.IsOpened == true);
+        AddShortcut(shortcuts.FindPreviousAlternative, () => previous, suppressRepeat: false,
+            canHandle: () => MessageLog.SearchPanel?.IsOpened == true);
+        // InputGesture displays the primary gesture; the header also shows the function key.
+        FindNextMenuItem.Header = "Find next (" + DesktopShortcuts.Label(shortcuts.FindNextAlternative) + ")";
+        FindPreviousMenuItem.Header = "Find previous (" + DesktopShortcuts.Label(shortcuts.FindPreviousAlternative) + ")";
+        ToolTip.SetTip(FindNextMenuItem, DesktopShortcuts.Label(shortcuts.FindNext) + " / " + DesktopShortcuts.Label(shortcuts.FindNextAlternative));
+        ToolTip.SetTip(FindPreviousMenuItem, DesktopShortcuts.Label(shortcuts.FindPrevious) + " / " + DesktopShortcuts.Label(shortcuts.FindPreviousAlternative));
+        // Only the transcript owns the inspection key. Find retains Enter/Shift+Enter.
+        RegisterAction(InspectMessageMenuItem, shortcuts.InspectMessage, inspect,
+            canHandle: () => MessageLog.TextArea.IsFocused);
+        InspectLogMenuItem.Command = inspect;
+        InspectLogMenuItem.InputGesture = shortcuts.InspectMessage;
+        SetActionTip(MessageLog, "Inspect message at caret", shortcuts.InspectMessage);
+        SetActionTip(InspectLogMenuItem, "Inspect message at caret", shortcuts.InspectMessage);
         RegisterAction(NextPanelMenuItem, shortcuts.NextPanel, nextPanel, suppressRepeat: false);
         RegisterAction(PreviousPanelMenuItem, shortcuts.PreviousPanel, previousPanel, suppressRepeat: false);
         ConnectButton.Command = connect;

@@ -32,6 +32,7 @@
         <MenuItem x:Name="FindLogMenuItem" Header="Find in message log" />
         <MenuItem x:Name="FindNextMenuItem" Header="Find next" />
         <MenuItem x:Name="FindPreviousMenuItem" Header="Find previous" />
+        <MenuItem x:Name="InspectMessageMenuItem" Header="Inspect message at caret" />
         <MenuItem x:Name="ExportLogMenuItem" Header="Export message _log…" />
         <MenuItem x:Name="ClearLogMenuItem" Header="Clear message log" />
         <Separator />
@@ -39,7 +40,7 @@
       </MenuItem>
       <MenuItem x:Name="ViewMenu" Header="_View">
         <MenuItem Header="Always on top" ToggleType="CheckBox" IsChecked="{Binding AlwaysOnTop, Mode=TwoWay}" />
-        <MenuItem x:Name="DarkModeMenuItem" Header="_Dark mode" ToggleType="CheckBox" IsChecked="{Binding Preferences.DarkTheme, Mode=OneWay}" Command="{Binding ToggleThemeCommand}" />
+        <MenuItem x:Name="DarkModeMenuItem" Header="_Dark mode" ToggleType="CheckBox" IsChecked="{Binding Preferences.DarkTheme, Mode=OneWay}" />
       </MenuItem>
       <MenuItem Header="_Updates">
         <MenuItem Header="_Check for updates" Command="{Binding CheckUpdatesCommand}" />
@@ -168,7 +169,7 @@
           <Border BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" Background="{DynamicResource LogBrush}">
             <editor:TextEditor x:Name="MessageLog" Document="{Binding LogDocument}" IsReadOnly="True" ShowLineNumbers="False" WordWrap="True" FontFamily="Cascadia Mono,Consolas,DejaVu Sans Mono,monospace" FontSize="13" Padding="8" Background="{DynamicResource LogBrush}" AutomationProperties.Name="Sent and Received SIP Message Log">
               <editor:TextEditor.ContextMenu>
-                <ContextMenu><MenuItem Header="Copy" Click="CopyLog_Click" /><MenuItem Header="Select all" Click="SelectLog_Click" /><Separator /><MenuItem Header="Inspect message fields" Click="InspectLog_Click" /></ContextMenu>
+                <ContextMenu><MenuItem Header="Copy" Click="CopyLog_Click" /><MenuItem Header="Select all" Click="SelectLog_Click" /><Separator /><MenuItem x:Name="InspectLogMenuItem" Header="Inspect message fields" /></ContextMenu>
               </editor:TextEditor.ContextMenu>
             </editor:TextEditor>
           </Border>

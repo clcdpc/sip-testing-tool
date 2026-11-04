@@ -148,7 +148,16 @@ public partial class MainWindow : Window
         AddFocusShortcut(shortcuts.FocusPatron, PatronField, FocusPatronMenuItem);
         AddFocusShortcut(shortcuts.FocusItem, ItemField, FocusItemMenuItem);
         AddFocusShortcut(shortcuts.FocusServer, ServerField, FocusServerMenuItem);
-        AddShortcut(shortcuts.ToggleTheme, () => model?.ToggleThemeCommand);
+        var theme = new AsyncRelayCommand(async () =>
+        {
+            if (WindowActionsAvailable && model?.ToggleThemeCommand.CanExecute(null) == true)
+            {
+                await model.ToggleThemeCommand.ExecuteAsync(null);
+            }
+        }, () => WindowActionsAvailable && model?.ToggleThemeCommand.CanExecute(null) == true);
+        actionCommands.Add(theme);
+        DarkModeMenuItem.Command = theme;
+        AddShortcut(shortcuts.ToggleTheme, () => theme);
         AddShortcut(shortcuts.ExportLog, () => exportLogCommand);
         ConfigureAdditionalActions(shortcuts);
 
@@ -161,6 +170,7 @@ public partial class MainWindow : Window
         AddShortcut(shortcuts.FocusMessages, () => FocusMessagesMenuItem.Command, suppressRepeat: false);
         FocusMessagesMenuItem.InputGesture = shortcuts.FocusMessages;
         DarkModeMenuItem.InputGesture = shortcuts.ToggleTheme;
+        SetActionTip(DarkModeMenuItem, "Toggle dark mode", shortcuts.ToggleTheme);
         ExportLogButton.Command = ExportLogMenuItem.Command = exportLogCommand;
         ExportLogMenuItem.InputGesture = shortcuts.ExportLog;
         FocusMessagesHint.Text = DesktopShortcuts.Label(shortcuts.FocusMessages) + " to focus";
@@ -425,5 +435,4 @@ public partial class MainWindow : Window
 
     private void CopyLog_Click(object? sender, RoutedEventArgs args) => MessageLog.Copy();
     private void SelectLog_Click(object? sender, RoutedEventArgs args) => MessageLog.SelectAll();
-    private void InspectLog_Click(object? sender, RoutedEventArgs args) => LogInspection.ExpandMessageAtOffset(MessageLog.CaretOffset);
 }

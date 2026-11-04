@@ -50,7 +50,7 @@ public sealed partial class DesktopParityTests
             {
                 "_Connect / Reconnect", "_Login", "_Execute selected command", "separator", "Focus SIP _command", "Focus _server address",
                 "Focus _patron barcode", "Focus _item barcode", "_Focus messages", "_Next panel", "Previous panel", "separator",
-                "Find in message log", "Find next", "Find previous", "Export message _log…", "Clear message log", "separator", "Reset selected options"
+                "Find in message log", "Find next (F3)", "Find previous (Shift+F3)", "Inspect message at caret", "Export message _log…", "Clear message log", "separator", "Reset selected options"
             }, actions.Items.Cast<Control>().Select(item => item is Separator ? "separator" : (string)((MenuItem)item).Header!).ToArray());
             CollectionAssert.AreEqual(new[] { "Always on top", "_Dark mode" },
                 window.FindControl<MenuItem>("ViewMenu")!.Items.Cast<MenuItem>().Select(item => (string)item.Header!).ToArray());
@@ -62,11 +62,12 @@ public sealed partial class DesktopParityTests
                 ("ExportLogMenuItem", shortcuts.ExportLog), ("DarkModeMenuItem", shortcuts.ToggleTheme),
                 ("ConnectMenuItem", shortcuts.Connect), ("LoginMenuItem", shortcuts.Login),
                 ("FindLogMenuItem", shortcuts.FindLog), ("FindNextMenuItem", shortcuts.FindNext), ("FindPreviousMenuItem", shortcuts.FindPrevious),
+                ("InspectMessageMenuItem", shortcuts.InspectMessage),
                 ("ClearLogMenuItem", shortcuts.ClearLog), ("ResetOptionsMenuItem", shortcuts.ResetOptions),
                 ("NextPanelMenuItem", shortcuts.NextPanel), ("PreviousPanelMenuItem", shortcuts.PreviousPanel)
             };
-            Assert.HasCount(17, window.KeyBindings);
-            Assert.AreEqual(17, window.KeyBindings.Select(binding => binding.Gesture).Distinct().Count());
+            Assert.HasCount(20, window.KeyBindings);
+            Assert.AreEqual(20, window.KeyBindings.Select(binding => binding.Gesture).Distinct().Count());
             foreach (var (name, gesture) in entries)
             {
                 var item = window.FindControl<MenuItem>(name)!;
@@ -74,13 +75,23 @@ public sealed partial class DesktopParityTests
                 Assert.IsNull(item.HotKey, "Only window bindings register gestures: " + name);
                 Assert.AreEqual(1, window.KeyBindings.Count(binding => binding.Gesture == item.InputGesture), name);
             }
+            foreach (var (name, primary, alternative) in new[]
+            {
+                ("FindNextMenuItem", shortcuts.FindNext, shortcuts.FindNextAlternative),
+                ("FindPreviousMenuItem", shortcuts.FindPrevious, shortcuts.FindPreviousAlternative)
+            })
+            {
+                var menu = window.FindControl<MenuItem>(name)!;
+                Assert.AreEqual(DesktopShortcuts.Label(primary) + " / " + DesktopShortcuts.Label(alternative), ToolTip.GetTip(menu));
+                StringAssert.Contains((string)menu.Header!, DesktopShortcuts.Label(alternative));
+                Assert.AreEqual(1, window.KeyBindings.Count(binding => binding.Gesture == alternative));
+            }
             Assert.AreSame(window.FindControl<Button>("ExecuteButton")!.Command, window.FindControl<MenuItem>("ExecuteMenuItem")!.Command);
             Assert.AreSame(window.FindControl<Button>("ExportLogButton")!.Command, window.FindControl<MenuItem>("ExportLogMenuItem")!.Command);
-            Assert.AreSame(model.ToggleThemeCommand, window.FindControl<MenuItem>("DarkModeMenuItem")!.Command);
             Assert.AreEqual(MenuItemToggleType.CheckBox, window.FindControl<MenuItem>("DarkModeMenuItem")!.ToggleType);
             Assert.AreEqual(model.ExecuteLabel + " (F5)", window.FindControl<Button>("ExecuteButton")!.Content);
-            Assert.AreEqual(isMacOS ? "Cmd+Shift+K" : "Ctrl+Shift+K", window.FindControl<TextBlock>("FocusCommandHint")!.Text);
-            Assert.AreEqual((isMacOS ? "Cmd" : "Ctrl") + "+Shift+M to focus", window.FindControl<TextBlock>("FocusMessagesHint")!.Text);
+            Assert.AreEqual(isMacOS ? "Cmd+K" : "Ctrl+K", window.FindControl<TextBlock>("FocusCommandHint")!.Text);
+            Assert.AreEqual((isMacOS ? "Cmd" : "Ctrl") + "+J to focus", window.FindControl<TextBlock>("FocusMessagesHint")!.Text);
             foreach (var (field, label, description, gesture, accessibleName) in new[]
             {
                 ("ServerField", "ServerLabel", "server address", shortcuts.FocusServer, "SIP Server"),
@@ -112,14 +123,14 @@ public sealed partial class DesktopParityTests
     }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
 
     [TestMethod]
-    [DataRow(false, "CommandPicker", "FocusCommandMenuItem", Key.K, true)]
-    [DataRow(true, "CommandPicker", "FocusCommandMenuItem", Key.K, true)]
-    [DataRow(false, "ServerField", "FocusServerMenuItem", Key.L, true)]
-    [DataRow(true, "ServerField", "FocusServerMenuItem", Key.L, true)]
-    [DataRow(false, "PatronField", "FocusPatronMenuItem", Key.P, true)]
-    [DataRow(true, "PatronField", "FocusPatronMenuItem", Key.P, true)]
-    [DataRow(false, "ItemField", "FocusItemMenuItem", Key.I, true)]
-    [DataRow(true, "ItemField", "FocusItemMenuItem", Key.I, true)]
+    [DataRow(false, "CommandPicker", "FocusCommandMenuItem", Key.K, false)]
+    [DataRow(true, "CommandPicker", "FocusCommandMenuItem", Key.K, false)]
+    [DataRow(false, "ServerField", "FocusServerMenuItem", Key.L, false)]
+    [DataRow(true, "ServerField", "FocusServerMenuItem", Key.L, false)]
+    [DataRow(false, "PatronField", "FocusPatronMenuItem", Key.P, false)]
+    [DataRow(true, "PatronField", "FocusPatronMenuItem", Key.P, false)]
+    [DataRow(false, "ItemField", "FocusItemMenuItem", Key.I, false)]
+    [DataRow(true, "ItemField", "FocusItemMenuItem", Key.I, false)]
     public Task ActionsFocusMatchesKeyboardSelectionOnBothPlatforms(bool isMacOS, string targetName, string menuName, Key key, bool shift) => ui.Dispatch(() =>
     {
         using var model = new MainWindowViewModel { Fields = SampleFields(), SelectedCommand = Choice(SipCommand.PatronInformation) };
@@ -313,20 +324,22 @@ public sealed partial class DesktopParityTests
         try
         {
             Layout(window);
-            Press(window, Key.F, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.F, ShortcutModifier);
             Layout(window);
             window.FindControl<TextEditor>("MessageLog")!.SearchPanel.SearchPattern = "test";
             var operation = dialog.ShowDialog(window);
             Layout(dialog);
             var field = dialog.GetVisualDescendants().OfType<TextBox>().First();
             field.Focus();
-            foreach (var item in window.FindControl<MenuItem>("ActionsMenu")!.Items.OfType<MenuItem>())
+            foreach (var item in window.FindControl<MenuItem>("ActionsMenu")!.Items.OfType<MenuItem>()
+                .Append(window.FindControl<MenuItem>("DarkModeMenuItem")!))
             {
                 Assert.IsFalse(item.Command!.CanExecute(null), item.Name);
                 item.Command.Execute(null);
                 Assert.IsTrue(field.IsFocused);
             }
             Assert.IsNull(model.ExecuteCommand.ExecutionTask);
+            Assert.IsNull(model.ToggleThemeCommand.ExecutionTask);
             Assert.HasCount(0, provider.Saves);
             dialog.Close();
             await operation;
@@ -422,6 +435,14 @@ public sealed partial class DesktopParityTests
                                 "Clipped menu label or gesture: " + text.Text);
                         }
                     }
+                    Press(window, Key.Escape);
+                    var view = window.FindControl<MenuItem>("ViewMenu")!;
+                    view.Focus(NavigationMethod.Tab);
+                    Press(window, Key.Down);
+                    Layout(window);
+                    var theme = window.FindControl<MenuItem>("DarkModeMenuItem")!;
+                    Assert.AreEqual("Toggle dark mode (" + DesktopShortcuts.Label(new DesktopShortcuts(isMacOS).ToggleTheme) + ")", ToolTip.GetTip(theme));
+                    SaveFrame(TopLevel.GetTopLevel(theme)!, prefix + "-view");
                     Press(window, Key.Escape);
                 }
             }

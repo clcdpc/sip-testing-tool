@@ -31,7 +31,7 @@ Patron status, summary and supported-message (**BX**) flags can be inspected ind
 
 Click **+** beside a log message in either interface to open its field table beneath the transcript. Each field has a name, brief description and value in message order, including repeated fields and the sequence/checksum trailer. Patron status, summary and supported-message fields have a parent row followed by an indented row for every flag, with explicit **SET**, **Not set**, reserved or invalid states. Unknown fields and incomplete data retain their original values. The table shows one message at a time; another **+** switches messages. Drag the divider to resize the table, click **−** or **Collapse** to close it, or press **Escape** while the table has focus. Table cells can be selected and copied, and raw log selection and export keep their existing behavior.
 
-In Avalonia, **View → Focus messages** jumps to open properties or the first visible message expander; an empty log focuses **Clear log**. **Tab** and **Shift+Tab** reach the visible message expanders and skip the read-only transcript. The transcript still supports mouse selection, copying and inspecting the message at its caret. Press **Enter** or **Space** to toggle a focused expander. Expanding a message immediately focuses its properties. Use the arrow keys to browse property rows; **Escape** closes the properties and returns focus to an expander. Clearing the log returns focus to **Clear log** when the focused message disappears. See the [keyboard shortcuts](#desktop-keyboard-shortcuts) below.
+In Avalonia, **Actions → Focus messages** jumps to open properties or the first visible message expander; an empty log focuses **Clear log**. **Tab** and **Shift+Tab** reach the visible message expanders and skip the read-only transcript. The transcript still supports mouse selection, copying and inspecting the message at its caret. Press **Enter** or **Space** to toggle a focused expander. Expanding a message immediately focuses its properties. Use the arrow keys to browse property rows; **Escape** closes the properties and returns focus to an expander. Clearing the log returns focus to **Clear log** when the focused message disappears. See the [keyboard shortcuts](#desktop-keyboard-shortcuts) below.
 
 Polaris field help uses the supplied **SIP Message Documentation** (July 2010, pages 2–4), **RPA via SIP for Vendors 2012**, and **Polaris SIP2 Custom Extensions & Enhancements** (revised 23 October 2026) references. The last document is an unofficial static analysis of SIPService.exe **8.1.7065.1**. The reference names birth/expiration dates, patron codes and home branches, statistical classes, postal codes, and checkin collection/call-number/hold fields. **U1–U5** are library-defined **User1–User5** attributes, identified together in the 8.1 reference; their configured text is preserved. Checkin **CV** alert codes remain distinct from the historical Polaris 3.6 login field; the 8.1 reference does not establish CV as a login alias. Login **CP** authentication overrides and the patron username/barcode behavior of **AA** are explained in their message context.
 
@@ -51,29 +51,29 @@ Checkout defaults preserve the previous request: renewals allowed, no-block off,
 
 ## Desktop keyboard shortcuts
 
-These shortcuts apply to the Avalonia app. Application actions use **Ctrl+Shift+letter** on Windows/Linux and **Cmd+Shift+letter** on macOS, where **Cmd** means Command (⌘). Function keys handle execution and navigation. Existing **Ctrl+Enter** message inspection remains available on all platforms.
+These shortcuts apply to the Avalonia app. Application letter shortcuts use **Ctrl** on Windows/Linux and **Cmd** on macOS, where **Cmd** means Command (⌘). Function keys handle execution and navigation. Shift is reserved for reverse navigation and Clear log. Message inspection uses **Ctrl+Enter** on Windows/Linux and **Cmd+Enter** on macOS. Standard Copy, Cut, Paste, Select all and Undo shortcuts remain available.
 
 | Action | Windows / Linux | macOS |
 | --- | --- | --- |
 | Execute the selected SIP command | F5 | F5 |
-| Connect / reconnect | Ctrl+Shift+C | Cmd+Shift+C |
-| Execute SIP Login | Ctrl+Shift+G | Cmd+Shift+G |
-| Focus the command dropdown | Ctrl+Shift+K | Cmd+Shift+K |
-| Focus and select server address | Ctrl+Shift+L | Cmd+Shift+L |
-| Focus and select patron barcode (AA) | Ctrl+Shift+P | Cmd+Shift+P |
-| Focus and select item barcode (AB) | Ctrl+Shift+I | Cmd+Shift+I |
-| Focus messages | Ctrl+Shift+M | Cmd+Shift+M |
+| Connect / reconnect | Ctrl+N | Cmd+N |
+| Execute SIP Login | Ctrl+U | Cmd+U |
+| Focus the command dropdown | Ctrl+K | Cmd+K |
+| Focus and select server address | Ctrl+L | Cmd+L |
+| Focus and select patron barcode (AA) | Ctrl+P | Cmd+P |
+| Focus and select item barcode (AB) | Ctrl+I | Cmd+I |
+| Focus messages | Ctrl+J | Cmd+J |
 | Next application panel | F6 | F6 |
 | Previous application panel | Shift+F6 | Shift+F6 |
-| Find in message log | Ctrl+Shift+F | Cmd+Shift+F |
-| Find next occurrence (active search) | F3 | F3 |
-| Find previous occurrence (active search) | Shift+F3 | Shift+F3 |
+| Find in message log | Ctrl+F | Cmd+F |
+| Find next occurrence (active search) | Ctrl+G or F3 | Cmd+G or F3 |
+| Find previous occurrence (active search) | Ctrl+Shift+G or Shift+F3 | Cmd+Shift+G or Shift+F3 |
 | Close search (search input or transcript focused) | Escape | Escape |
-| Export the message log | Ctrl+Shift+S | Cmd+Shift+S |
+| Export the message log | Ctrl+S | Cmd+S |
 | Clear the message log | Ctrl+Shift+X | Cmd+Shift+X |
-| Reset selected command options | Ctrl+Shift+R | Cmd+Shift+R |
-| Toggle dark mode | Ctrl+Shift+D | Cmd+Shift+D |
-| Inspect the message at the raw-log caret | Ctrl+Enter | Ctrl+Enter |
+| Reset selected command options | Ctrl+R | Cmd+R |
+| Toggle dark mode | Ctrl+D | Cmd+D |
+| Inspect the message at the raw-log caret | Ctrl+Enter | Cmd+Enter |
 
 Discover the complete action list and shortcuts in **Actions**, with dark mode under **View**. Contextual hints appear on the Execute button, beside the command dropdown and beside the message-log heading; control and field-label tooltips also show shortcuts. Menus, buttons and shortcuts share their action implementations and availability rules. Shortcuts leave modal dialogs and native file pickers in control.
 
@@ -81,7 +81,7 @@ Dedicated field-focus shortcuts select the current value for replacement. For re
 
 **F6** and **Shift+F6** cycle forward and backward through Connection, Login, Patron, Item, Command / Options and Messages, wrapping and skipping unavailable panels. Panel navigation preserves field values and selections, keeps normal Tab navigation, and returns to an expanded inspector when navigating to Messages.
 
-**Find** in the message-log header or **Actions → Find in message log** opens AvaloniaEdit's search within the read-only transcript and focuses its input. Reopening selects the existing term. Search highlights sent and received text, supports case-sensitive, whole-word and regular-expression matching, and wraps through results with **F3 / Shift+F3** even after focus returns to the transcript. New messages remain searchable without pulling the viewport away from an active search. Escape in search or the transcript closes search and retains the current selection; automatic scrolling resumes on the next appended transaction. Escape in the inspector retains its usual collapse behavior. Replacement is unavailable.
+**Find** in the message-log header or **Actions → Find in message log** opens AvaloniaEdit's search within the read-only transcript and focuses its input. Reopening selects the existing term. Search highlights sent and received text, supports case-sensitive, whole-word and regular-expression matching, and wraps through results with **Ctrl/Cmd+G / Ctrl/Cmd+Shift+G** or **F3 / Shift+F3**, from either the search input or transcript. **Enter / Shift+Enter** in the search input also navigate forward/backward. Navigation is inactive when search is closed. New messages remain searchable without pulling the viewport away from an active search. Escape in search or the transcript closes search and retains the current selection; automatic scrolling resumes on the next appended transaction. Escape in the inspector retains its usual collapse behavior. Replacement is unavailable.
 
 Clearing a nonempty log and resetting modified command options require confirmation, with **Cancel** focused by default. Empty logs and default options need no confirmation. Reset affects only the selected command, including its range, fee or notice fields, while preserving shared connection, patron and item details and other commands' options. Clearing closes stale search results and inspectors. **Actions → Export message log** shares the Export log button's save dialog.
 
@@ -113,7 +113,7 @@ The ribbon's institution (AO) and terminal (AP) values are read for each executi
 
 Login algorithm identifiers describe **already encoded** values agreed with the SIP server. `0` sends plain text. Changing an identifier does not perform encryption; the tool sends the visible credentials as entered. Field mappings follow the [SIP2 protocol definition](https://developers.exlibrisgroup.com/wp-content/uploads/2020/01/3M-Standard-Interchange-Protocol-Version-2.00.pdf); Notice update retains the existing server-specific message 43 implementation. Both interfaces expose these command options and use the same SIP client. The field reference and Polaris decoding are shared in `sip-core/Inspection`, so descriptions and compound values stay consistent.
 
-In Windows Forms, **View → Dark mode** (**Ctrl+Shift+D**) switches the current window and open dialogs immediately. The connection, current command values, message history and log selection stay in place; existing sent/received colors update with the theme. The choice is saved per user in `%LOCALAPPDATA%\Clc\SipTestingTool\winforms-appearance.json`. The theme checkbox in default settings also applies immediately; **Save and Close** remembers that choice. A user's existing `dark_theme_enabled` setting is used until a per-user theme choice has been saved.
+In Windows Forms, **View → Dark mode** switches the current window and open dialogs immediately. The connection, current command values, message history and log selection stay in place; existing sent/received colors update with the theme. The choice is saved per user in `%LOCALAPPDATA%\Clc\SipTestingTool\winforms-appearance.json`. The theme checkbox in default settings also applies immediately; **Save and Close** remembers that choice. A user's existing `dark_theme_enabled` setting is used until a per-user theme choice has been saved.
 
 The checkout date/time field and its calendar popup follow the selected theme, including on Windows 10. Check the field to include it, type `yyyy-MM-dd HH:mm:ss`, or choose a calendar date while retaining the time. **Up/Down** adjusts the date/time part at the caret, **F4** or **Alt+Down** opens the calendar, and **Escape** restores the last valid date. Calendar arrow keys move by day/week, **Page Up/Down** by month, and **Enter** selects the focused date. Incomplete or impossible checked dates stop checkout with a validation message; unchecked dates are omitted.
 

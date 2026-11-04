@@ -72,13 +72,16 @@ public sealed partial class DesktopParityTests
     }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
 
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public Task FindNavigationMovesOncePerKeyAndWrapsFromSearchAndTranscript(bool transcriptFocus) => ui.Dispatch(() =>
+    [DataRow(false, false)]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    public Task FindNavigationMovesOncePerKeyAndWrapsFromSearchAndTranscript(bool isMacOS, bool transcriptFocus) => ui.Dispatch(() =>
     {
-        using var model = new MainWindowViewModel();
+        using var model = new MainWindowViewModel { IsConnected = true, SelectedCommand = Choice(SipCommand.ItemInformation) };
         model.LogDocument.Text = SearchTranscript;
-        var window = new MainWindow { DataContext = model };
+        var window = new MainWindow(new DesktopShortcuts(isMacOS)) { DataContext = model };
+        var primary = isMacOS ? RawInputModifiers.Meta : RawInputModifiers.Control;
         window.Show();
         try
         {
@@ -87,9 +90,11 @@ public sealed partial class DesktopParityTests
             var original = log.CaretOffset;
             Press(window, Key.F3);
             Press(window, Key.F3, RawInputModifiers.Shift);
+            Press(window, Key.G, primary);
+            Press(window, Key.G, primary | RawInputModifiers.Shift);
             Assert.AreEqual(original, log.CaretOffset);
             Assert.IsFalse(log.SearchPanel.IsOpened);
-            Press(window, Key.F, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.F, primary);
             Layout(window);
             window.KeyTextInput("alpha");
             var positions = Regex.Matches(SearchTranscript, "alpha", RegexOptions.IgnoreCase).Select(match => match.Index).ToArray();
@@ -97,15 +102,25 @@ public sealed partial class DesktopParityTests
             if (transcriptFocus) { log.TextArea.Focus(); }
             for (var i = 1; i <= positions.Length * 2; i++)
             {
-                Press(window, Key.F3);
-                Assert.AreEqual(positions[i % positions.Length], log.SelectionStart, "F3 must advance exactly one result.");
+                var letter = i <= positions.Length;
+                Press(window, letter ? Key.G : Key.F3, letter ? primary : RawInputModifiers.None);
+                Assert.AreEqual(positions[i % positions.Length], log.SelectionStart, "Each shortcut must advance exactly one result.");
                 Assert.AreEqual(5, log.SelectionLength);
             }
-            for (var i = 1; i <= positions.Length; i++)
+            for (var i = 1; i <= positions.Length * 2; i++)
             {
-                Press(window, Key.F3, RawInputModifiers.Shift);
-                Assert.AreEqual(positions[(positions.Length - i) % positions.Length], log.SelectionStart);
+                var letter = i <= positions.Length;
+                Press(window, letter ? Key.G : Key.F3, RawInputModifiers.Shift | (letter ? primary : RawInputModifiers.None));
+                Assert.AreEqual(positions[(positions.Length * 2 - i) % positions.Length], log.SelectionStart);
             }
+            SearchInput(log).Focus();
+            Press(window, Key.Enter);
+            Assert.AreEqual(positions[1], log.SelectionStart);
+            Press(window, Key.Enter, RawInputModifiers.Shift);
+            Assert.AreEqual(positions[0], log.SelectionStart);
+            Assert.IsTrue(SearchInput(log).IsFocused);
+            Assert.IsNull(model.LoginCommand.ExecutionTask, "Search navigation must never run SIP Login.");
+            Assert.IsNull(model.ExecuteCommand.ExecutionTask);
             ActivateAction(window, "FindNextMenuItem");
             Assert.AreEqual(positions[1], log.SelectionStart);
             ActivateAction(window, "FindPreviousMenuItem");
@@ -118,6 +133,8 @@ public sealed partial class DesktopParityTests
             Press(window, Key.Escape);
             var caret = log.CaretOffset;
             Press(window, Key.F3);
+            Press(window, Key.G, primary);
+            Press(window, Key.G, primary | RawInputModifiers.Shift);
             Assert.AreEqual(caret, log.CaretOffset);
             Assert.IsFalse(window.FindControl<MenuItem>("FindNextMenuItem")!.Command!.CanExecute(null));
         }
@@ -141,7 +158,7 @@ public sealed partial class DesktopParityTests
         {
             Layout(window);
             var log = window.FindControl<TextEditor>("MessageLog")!;
-            Press(window, Key.F, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.F, ShortcutModifier);
             Layout(window);
             log.SearchPanel.MatchCase = matchCase;
             log.SearchPanel.WholeWords = wholeWords;
@@ -166,7 +183,7 @@ public sealed partial class DesktopParityTests
         {
             Layout(window);
             var log = window.FindControl<TextEditor>("MessageLog")!;
-            Press(window, Key.F, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.F, ShortcutModifier);
             Layout(window);
             var caret = log.CaretOffset;
             Press(window, Key.F3);
@@ -201,7 +218,7 @@ public sealed partial class DesktopParityTests
             Layout(window);
             var log = window.FindControl<TextEditor>("MessageLog")!;
             log.ScrollToEnd();
-            Press(window, Key.F, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.F, ShortcutModifier);
             Layout(window);
             log.CaretOffset = 0;
             window.KeyTextInput("needle");
@@ -242,12 +259,12 @@ public sealed partial class DesktopParityTests
         {
             Layout(window);
             var log = window.FindControl<TextEditor>("MessageLog")!;
-            Press(window, Key.F, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.F, ShortcutModifier);
             Layout(window);
             window.KeyTextInput("alpha");
             log.TextArea.Focus();
             var selection = log.SelectionStart;
-            Press(window, Key.S, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.S, ShortcutModifier);
             var export = (IAsyncRelayCommand)window.FindControl<Button>("ExportLogButton")!.Command!;
             Assert.HasCount(1, provider.Saves);
             Press(window, Key.F3);
@@ -255,7 +272,10 @@ public sealed partial class DesktopParityTests
             Press(window, Key.Escape);
             Press(window, Key.F6);
             Press(window, Key.F6, RawInputModifiers.Shift);
-            Press(window, Key.F, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.F, ShortcutModifier);
+            Press(window, Key.G, ShortcutModifier);
+            Press(window, Key.G, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.Enter, ShortcutModifier);
             Assert.AreEqual(selection, log.SelectionStart);
             Assert.IsTrue(log.SearchPanel.IsOpened && log.TextArea.IsFocused);
             Assert.IsTrue(SearchInput(log).SelectedText.Length == 0);
@@ -289,16 +309,16 @@ public sealed partial class DesktopParityTests
             var pinOffset = content.IndexOf("<-- ", StringComparison.Ordinal) + 6;
             window.LogInspection.InspectOffset(pinOffset, true);
             Assert.IsNotNull(window.LogInspection.PinnedField);
-            Press(window, Key.F, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.F, ShortcutModifier);
             Layout(window);
             window.KeyTextInput("2187");
             Assert.IsTrue(log.TextArea.TextView.LineTransformers.OfType<SipLogColorizer>().Any());
             log.TextArea.Focus();
-            Press(window, Key.Enter, RawInputModifiers.Control);
+            Press(window, Key.Enter, ShortcutModifier);
             Layout(window);
             var inspector = window.FindControl<MessageFieldsPanel>("MessageFields")!;
             Assert.IsTrue(inspector.IsVisible && inspector.IsKeyboardFocusWithin);
-            Press(window, Key.F, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.F, ShortcutModifier);
             Layout(window);
             Assert.IsTrue(SearchInput(log).IsFocused);
             foreach (var size in new[] { new Size(1060, 720), new Size(1280, 820) })
@@ -324,7 +344,7 @@ public sealed partial class DesktopParityTests
             Assert.IsNotNull(window.LogInspection.HoveredField);
             window.LogInspection.InspectOffset(pinOffset, true);
             Assert.IsNotNull(window.LogInspection.PinnedField);
-            Press(window, Key.M, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.J, ShortcutModifier);
             Press(window, Key.Escape);
             Assert.IsFalse(inspector.IsVisible, "Normal inspector Escape remains available outside search.");
         }

@@ -57,7 +57,7 @@ public sealed partial class DesktopParityTests
             var log = window.FindControl<TextEditor>("MessageLog")!;
             var raw = log.Text;
             window.FindControl<TextBox>("ServerField")!.Focus();
-            Press(window, Key.M, RawInputModifiers.Shift | (OperatingSystem.IsMacOS() ? RawInputModifiers.Meta : RawInputModifiers.Control));
+            Press(window, Key.J, ShortcutModifier);
             Layout(window);
             if (populated)
             {
@@ -93,7 +93,7 @@ public sealed partial class DesktopParityTests
             Layout(window);
             Assert.IsEmpty(log.TextArea.LeftMargins.First().GetVisualDescendants().OfType<Button>(), "The wrapped response's expander should initially be above the viewport.");
             window.FindControl<TextBox>("ServerField")!.Focus();
-            Press(window, Key.M, RawInputModifiers.Shift | (OperatingSystem.IsMacOS() ? RawInputModifiers.Meta : RawInputModifiers.Control));
+            Press(window, Key.J, ShortcutModifier);
             Layout(window);
             var focused = log.TextArea.LeftMargins.First().GetVisualDescendants().OfType<Button>().Single(button => button.IsFocused);
             Assert.AreEqual("Expand received message 2", AutomationProperties.GetName(focused));
@@ -127,7 +127,7 @@ public sealed partial class DesktopParityTests
             }
             else
             {
-                Press(window, Key.M, RawInputModifiers.Shift | (OperatingSystem.IsMacOS() ? RawInputModifiers.Meta : RawInputModifiers.Control));
+                Press(window, Key.J, ShortcutModifier);
             }
             Layout(window);
             Assert.IsTrue(panel.IsVisible && table.IsKeyboardFocusWithin);
@@ -300,7 +300,7 @@ public sealed partial class DesktopParityTests
             {
                 log.CaretOffset = 0;
                 log.TextArea.Focus();
-                Press(window, Key.Enter, RawInputModifiers.Control);
+                Press(window, Key.Enter, ShortcutModifier);
             }
             var panel = window.FindControl<MessageFieldsPanel>("MessageFields")!;
             var table = panel.GetVisualDescendants().OfType<ListBox>().Single();

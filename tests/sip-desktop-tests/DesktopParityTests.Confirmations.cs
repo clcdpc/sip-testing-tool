@@ -46,7 +46,7 @@ public sealed partial class DesktopParityTests
             Layout(window);
             var log = window.FindControl<TextEditor>("MessageLog")!;
             window.LogInspection.ExpandMessageAtOffset(0);
-            Press(window, Key.F, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.F, ShortcutModifier);
             Layout(window);
             SearchInput(log).Text = "user";
             var original = model.LogDocument.Text;
@@ -139,7 +139,7 @@ public sealed partial class DesktopParityTests
             Activate(window, activation, "ResetOptionsButton", "ResetOptionsMenuItem", Key.R);
             var operation = command.ExecutionTask!;
             StringAssert.Contains(window.OwnedWindows.Single().Title!, "Checkout");
-            Press(window, Key.R, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.R, ShortcutModifier);
             Assert.HasCount(1, window.OwnedWindows);
             RespondToConfirmation(window, confirm);
             await operation;
@@ -181,7 +181,7 @@ public sealed partial class DesktopParityTests
         {
             Layout(window);
             Assert.IsFalse(model.HasModifiedOptions, selected.ToString());
-            Press(window, Key.R, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.R, ShortcutModifier);
             var command = (IAsyncRelayCommand)window.FindControl<MenuItem>("ResetOptionsMenuItem")!.Command!;
             await command.ExecutionTask!;
             Assert.HasCount(0, window.OwnedWindows, "Unmodified options must reset without a dialog.");
@@ -200,12 +200,12 @@ public sealed partial class DesktopParityTests
                 default: model.Options.TerminalPassword = "secret"; break;
             }
             Assert.IsTrue(model.HasModifiedOptions, selected.ToString());
-            Press(window, Key.R, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.R, ShortcutModifier);
             var operation = command.ExecutionTask!;
             RespondToConfirmation(window, false);
             await operation;
             Assert.IsTrue(model.HasModifiedOptions, "Cancellation must preserve all modified values.");
-            Press(window, Key.R, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.R, ShortcutModifier);
             operation = command.ExecutionTask!;
             RespondToConfirmation(window, true);
             await operation;
@@ -222,7 +222,7 @@ public sealed partial class DesktopParityTests
                 Assert.AreEqual("5", model.Fields.Bq);
             }
             model.IsBusy = true;
-            Press(window, Key.R, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.R, ShortcutModifier);
             Assert.IsFalse(command.CanExecute(null));
             Assert.HasCount(0, window.OwnedWindows);
         }
@@ -256,7 +256,7 @@ public sealed partial class DesktopParityTests
         try
         {
             Layout(window);
-            var modifiers = ShortcutModifier | RawInputModifiers.Shift;
+            var modifiers = ShortcutModifier | (key == Key.X ? RawInputModifiers.Shift : RawInputModifiers.None);
             window.KeyPress(key, modifiers, PhysicalKey.None, null);
             var command = (IAsyncRelayCommand)window.FindControl<MenuItem>(name)!.Command!;
             var operation = command.ExecutionTask;
@@ -292,7 +292,7 @@ public sealed partial class DesktopParityTests
             Layout(window);
             foreach (var (key, name, file) in new[] { (Key.R, "ResetOptionsMenuItem", "reset"), (Key.X, "ClearLogMenuItem", "clear") })
             {
-                Press(window, key, ShortcutModifier | RawInputModifiers.Shift);
+                Press(window, key, ShortcutModifier | (key == Key.X ? RawInputModifiers.Shift : RawInputModifiers.None));
                 var command = (IAsyncRelayCommand)window.FindControl<MenuItem>(name)!.Command!;
                 var dialog = window.OwnedWindows.Single();
                 Layout(dialog);
@@ -305,7 +305,7 @@ public sealed partial class DesktopParityTests
                 }
                 SaveFrame(dialog, $"shortcuts-{file}-confirmation-{(dark ? "dark" : "light")}");
                 Press(dialog, Key.F6);
-                Press(dialog, Key.F, ShortcutModifier | RawInputModifiers.Shift);
+                Press(dialog, Key.F, ShortcutModifier);
                 Assert.IsTrue(Field<Button>(dialog, "CancelButton").IsFocused);
                 dialog.KeyPress(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, null);
                 window.KeyRelease(Key.Escape, RawInputModifiers.None, PhysicalKey.Escape, null);

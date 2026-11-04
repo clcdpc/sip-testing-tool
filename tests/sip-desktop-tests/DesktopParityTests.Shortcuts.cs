@@ -30,11 +30,12 @@ public sealed partial class DesktopParityTests
         var label = isMacOS ? "Cmd+" : "Ctrl+";
         foreach (var (gesture, key, shift) in new[]
         {
-            (shortcuts.FocusCommand, Key.K, true), (shortcuts.FocusPatron, Key.P, true),
-            (shortcuts.FocusItem, Key.I, true), (shortcuts.FocusServer, Key.L, true),
-            (shortcuts.ExportLog, Key.S, true), (shortcuts.ToggleTheme, Key.D, true),
-            (shortcuts.FocusMessages, Key.M, true), (shortcuts.Connect, Key.C, true), (shortcuts.Login, Key.G, true),
-            (shortcuts.FindLog, Key.F, true), (shortcuts.ClearLog, Key.X, true), (shortcuts.ResetOptions, Key.R, true)
+            (shortcuts.FocusCommand, Key.K, false), (shortcuts.FocusPatron, Key.P, false),
+            (shortcuts.FocusItem, Key.I, false), (shortcuts.FocusServer, Key.L, false),
+            (shortcuts.ExportLog, Key.S, false), (shortcuts.ToggleTheme, Key.D, false),
+            (shortcuts.FocusMessages, Key.J, false), (shortcuts.Connect, Key.N, false), (shortcuts.Login, Key.U, false),
+            (shortcuts.FindLog, Key.F, false), (shortcuts.ClearLog, Key.X, true), (shortcuts.ResetOptions, Key.R, false),
+            (shortcuts.FindNext, Key.G, false), (shortcuts.FindPrevious, Key.G, true), (shortcuts.InspectMessage, Key.Enter, false)
         })
         {
             Assert.AreEqual(key, gesture.Key);
@@ -46,7 +47,7 @@ public sealed partial class DesktopParityTests
         Assert.AreEqual("F5", DesktopShortcuts.Label(shortcuts.Execute));
         foreach (var (gesture, key, shift) in new[]
         {
-            (shortcuts.FindNext, Key.F3, false), (shortcuts.FindPrevious, Key.F3, true),
+            (shortcuts.FindNextAlternative, Key.F3, false), (shortcuts.FindPreviousAlternative, Key.F3, true),
             (shortcuts.NextPanel, Key.F6, false), (shortcuts.PreviousPanel, Key.F6, true)
         })
         {
@@ -258,9 +259,9 @@ public sealed partial class DesktopParityTests
     }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
 
     [TestMethod]
-    [DataRow("PatronField", Key.P, true, "P123")]
-    [DataRow("ItemField", Key.I, true, "I456")]
-    [DataRow("ServerField", Key.L, true, "sip.example.test")]
+    [DataRow("PatronField", Key.P, false, "P123")]
+    [DataRow("ItemField", Key.I, false, "I456")]
+    [DataRow("ServerField", Key.L, false, "sip.example.test")]
     public Task InputShortcutsSelectExistingTextAndAllowImmediateReplacement(string name, Key key, bool shift, string value) => ui.Dispatch(() =>
     {
         using var model = new MainWindowViewModel { Fields = SampleFields() };
@@ -293,10 +294,10 @@ public sealed partial class DesktopParityTests
     }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
 
     [TestMethod]
-    [DataRow("PatronField", Key.P, true)]
-    [DataRow("ItemField", Key.I, true)]
-    [DataRow("ServerField", Key.L, true)]
-    [DataRow("CommandPicker", Key.K, true)]
+    [DataRow("PatronField", Key.P, false)]
+    [DataRow("ItemField", Key.I, false)]
+    [DataRow("ServerField", Key.L, false)]
+    [DataRow("CommandPicker", Key.K, false)]
     public Task FocusShortcutsSkipDisabledAndHiddenInputs(string name, Key key, bool shift) => ui.Dispatch(() =>
     {
         using var model = new MainWindowViewModel { Fields = SampleFields() };
@@ -331,9 +332,9 @@ public sealed partial class DesktopParityTests
             Layout(window);
             var source = window.FindControl<Button>("ClearLogButton")!;
             source.Focus();
-            Press(window, Key.P, ShortcutModifier | RawInputModifiers.Shift);
-            Press(window, Key.I, ShortcutModifier | RawInputModifiers.Shift);
-            Press(window, Key.L, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.P, ShortcutModifier);
+            Press(window, Key.I, ShortcutModifier);
+            Press(window, Key.L, ShortcutModifier);
             Assert.IsTrue(source.IsFocused);
             Assert.IsNull(model.ConnectCommand.ExecutionTask);
         }
@@ -351,7 +352,7 @@ public sealed partial class DesktopParityTests
             Layout(window);
             var picker = window.FindControl<ComboBox>("CommandPicker")!;
             window.FindControl<TextBox>("ServerField")!.Focus();
-            Press(window, Key.K, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.K, ShortcutModifier);
             Assert.IsTrue(picker.IsFocused);
             Assert.AreEqual(SipCommand.ItemInformation, model.SelectedCommand.Command);
             Assert.AreSame(model.SelectedCommand, picker.SelectedItem);
@@ -389,12 +390,12 @@ public sealed partial class DesktopParityTests
         try
         {
             Layout(window);
-            Press(window, Key.P, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.P, ShortcutModifier);
             window.KeyTextInput("scanned-patron");
             Press(window, Key.F5);
             await model.ExecuteCommand.ExecutionTask!;
             model.SelectedCommand = Choice(SipCommand.ItemInformation);
-            Press(window, Key.I, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.I, ShortcutModifier);
             window.KeyTextInput("scanned-item");
             Press(window, Key.F5);
             await model.ExecuteCommand.ExecutionTask!;
@@ -442,7 +443,7 @@ public sealed partial class DesktopParityTests
             {
                 ActivateAction(window, "ExportLogMenuItem");
             }
-            else { Press(window, Key.S, ShortcutModifier | RawInputModifiers.Shift); }
+            else { Press(window, Key.S, ShortcutModifier); }
             Assert.HasCount(1, provider.Saves);
             Assert.IsTrue(command.IsRunning && !command.CanExecute(null));
             var operation = command.ExecutionTask!;
@@ -456,15 +457,15 @@ public sealed partial class DesktopParityTests
             }
             Assert.IsFalse(button.IsEffectivelyEnabled);
             actions.IsSubMenuOpen = false;
-            Press(window, Key.S, ShortcutModifier | RawInputModifiers.Shift);
-            Press(window, Key.S, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.S, ShortcutModifier);
+            Press(window, Key.S, ShortcutModifier);
             Assert.HasCount(1, provider.Saves);
             Assert.AreSame(operation, command.ExecutionTask);
             var source = window.FindControl<TextBox>("UsernameField")!;
             source.Focus();
-            Press(window, Key.P, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.P, ShortcutModifier);
             Press(window, Key.F5);
-            Press(window, Key.D, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.D, ShortcutModifier);
             Assert.IsTrue(source.IsFocused, "A native save dialog must block focus shortcuts behind it.");
             Assert.IsNull(model.ExecuteCommand.ExecutionTask);
             Assert.IsNull(model.ToggleThemeCommand.ExecutionTask);
@@ -500,17 +501,17 @@ public sealed partial class DesktopParityTests
         {
             Layout(window);
             var command = (IAsyncRelayCommand)window.FindControl<Button>("ExportLogButton")!.Command!;
-            Press(window, Key.S, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.S, ShortcutModifier);
             provider.Result.SetResult(null);
             await command.ExecutionTask!;
             Assert.IsFalse(model.HasError);
             provider.Result = new(TaskCreationOptions.RunContinuationsAsynchronously);
-            Press(window, Key.S, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.S, ShortcutModifier);
             provider.Result.SetException(new IOException("save denied"));
             await command.ExecutionTask!;
             Assert.AreEqual("Could not export the log: save denied", model.ErrorMessage);
             provider.Result = new(TaskCreationOptions.RunContinuationsAsynchronously);
-            Press(window, Key.S, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.S, ShortcutModifier);
             Assert.HasCount(3, provider.Saves);
             provider.Result.SetResult(null);
             await command.ExecutionTask!;
@@ -554,7 +555,7 @@ public sealed partial class DesktopParityTests
             dialog.Close();
             await operation;
             window.Activate();
-            Press(window, Key.P, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.P, ShortcutModifier);
             Assert.IsTrue(window.FindControl<TextBox>("PatronField")!.IsFocused, "Shortcuts must work again after the modal closes.");
         }
         finally { dialog.Close(); window.Close(); }
@@ -576,7 +577,7 @@ public sealed partial class DesktopParityTests
             var wrong = OperatingSystem.IsMacOS() ? RawInputModifiers.Control : RawInputModifiers.Meta;
             Press(window, Key.D, wrong | RawInputModifiers.Shift);
             Assert.IsNull(model.ToggleThemeCommand.ExecutionTask);
-            var modifiers = ShortcutModifier | RawInputModifiers.Shift;
+            var modifiers = ShortcutModifier;
             window.KeyPress(Key.D, modifiers, PhysicalKey.D, null);
             await model.ToggleThemeCommand.ExecutionTask!;
             Assert.IsTrue((await store.LoadAsync()).DarkTheme);
@@ -605,8 +606,8 @@ public sealed partial class DesktopParityTests
         try
         {
             var shortcuts = new DesktopShortcuts(OperatingSystem.IsMacOS());
-            Assert.HasCount(17, window.KeyBindings);
-            Assert.AreEqual(17, window.KeyBindings.Select(binding => (binding.Gesture.Key, binding.Gesture.KeyModifiers)).Distinct().Count());
+            Assert.HasCount(20, window.KeyBindings);
+            Assert.AreEqual(20, window.KeyBindings.Select(binding => (binding.Gesture.Key, binding.Gesture.KeyModifiers)).Distinct().Count());
             foreach (var (name, gesture) in new[]
             {
                 ("DarkModeMenuItem", shortcuts.ToggleTheme), ("FocusMessagesMenuItem", shortcuts.FocusMessages),

@@ -41,19 +41,19 @@ public sealed partial class DesktopParityTests
             Layout(window);
             var command = (IAsyncRelayCommand)window.FindControl<Button>("ConnectButton")!.Command!;
             Assert.AreSame(command, window.FindControl<MenuItem>("ConnectMenuItem")!.Command);
-            Activate(window, activation, "ConnectButton", "ConnectMenuItem", Key.C);
+            Activate(window, activation, "ConnectButton", "ConnectMenuItem", Key.N);
             await command.ExecutionTask!;
             Assert.IsNotNull(model.ConnectCommand.ExecutionTask);
             Assert.IsTrue(model.IsConnected && !model.IsBusy && !model.HasError);
             StringAssert.Contains(model.Status, initial.Port.ToString());
             model.Fields.Port = "";
-            Activate(window, activation, "ConnectButton", "ConnectMenuItem", Key.C);
+            Activate(window, activation, "ConnectButton", "ConnectMenuItem", Key.N);
             await command.ExecutionTask!;
             Assert.IsTrue(model.HasError && model.IsConnected);
             Assert.IsTrue(window.FindControl<TextBox>("PortField")!.IsFocused);
             StringAssert.Contains(model.Status, initial.Port.ToString());
             model.Fields.Port = replacement.Port.ToString();
-            Activate(window, activation, "ConnectButton", "ConnectMenuItem", Key.C);
+            Activate(window, activation, "ConnectButton", "ConnectMenuItem", Key.N);
             await command.ExecutionTask!;
             await initial.Completion;
             Assert.IsTrue(model.IsConnected && !model.HasError);
@@ -81,27 +81,27 @@ public sealed partial class DesktopParityTests
         {
             Layout(window);
             model.IsBusy = true;
-            var modifiers = ShortcutModifier | RawInputModifiers.Shift;
-            window.KeyPress(Key.C, modifiers, PhysicalKey.C, null);
+            var modifiers = ShortcutModifier;
+            window.KeyPress(Key.N, modifiers, PhysicalKey.N, null);
             Assert.IsNull(model.ConnectCommand.ExecutionTask);
             model.IsBusy = false;
-            window.KeyPress(Key.C, modifiers, PhysicalKey.C, null);
+            window.KeyPress(Key.N, modifiers, PhysicalKey.N, null);
             Assert.AreEqual(0, attempts);
-            window.KeyRelease(Key.C, modifiers, PhysicalKey.C, null);
-            window.KeyPress(Key.C, modifiers, PhysicalKey.C, null);
+            window.KeyRelease(Key.N, modifiers, PhysicalKey.N, null);
+            window.KeyPress(Key.N, modifiers, PhysicalKey.N, null);
             var operation = model.ConnectCommand.ExecutionTask!;
             Assert.AreEqual(1, attempts);
             Assert.IsTrue(model.IsBusy && model.IsConnecting);
-            window.KeyPress(Key.C, modifiers, PhysicalKey.C, null);
+            window.KeyPress(Key.N, modifiers, PhysicalKey.N, null);
             Assert.AreSame(operation, model.ConnectCommand.ExecutionTask);
             Assert.IsFalse(window.FindControl<MenuItem>("ConnectMenuItem")!.Command!.CanExecute(null));
             model.CancelConnectCommand.Execute(null);
             await ((IAsyncRelayCommand)window.FindControl<Button>("ConnectButton")!.Command!).ExecutionTask!;
             Assert.IsFalse(model.IsConnecting || model.IsBusy || model.HasError);
             Assert.AreEqual("Connection cancelled", model.Status);
-            window.KeyPress(Key.C, modifiers, PhysicalKey.C, null);
+            window.KeyPress(Key.N, modifiers, PhysicalKey.N, null);
             Assert.AreEqual(1, attempts);
-            window.KeyRelease(Key.C, modifiers, PhysicalKey.C, null);
+            window.KeyRelease(Key.N, modifiers, PhysicalKey.N, null);
         }
         finally { window.Close(); }
         return true;
@@ -121,7 +121,7 @@ public sealed partial class DesktopParityTests
         try
         {
             Layout(window);
-            Press(window, Key.C, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.N, ShortcutModifier);
             await ((IAsyncRelayCommand)window.FindControl<Button>("ConnectButton")!.Command!).ExecutionTask!;
             Assert.IsTrue(model.HasError);
             StringAssert.Contains(model.ErrorMessage!, timeout ? "timed out" : "refused");
@@ -155,14 +155,14 @@ public sealed partial class DesktopParityTests
             Layout(window);
             var login = (IAsyncRelayCommand)window.FindControl<Button>("LoginButton")!.Command!;
             Assert.AreSame(login, window.FindControl<MenuItem>("LoginMenuItem")!.Command);
-            Press(window, Key.G, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.U, ShortcutModifier);
             Assert.IsNull(model.LoginCommand.ExecutionTask);
             await model.ConnectCommand.ExecuteAsync(null);
             model.IsBusy = true;
-            Press(window, Key.G, ShortcutModifier | RawInputModifiers.Shift);
+            Press(window, Key.U, ShortcutModifier);
             Assert.IsNull(model.LoginCommand.ExecutionTask);
             model.IsBusy = false;
-            Activate(window, activation, "LoginButton", "LoginMenuItem", Key.G);
+            Activate(window, activation, "LoginButton", "LoginMenuItem", Key.U);
             await login.ExecutionTask!;
             await server.Completion;
             StringAssert.StartsWith(request!, "93");
@@ -197,20 +197,20 @@ public sealed partial class DesktopParityTests
         try
         {
             Layout(window);
-            var modifiers = ShortcutModifier | RawInputModifiers.Shift;
-            window.KeyPress(Key.G, modifiers, PhysicalKey.G, null);
+            var modifiers = ShortcutModifier;
+            window.KeyPress(Key.U, modifiers, PhysicalKey.U, null);
             await received.Task;
             var operation = model.LoginCommand.ExecutionTask;
-            window.KeyPress(Key.G, modifiers, PhysicalKey.G, null);
+            window.KeyPress(Key.U, modifiers, PhysicalKey.U, null);
             Press(window, Key.F5);
-            Press(window, Key.C, modifiers);
+            Press(window, Key.N, modifiers);
             Assert.AreSame(operation, model.LoginCommand.ExecutionTask);
             Assert.IsNull(model.ExecuteCommand.ExecutionTask);
             release.SetResult();
             await ((IAsyncRelayCommand)window.FindControl<Button>("LoginButton")!.Command!).ExecutionTask!;
-            window.KeyPress(Key.G, modifiers, PhysicalKey.G, null);
+            window.KeyPress(Key.U, modifiers, PhysicalKey.U, null);
             Assert.AreSame(operation, model.LoginCommand.ExecutionTask);
-            window.KeyRelease(Key.G, modifiers, PhysicalKey.G, null);
+            window.KeyRelease(Key.U, modifiers, PhysicalKey.U, null);
             await server.Completion;
             Assert.AreEqual(1, model.LogDocument.Text.Split("--> ").Length - 1);
             Assert.AreEqual(SipCommand.Checkout, model.SelectedCommand.Command);
@@ -300,7 +300,7 @@ public sealed partial class DesktopParityTests
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public Task ObsoleteFocusAndEditorFindAliasesAreRemoved(bool isMacOS) => ui.Dispatch(() =>
+    public Task OnlyCurrentFocusAndFindGesturesAreRegistered(bool isMacOS) => ui.Dispatch(() =>
     {
         using var model = new MainWindowViewModel();
         var window = new MainWindow(new DesktopShortcuts(isMacOS)) { DataContext = model };
@@ -311,18 +311,22 @@ public sealed partial class DesktopParityTests
             var source = window.FindControl<TextBox>("UsernameField")!;
             var primary = isMacOS ? RawInputModifiers.Meta : RawInputModifiers.Control;
             source.Focus();
-            Press(window, Key.K, primary);
-            Press(window, Key.L, primary);
+            Press(window, Key.K, primary | RawInputModifiers.Shift);
+            Press(window, Key.L, primary | RawInputModifiers.Shift);
             Assert.IsTrue(source.IsFocused);
             var log = window.FindControl<TextEditor>("MessageLog")!;
             log.TextArea.Focus();
-            Press(window, Key.F, RawInputModifiers.Control);
+            Press(window, Key.F, primary | RawInputModifiers.Shift);
+            Press(window, Key.F, isMacOS ? RawInputModifiers.Control : RawInputModifiers.Meta);
             Press(window, Key.H, RawInputModifiers.Control);
             Assert.IsFalse(log.SearchPanel.IsOpened);
-            Press(window, Key.K, primary | RawInputModifiers.Shift);
+            Press(window, Key.K, primary);
             Assert.IsTrue(window.FindControl<ComboBox>("CommandPicker")!.IsFocused);
-            Press(window, Key.L, primary | RawInputModifiers.Shift);
+            Press(window, Key.L, primary);
             Assert.IsTrue(window.FindControl<TextBox>("ServerField")!.IsFocused);
+            Press(window, Key.F, primary);
+            Layout(window);
+            Assert.IsTrue(SearchInput(log).IsFocused);
         }
         finally { window.Close(); }
     }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
@@ -336,6 +340,6 @@ public sealed partial class DesktopParityTests
             Press(window, Key.Space);
         }
         else if (activation == "menu") { ActivateAction(window, menuName); }
-        else { Press(window, key, ShortcutModifier | RawInputModifiers.Shift); }
+        else { Press(window, key, ShortcutModifier | (key == Key.X ? RawInputModifiers.Shift : RawInputModifiers.None)); }
     }
 }
