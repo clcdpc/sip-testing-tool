@@ -57,7 +57,7 @@ public sealed partial class DesktopParityTests
             var log = window.FindControl<TextEditor>("MessageLog")!;
             var raw = log.Text;
             window.FindControl<TextBox>("ServerField")!.Focus();
-            Press(window, Key.M, RawInputModifiers.Shift | (OperatingSystem.IsMacOS() ? RawInputModifiers.Meta : RawInputModifiers.Control));
+            Press(window, Key.J, ShortcutModifier);
             Layout(window);
             if (populated)
             {
@@ -93,7 +93,7 @@ public sealed partial class DesktopParityTests
             Layout(window);
             Assert.IsEmpty(log.TextArea.LeftMargins.First().GetVisualDescendants().OfType<Button>(), "The wrapped response's expander should initially be above the viewport.");
             window.FindControl<TextBox>("ServerField")!.Focus();
-            Press(window, Key.M, RawInputModifiers.Shift | (OperatingSystem.IsMacOS() ? RawInputModifiers.Meta : RawInputModifiers.Control));
+            Press(window, Key.J, ShortcutModifier);
             Layout(window);
             var focused = log.TextArea.LeftMargins.First().GetVisualDescendants().OfType<Button>().Single(button => button.IsFocused);
             Assert.AreEqual("Expand received message 2", AutomationProperties.GetName(focused));
@@ -106,7 +106,7 @@ public sealed partial class DesktopParityTests
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public Task MessagesShortcutAndViewMenuReturnToOpenProperties(bool menu) => ui.Dispatch(() =>
+    public Task MessagesShortcutAndActionsMenuReturnToOpenProperties(bool menu) => ui.Dispatch(() =>
     {
         using var model = new MainWindowViewModel();
         var window = new MainWindow { DataContext = model };
@@ -123,16 +123,11 @@ public sealed partial class DesktopParityTests
             window.FindControl<TextBox>("ServerField")!.Focus();
             if (menu)
             {
-                var view = window.GetVisualDescendants().OfType<MenuItem>().Single(item => Equals(item.Header, "_View"));
-                view.IsSubMenuOpen = true;
-                Layout(window);
-                window.FindControl<MenuItem>("FocusMessagesMenuItem")!.Focus(NavigationMethod.Tab);
-                Press(window, Key.Enter);
-                Assert.IsFalse(view.IsSubMenuOpen);
+                ActivateAction(window, "FocusMessagesMenuItem");
             }
             else
             {
-                Press(window, Key.M, RawInputModifiers.Shift | (OperatingSystem.IsMacOS() ? RawInputModifiers.Meta : RawInputModifiers.Control));
+                Press(window, Key.J, ShortcutModifier);
             }
             Layout(window);
             Assert.IsTrue(panel.IsVisible && table.IsKeyboardFocusWithin);
@@ -305,7 +300,7 @@ public sealed partial class DesktopParityTests
             {
                 log.CaretOffset = 0;
                 log.TextArea.Focus();
-                Press(window, Key.Enter, RawInputModifiers.Control);
+                Press(window, Key.Enter, ShortcutModifier);
             }
             var panel = window.FindControl<MessageFieldsPanel>("MessageFields")!;
             var table = panel.GetVisualDescendants().OfType<ListBox>().Single();

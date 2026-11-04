@@ -37,6 +37,18 @@ public partial class CommandOptions : ObservableObject
     };
 
     public CommandOptions Copy() => JsonSerializer.Deserialize<CommandOptions>(JsonSerializer.Serialize(this))!;
+
+    public bool HasSameValues(CommandOptions other) =>
+        TerminalPassword == other.TerminalPassword && LanguageCode.Trim() == other.LanguageCode.Trim()
+        && NoBlock == other.NoBlock && RenewalAllowed == other.RenewalAllowed
+        && ThirdPartyAllowed == other.ThirdPartyAllowed && IncludeItemBarcode == other.IncludeItemBarcode
+        && UseDate == other.UseDate && (!UseDate || DateText == other.DateText)
+        && ItemProperties == other.ItemProperties && FeeAcknowledged == other.FeeAcknowledged
+        && Cancel == other.Cancel && TitleIdentifier == other.TitleIdentifier && ReturnLocation == other.ReturnLocation
+        && string.Equals(Currency.Trim(), other.Currency.Trim(), StringComparison.OrdinalIgnoreCase)
+        && UidAlgorithm == other.UidAlgorithm && PwdAlgorithm == other.PwdAlgorithm
+        && AcsStatus == other.AcsStatus && PrintWidth.Trim() == other.PrintWidth.Trim()
+        && ProtocolVersion.Trim() == other.ProtocolVersion.Trim();
 }
 
 public sealed class CommandValidationException(string fieldName, string message) : ArgumentException(message)

@@ -7,11 +7,8 @@
         Title="{Binding WindowTitle}" Width="1280" Height="820" MinWidth="1060" MinHeight="720"
         Icon="/Assets/app.ico" Background="{DynamicResource SurfaceBrush}"
         Topmost="{Binding AlwaysOnTop}" WindowStartupLocation="CenterScreen">
-  <Window.KeyBindings>
-    <KeyBinding Gesture="Ctrl+Shift+D" Command="{Binding ToggleThemeCommand}" />
-  </Window.KeyBindings>
   <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
-    <Menu Grid.Row="0" Background="{DynamicResource RibbonBrush}">
+    <Menu x:Name="MainMenu" Grid.Row="0" Background="{DynamicResource RibbonBrush}">
       <MenuItem Header="_Settings">
         <MenuItem Header="_Import settings…" Click="ImportSettings_Click" />
         <MenuItem Header="_Export settings…" Click="ExportSettings_Click" />
@@ -19,11 +16,31 @@
         <MenuItem Header="_Change default settings…" Click="Settings_Click" />
         <MenuItem Header="_Reload default values" Click="ReloadDefaults_Click" />
       </MenuItem>
-      <MenuItem Header="_View">
-        <MenuItem Header="Always on top" ToggleType="CheckBox" IsChecked="{Binding AlwaysOnTop}" />
-        <MenuItem Header="_Dark mode" ToggleType="CheckBox" IsChecked="{Binding Preferences.DarkTheme, Mode=OneWay}" Command="{Binding ToggleThemeCommand}" InputGesture="Ctrl+Shift+D" />
+      <MenuItem x:Name="ActionsMenu" Header="_Actions">
+        <MenuItem x:Name="ConnectMenuItem" Header="_Connect / Reconnect" />
+        <MenuItem x:Name="LoginMenuItem" Header="_Login" />
+        <MenuItem x:Name="ExecuteMenuItem" Header="_Execute selected command" />
         <Separator />
-        <MenuItem x:Name="FocusMessagesMenuItem" Header="_Sent / received messages" />
+        <MenuItem x:Name="FocusCommandMenuItem" Header="Focus SIP _command" />
+        <MenuItem x:Name="FocusServerMenuItem" Header="Focus _server address" />
+        <MenuItem x:Name="FocusPatronMenuItem" Header="Focus _patron barcode" />
+        <MenuItem x:Name="FocusItemMenuItem" Header="Focus _item barcode" />
+        <MenuItem x:Name="FocusMessagesMenuItem" Header="_Focus messages" />
+        <MenuItem x:Name="NextPanelMenuItem" Header="_Next panel" />
+        <MenuItem x:Name="PreviousPanelMenuItem" Header="Previous panel" />
+        <Separator />
+        <MenuItem x:Name="FindLogMenuItem" Header="Find in message log" />
+        <MenuItem x:Name="FindNextMenuItem" Header="Find next" />
+        <MenuItem x:Name="FindPreviousMenuItem" Header="Find previous" />
+        <MenuItem x:Name="InspectMessageMenuItem" Header="Inspect message at caret" />
+        <MenuItem x:Name="ExportLogMenuItem" Header="Export message _log…" />
+        <MenuItem x:Name="ClearLogMenuItem" Header="Clear message log" />
+        <Separator />
+        <MenuItem x:Name="ResetOptionsMenuItem" Header="Reset selected options" />
+      </MenuItem>
+      <MenuItem x:Name="ViewMenu" Header="_View">
+        <MenuItem Header="Always on top" ToggleType="CheckBox" IsChecked="{Binding AlwaysOnTop, Mode=TwoWay}" />
+        <MenuItem x:Name="DarkModeMenuItem" Header="_Dark mode" ToggleType="CheckBox" IsChecked="{Binding Preferences.DarkTheme, Mode=OneWay}" />
       </MenuItem>
       <MenuItem Header="_Updates">
         <MenuItem Header="_Check for updates" Command="{Binding CheckUpdatesCommand}" />
@@ -37,7 +54,7 @@
           <Grid RowDefinitions="Auto,Auto,Auto,Auto">
             <TextBlock Classes="groupTitle" Text="Connection" />
             <Grid Grid.Row="1" ColumnDefinitions="*,82" IsEnabled="{Binding !IsBusy}">
-              <StackPanel Classes="field" Margin="0,0,8,0"><TextBlock Classes="fieldLabel" Text="Server" /><TextBox x:Name="ServerField" Text="{Binding Fields.Server}" AutomationProperties.Name="SIP Server" /></StackPanel>
+              <StackPanel Classes="field" Margin="0,0,8,0"><TextBlock x:Name="ServerLabel" Classes="fieldLabel" Text="Server" /><TextBox x:Name="ServerField" Text="{Binding Fields.Server}" AutomationProperties.Name="SIP Server" /></StackPanel>
               <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Port" /><TextBox x:Name="PortField" Text="{Binding Fields.Port}" AutomationProperties.Name="SIP Server Port" /></StackPanel>
             </Grid>
             <Grid Grid.Row="2" ColumnDefinitions="*,82" Margin="0,8,0,0" IsEnabled="{Binding !IsBusy}">
@@ -45,7 +62,7 @@
               <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Terminal (AP)" /><TextBox x:Name="ApField" Text="{Binding Fields.Ap}" AutomationProperties.Name="Terminal AP" /></StackPanel>
             </Grid>
             <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="6" Margin="0,8,0,0">
-              <Button x:Name="ConnectButton" Content="Connect" Command="{Binding ConnectCommand}" MinWidth="88" />
+              <Button x:Name="ConnectButton" Content="Connect" MinWidth="88" />
               <Button x:Name="CancelConnectButton" Content="Cancel" Command="{Binding CancelConnectCommand}" IsVisible="{Binding IsConnecting}" MinWidth="80" />
             </StackPanel>
           </Grid>
@@ -70,20 +87,20 @@
                 </AutoCompleteBox>
               </StackPanel>
             </Grid>
-            <Button x:Name="LoginButton" Grid.Row="3" Content="Login" Command="{Binding LoginCommand}" Margin="0,8,0,0" MinWidth="88" />
+            <Button x:Name="LoginButton" Grid.Row="3" Content="Login" Margin="0,8,0,0" MinWidth="88" />
           </Grid>
         </Border>
-        <Border Grid.Column="2" Padding="12,8" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,1,0" IsEnabled="{Binding !IsBusy}">
+        <Border x:Name="PatronGroup" Grid.Column="2" Padding="12,8" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,1,0" IsEnabled="{Binding !IsBusy}">
           <Grid RowDefinitions="Auto,Auto,Auto,*">
             <TextBlock Classes="groupTitle" Text="Patron" />
-            <StackPanel Grid.Row="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Barcode (AA)" /><TextBox x:Name="PatronField" Text="{Binding Fields.PatronBarcode}" AutomationProperties.Name="Patron Barcode" /></StackPanel>
+            <StackPanel Grid.Row="1" Classes="field"><TextBlock x:Name="PatronLabel" Classes="fieldLabel" Text="Barcode (AA)" /><TextBox x:Name="PatronField" Text="{Binding Fields.PatronBarcode}" AutomationProperties.Name="Patron Barcode" /></StackPanel>
             <StackPanel Grid.Row="2" Classes="field" Margin="0,8,0,0"><TextBlock Classes="fieldLabel" Text="PIN (AD)" /><TextBox x:Name="PatronPinField" Text="{Binding Fields.PatronPin}" AutomationProperties.Name="Patron PIN" /></StackPanel>
           </Grid>
         </Border>
-        <Border Grid.Column="3" Padding="12,8" IsEnabled="{Binding !IsBusy}">
+        <Border x:Name="ItemGroup" Grid.Column="3" Padding="12,8" IsEnabled="{Binding !IsBusy}">
           <Grid RowDefinitions="Auto,Auto,*">
             <TextBlock Classes="groupTitle" Text="Item" />
-            <StackPanel Grid.Row="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Barcode (AB)" /><TextBox x:Name="ItemField" Text="{Binding Fields.ItemBarcode}" AutomationProperties.Name="Item Barcode" /></StackPanel>
+            <StackPanel Grid.Row="1" Classes="field"><TextBlock x:Name="ItemLabel" Classes="fieldLabel" Text="Barcode (AB)" /><TextBox x:Name="ItemField" Text="{Binding Fields.ItemBarcode}" AutomationProperties.Name="Item Barcode" /></StackPanel>
           </Grid>
         </Border>
       </Grid>
@@ -102,9 +119,12 @@
         <ColumnDefinition Width="6" />
         <ColumnDefinition Width="*" MinWidth="440" />
       </Grid.ColumnDefinitions>
-      <Border Grid.Column="0" Background="{DynamicResource RibbonBrush}" Padding="12">
+      <Border x:Name="CommandGroup" Grid.Column="0" Background="{DynamicResource RibbonBrush}" Padding="12">
         <Grid RowDefinitions="Auto,*,Auto">
-          <ComboBox x:Name="CommandPicker" ItemsSource="{Binding Commands}" SelectedItem="{Binding SelectedCommand}" HorizontalAlignment="Stretch" Margin="0,0,0,12" AutomationProperties.Name="SIP Command" />
+          <Grid RowDefinitions="Auto,Auto">
+            <ComboBox x:Name="CommandPicker" ItemsSource="{Binding Commands}" SelectedItem="{Binding SelectedCommand}" HorizontalAlignment="Stretch" AutomationProperties.Name="SIP Command" />
+            <TextBlock x:Name="FocusCommandHint" Grid.Row="1" HorizontalAlignment="Right" FontSize="11" LineHeight="12" Opacity="0.65" Focusable="False" IsTabStop="False" />
+          </Grid>
           <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="14">
               <StackPanel x:Name="PatronQueryPanel" IsVisible="{Binding IsPatronQuery}" Spacing="14">
@@ -131,23 +151,25 @@
               <views:CommandOptionsView x:Name="CommandOptionsHost" />
             </StackPanel>
           </ScrollViewer>
-          <Button Grid.Row="2" x:Name="ExecuteButton" Content="{Binding ExecuteLabel}" Command="{Binding ExecuteCommand}" HorizontalAlignment="Stretch" Classes="accent" Margin="0,10,0,0" MinHeight="32" />
+          <Button Grid.Row="2" x:Name="ExecuteButton" HorizontalAlignment="Stretch" Classes="accent" Margin="0,10,0,0" MinHeight="32" />
         </Grid>
       </Border>
       <GridSplitter Grid.Column="1" ResizeDirection="Columns" HorizontalAlignment="Stretch" Background="{DynamicResource LineBrush}" />
-      <Grid Grid.Column="2" RowDefinitions="Auto,*">
-        <Grid ColumnDefinitions="*,Auto" Background="{DynamicResource RibbonBrush}" Margin="0,0,0,0">
-          <TextBlock Classes="groupTitle" Text="Sent / received messages" Margin="12,0" VerticalAlignment="Center" />
-          <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="8">
-            <Button x:Name="ClearLogButton" Content="Clear log" Command="{Binding ClearLogCommand}" />
-            <Button x:Name="ExportLogButton" Content="Export log…" Click="ExportLog_Click" />
+      <Grid x:Name="MessagesGroup" Grid.Column="2" RowDefinitions="Auto,*">
+        <Grid x:Name="MessageLogHeader" ColumnDefinitions="Auto,*,Auto" Background="{DynamicResource RibbonBrush}" Margin="0,0,0,0">
+          <TextBlock Classes="groupTitle" Text="Sent / received messages" Margin="12,0,8,0" VerticalAlignment="Center" />
+          <TextBlock x:Name="FocusMessagesHint" Grid.Column="1" FontSize="11" Opacity="0.65" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Focusable="False" IsTabStop="False" />
+          <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6" Margin="8">
+            <Button x:Name="FindLogButton" Content="Find" />
+            <Button x:Name="ClearLogButton" Content="Clear log" />
+            <Button x:Name="ExportLogButton" Content="Export log…" />
           </StackPanel>
         </Grid>
         <Grid x:Name="LogContent" Grid.Row="1" RowDefinitions="*,0,0">
           <Border BorderBrush="{DynamicResource LineBrush}" BorderThickness="1" Background="{DynamicResource LogBrush}">
             <editor:TextEditor x:Name="MessageLog" Document="{Binding LogDocument}" IsReadOnly="True" ShowLineNumbers="False" WordWrap="True" FontFamily="Cascadia Mono,Consolas,DejaVu Sans Mono,monospace" FontSize="13" Padding="8" Background="{DynamicResource LogBrush}" AutomationProperties.Name="Sent and Received SIP Message Log">
               <editor:TextEditor.ContextMenu>
-                <ContextMenu><MenuItem Header="Copy" Click="CopyLog_Click" /><MenuItem Header="Select all" Click="SelectLog_Click" /><Separator /><MenuItem Header="Inspect message fields" Click="InspectLog_Click" /></ContextMenu>
+                <ContextMenu><MenuItem Header="Copy" Click="CopyLog_Click" /><MenuItem Header="Select all" Click="SelectLog_Click" /><Separator /><MenuItem x:Name="InspectLogMenuItem" Header="Inspect message fields" /></ContextMenu>
               </editor:TextEditor.ContextMenu>
             </editor:TextEditor>
           </Border>

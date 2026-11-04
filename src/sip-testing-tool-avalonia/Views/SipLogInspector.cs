@@ -202,11 +202,6 @@ public sealed class SipLogInspector : IDisposable
     private void EditorKeyDown(object? sender, KeyEventArgs args)
     {
         if (args.Key == Key.Escape) { pinned = null; SetHover(null); RefreshTheme(); }
-        if (editor.TextArea.IsFocused && args.Key == Key.Enter && args.KeyModifiers == KeyModifiers.Control)
-        {
-            ExpandMessageAtOffset(editor.CaretOffset);
-            args.Handled = true;
-        }
     }
 
     public void RefreshTheme()
