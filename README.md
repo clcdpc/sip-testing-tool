@@ -65,7 +65,7 @@ These shortcuts apply to the Avalonia app. On macOS, **Cmd** means the Command (
 | Toggle dark mode | Ctrl+Shift+D | Cmd+Shift+D |
 | Inspect the message at the raw-log caret | Ctrl+Enter | Ctrl+Enter |
 
-Focus shortcuts preserve values until you type, paste or scan a replacement. For repeated tests, focus a barcode, enter it, press **F5**, inspect the response and repeat. Execution uses the selected command's existing validation and runs only while connected and idle. Holding a shortcut key does not repeat its action. Shortcuts leave modal dialogs in control. Hints appear in control tooltips, the View menu and beside the message-log heading; **View → Export message log** shares the Export log button's save dialog.
+Focus shortcuts preserve values until you type, paste or scan a replacement. For repeated tests, focus a barcode, enter it, press **F5**, inspect the response and repeat. Execution uses the selected command's existing validation and runs only while connected and idle. Holding a shortcut key does not repeat its action. Shortcuts leave modal dialogs in control. Discover commands and their shortcuts in **Actions**, with dark mode under **View**. Contextual hints appear on the Execute button, beside the command dropdown and beside the message-log heading; control and field-label tooltips also show shortcuts. **Actions → Export message log** shares the Export log button's save dialog.
 
 ## Command options
 

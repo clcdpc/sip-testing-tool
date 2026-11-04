@@ -430,16 +430,22 @@ public sealed partial class DesktopParityTests
             }
             else if (activation == "menu")
             {
-                var view = window.GetVisualDescendants().OfType<MenuItem>().Single(item => Equals(item.Header, "_View"));
-                view.IsSubMenuOpen = true;
-                Layout(window);
-                menu.Focus(NavigationMethod.Tab);
-                Press(window, Key.Enter);
+                ActivateAction(window, "ExportLogMenuItem");
             }
             else { Press(window, Key.S, ShortcutModifier | RawInputModifiers.Shift); }
             Assert.HasCount(1, provider.Saves);
             Assert.IsTrue(command.IsRunning && !command.CanExecute(null));
             var operation = command.ExecutionTask!;
+            var actions = window.FindControl<MenuItem>("ActionsMenu")!;
+            actions.IsSubMenuOpen = true;
+            Layout(window);
+            foreach (var item in actions.Items.OfType<MenuItem>())
+            {
+                Assert.IsFalse(item.Command!.CanExecute(null), item.Name);
+                Assert.IsFalse(item.IsEffectivelyEnabled, item.Name);
+            }
+            Assert.IsFalse(button.IsEffectivelyEnabled);
+            actions.IsSubMenuOpen = false;
             Press(window, Key.S, ShortcutModifier | RawInputModifiers.Shift);
             Press(window, Key.S, ShortcutModifier | RawInputModifiers.Shift);
             Assert.HasCount(1, provider.Saves);
@@ -464,6 +470,9 @@ public sealed partial class DesktopParityTests
                 await File.ReadAllBytesAsync(path), "Both paths must truncate old content and write identical UTF-8 without a BOM.");
             Assert.IsFalse(model.HasError);
             Assert.IsTrue(command.CanExecute(null));
+            actions.IsSubMenuOpen = true;
+            Layout(window);
+            Assert.IsTrue(menu.IsEffectivelyEnabled && button.IsEffectivelyEnabled);
         }
         finally { provider.Result.TrySetResult(null); window.Close(); }
         return true;

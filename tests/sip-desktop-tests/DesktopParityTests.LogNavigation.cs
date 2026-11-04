@@ -106,7 +106,7 @@ public sealed partial class DesktopParityTests
     [TestMethod]
     [DataRow(false)]
     [DataRow(true)]
-    public Task MessagesShortcutAndViewMenuReturnToOpenProperties(bool menu) => ui.Dispatch(() =>
+    public Task MessagesShortcutAndActionsMenuReturnToOpenProperties(bool menu) => ui.Dispatch(() =>
     {
         using var model = new MainWindowViewModel();
         var window = new MainWindow { DataContext = model };
@@ -123,12 +123,7 @@ public sealed partial class DesktopParityTests
             window.FindControl<TextBox>("ServerField")!.Focus();
             if (menu)
             {
-                var view = window.GetVisualDescendants().OfType<MenuItem>().Single(item => Equals(item.Header, "_View"));
-                view.IsSubMenuOpen = true;
-                Layout(window);
-                window.FindControl<MenuItem>("FocusMessagesMenuItem")!.Focus(NavigationMethod.Tab);
-                Press(window, Key.Enter);
-                Assert.IsFalse(view.IsSubMenuOpen);
+                ActivateAction(window, "FocusMessagesMenuItem");
             }
             else
             {

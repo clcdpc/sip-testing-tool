@@ -803,13 +803,13 @@ public sealed partial class DesktopParityTests
         window.KeyPress(key, modifiers, physical, null);
         window.KeyRelease(key, modifiers, physical, null);
     }
-    private static void Layout(Window window)
+    private static void Layout(TopLevel window)
     {
         window.UpdateLayout();
         Dispatcher.UIThread.RunJobs();
         AvaloniaHeadlessPlatform.ForceRenderTimerTick();
     }
-    private static void SaveFrame(Window window, string name)
+    private static void SaveFrame(TopLevel window, string name)
     {
         DirectoryInfo? root = new(AppContext.BaseDirectory);
         while (root != null && !Directory.Exists(Path.Combine(root.FullName, ".git")) && !File.Exists(Path.Combine(root.FullName, ".git"))) { root = root.Parent; }

@@ -8,7 +8,7 @@
         Icon="/Assets/app.ico" Background="{DynamicResource SurfaceBrush}"
         Topmost="{Binding AlwaysOnTop}" WindowStartupLocation="CenterScreen">
   <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
-    <Menu Grid.Row="0" Background="{DynamicResource RibbonBrush}">
+    <Menu x:Name="MainMenu" Grid.Row="0" Background="{DynamicResource RibbonBrush}">
       <MenuItem Header="_Settings">
         <MenuItem Header="_Import settings…" Click="ImportSettings_Click" />
         <MenuItem Header="_Export settings…" Click="ExportSettings_Click" />
@@ -16,12 +16,20 @@
         <MenuItem Header="_Change default settings…" Click="Settings_Click" />
         <MenuItem Header="_Reload default values" Click="ReloadDefaults_Click" />
       </MenuItem>
-      <MenuItem Header="_View">
-        <MenuItem Header="Always on top" ToggleType="CheckBox" IsChecked="{Binding AlwaysOnTop}" />
-        <MenuItem x:Name="DarkModeMenuItem" Header="_Dark mode" ToggleType="CheckBox" IsChecked="{Binding Preferences.DarkTheme, Mode=OneWay}" Command="{Binding ToggleThemeCommand}" />
+      <MenuItem x:Name="ActionsMenu" Header="_Actions">
+        <MenuItem x:Name="ExecuteMenuItem" Header="_Execute selected command" />
         <Separator />
+        <MenuItem x:Name="FocusCommandMenuItem" Header="Focus SIP _command" />
+        <MenuItem x:Name="FocusServerMenuItem" Header="Focus _server address" />
+        <MenuItem x:Name="FocusPatronMenuItem" Header="Focus _patron barcode" />
+        <MenuItem x:Name="FocusItemMenuItem" Header="Focus _item barcode" />
         <MenuItem x:Name="FocusMessagesMenuItem" Header="_Focus messages" />
+        <Separator />
         <MenuItem x:Name="ExportLogMenuItem" Header="Export message _log…" />
+      </MenuItem>
+      <MenuItem x:Name="ViewMenu" Header="_View">
+        <MenuItem Header="Always on top" ToggleType="CheckBox" IsChecked="{Binding AlwaysOnTop, Mode=TwoWay}" />
+        <MenuItem x:Name="DarkModeMenuItem" Header="_Dark mode" ToggleType="CheckBox" IsChecked="{Binding Preferences.DarkTheme, Mode=OneWay}" Command="{Binding ToggleThemeCommand}" />
       </MenuItem>
       <MenuItem Header="_Updates">
         <MenuItem Header="_Check for updates" Command="{Binding CheckUpdatesCommand}" />
@@ -35,7 +43,7 @@
           <Grid RowDefinitions="Auto,Auto,Auto,Auto">
             <TextBlock Classes="groupTitle" Text="Connection" />
             <Grid Grid.Row="1" ColumnDefinitions="*,82" IsEnabled="{Binding !IsBusy}">
-              <StackPanel Classes="field" Margin="0,0,8,0"><TextBlock Classes="fieldLabel" Text="Server" /><TextBox x:Name="ServerField" Text="{Binding Fields.Server}" AutomationProperties.Name="SIP Server" /></StackPanel>
+              <StackPanel Classes="field" Margin="0,0,8,0"><TextBlock x:Name="ServerLabel" Classes="fieldLabel" Text="Server" /><TextBox x:Name="ServerField" Text="{Binding Fields.Server}" AutomationProperties.Name="SIP Server" /></StackPanel>
               <StackPanel Grid.Column="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Port" /><TextBox x:Name="PortField" Text="{Binding Fields.Port}" AutomationProperties.Name="SIP Server Port" /></StackPanel>
             </Grid>
             <Grid Grid.Row="2" ColumnDefinitions="*,82" Margin="0,8,0,0" IsEnabled="{Binding !IsBusy}">
@@ -74,14 +82,14 @@
         <Border Grid.Column="2" Padding="12,8" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,1,0" IsEnabled="{Binding !IsBusy}">
           <Grid RowDefinitions="Auto,Auto,Auto,*">
             <TextBlock Classes="groupTitle" Text="Patron" />
-            <StackPanel Grid.Row="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Barcode (AA)" /><TextBox x:Name="PatronField" Text="{Binding Fields.PatronBarcode}" AutomationProperties.Name="Patron Barcode" /></StackPanel>
+            <StackPanel Grid.Row="1" Classes="field"><TextBlock x:Name="PatronLabel" Classes="fieldLabel" Text="Barcode (AA)" /><TextBox x:Name="PatronField" Text="{Binding Fields.PatronBarcode}" AutomationProperties.Name="Patron Barcode" /></StackPanel>
             <StackPanel Grid.Row="2" Classes="field" Margin="0,8,0,0"><TextBlock Classes="fieldLabel" Text="PIN (AD)" /><TextBox x:Name="PatronPinField" Text="{Binding Fields.PatronPin}" AutomationProperties.Name="Patron PIN" /></StackPanel>
           </Grid>
         </Border>
         <Border Grid.Column="3" Padding="12,8" IsEnabled="{Binding !IsBusy}">
           <Grid RowDefinitions="Auto,Auto,*">
             <TextBlock Classes="groupTitle" Text="Item" />
-            <StackPanel Grid.Row="1" Classes="field"><TextBlock Classes="fieldLabel" Text="Barcode (AB)" /><TextBox x:Name="ItemField" Text="{Binding Fields.ItemBarcode}" AutomationProperties.Name="Item Barcode" /></StackPanel>
+            <StackPanel Grid.Row="1" Classes="field"><TextBlock x:Name="ItemLabel" Classes="fieldLabel" Text="Barcode (AB)" /><TextBox x:Name="ItemField" Text="{Binding Fields.ItemBarcode}" AutomationProperties.Name="Item Barcode" /></StackPanel>
           </Grid>
         </Border>
       </Grid>
@@ -102,7 +110,10 @@
       </Grid.ColumnDefinitions>
       <Border Grid.Column="0" Background="{DynamicResource RibbonBrush}" Padding="12">
         <Grid RowDefinitions="Auto,*,Auto">
-          <ComboBox x:Name="CommandPicker" ItemsSource="{Binding Commands}" SelectedItem="{Binding SelectedCommand}" HorizontalAlignment="Stretch" Margin="0,0,0,12" AutomationProperties.Name="SIP Command" />
+          <Grid RowDefinitions="Auto,Auto">
+            <ComboBox x:Name="CommandPicker" ItemsSource="{Binding Commands}" SelectedItem="{Binding SelectedCommand}" HorizontalAlignment="Stretch" AutomationProperties.Name="SIP Command" />
+            <TextBlock x:Name="FocusCommandHint" Grid.Row="1" HorizontalAlignment="Right" FontSize="11" LineHeight="12" Opacity="0.65" Focusable="False" IsTabStop="False" />
+          </Grid>
           <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
             <StackPanel Spacing="14">
               <StackPanel x:Name="PatronQueryPanel" IsVisible="{Binding IsPatronQuery}" Spacing="14">
@@ -129,7 +140,7 @@
               <views:CommandOptionsView x:Name="CommandOptionsHost" />
             </StackPanel>
           </ScrollViewer>
-          <Button Grid.Row="2" x:Name="ExecuteButton" Content="{Binding ExecuteLabel}" Command="{Binding ExecuteCommand}" HorizontalAlignment="Stretch" Classes="accent" Margin="0,10,0,0" MinHeight="32" />
+          <Button Grid.Row="2" x:Name="ExecuteButton" HorizontalAlignment="Stretch" Classes="accent" Margin="0,10,0,0" MinHeight="32" />
         </Grid>
       </Border>
       <GridSplitter Grid.Column="1" ResizeDirection="Columns" HorizontalAlignment="Stretch" Background="{DynamicResource LineBrush}" />

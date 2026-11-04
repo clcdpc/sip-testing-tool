@@ -4,6 +4,7 @@ using System.Windows.Input;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
+using Avalonia.Data;
 using Avalonia.Interactivity;
 using Avalonia.Input;
 using Avalonia.VisualTree;
@@ -21,12 +22,15 @@ public partial class MainWindow : Window
     private MainWindowViewModel? model;
     private readonly SipLogColorizer colorizer = new();
     private readonly HashSet<Key> shortcutKeysDown = [];
+    private readonly List<IRelayCommand> actionCommands = [];
     private readonly AsyncRelayCommand exportLogCommand;
     private bool filePickerOpen;
     public SipLogInspector LogInspection { get; }
     private MainWindowViewModel Model => (MainWindowViewModel)DataContext!;
 
-    public MainWindow()
+    public MainWindow() : this(new DesktopShortcuts(OperatingSystem.IsMacOS())) { }
+
+    internal MainWindow(DesktopShortcuts shortcuts)
     {
         InitializeComponent();
         NoticeStatusField.ItemTemplate = NoticeMediumField.ItemTemplate = NoticeTypeField.ItemTemplate =
@@ -34,8 +38,9 @@ public partial class MainWindow : Window
         AddHandler(KeyDownEvent, SessionKeyDown, RoutingStrategies.Tunnel);
         LogInspection = new SipLogInspector(MessageLog, MessageFields);
         LogInspection.FocusFallbackRequested += () => ClearLogButton.Focus(NavigationMethod.Tab);
-        exportLogCommand = new AsyncRelayCommand(ExportLogAsync);
-        ConfigureShortcuts(new DesktopShortcuts(OperatingSystem.IsMacOS()));
+        exportLogCommand = new AsyncRelayCommand(ExportLogAsync, () => WindowActionsAvailable);
+        ConfigureShortcuts(shortcuts);
+        Opened += (_, _) => RefreshActionCommands();
         AddHandler(KeyUpEvent, (_, args) => shortcutKeysDown.Remove(args.Key), RoutingStrategies.Tunnel, handledEventsToo: true);
         // A key released in another window will not send KeyUp to this one.
         Deactivated += (_, _) => shortcutKeysDown.Clear();
@@ -67,6 +72,7 @@ public partial class MainWindow : Window
                 model.TransactionAppended -= ScrollLog;
                 model.ThemeChanged -= ApplyTheme;
                 model.ValidationFailed -= FocusInvalidField;
+                model.ExecuteCommand.CanExecuteChanged -= ExecuteAvailabilityChanged;
             }
             model = DataContext as MainWindowViewModel;
             if (model != null)
@@ -74,8 +80,10 @@ public partial class MainWindow : Window
                 model.TransactionAppended += ScrollLog;
                 model.ThemeChanged += ApplyTheme;
                 model.ValidationFailed += FocusInvalidField;
+                model.ExecuteCommand.CanExecuteChanged += ExecuteAvailabilityChanged;
                 ApplyTheme();
             }
+            RefreshActionCommands();
         };
         Closed += (_, _) =>
         {
@@ -85,6 +93,7 @@ public partial class MainWindow : Window
                 model.TransactionAppended -= ScrollLog;
                 model.ThemeChanged -= ApplyTheme;
                 model.ValidationFailed -= FocusInvalidField;
+                model.ExecuteCommand.CanExecuteChanged -= ExecuteAvailabilityChanged;
                 model.Dispose();
             }
         };
@@ -95,36 +104,89 @@ public partial class MainWindow : Window
     private bool WindowActionsAvailable => IsEffectivelyEnabled && IsEffectivelyVisible && !filePickerOpen
         && !OwnedWindows.Any(window => window.IsVisible && window.IsDialog);
 
+    private void RefreshActionCommands()
+    {
+        foreach (var command in actionCommands) { command.NotifyCanExecuteChanged(); }
+    }
+
+    private void ExecuteAvailabilityChanged(object? sender, EventArgs args) => RefreshActionCommands();
+
+    private void SetFilePickerOpen(bool open)
+    {
+        filePickerOpen = open;
+        RefreshActionCommands();
+    }
+
     private void ConfigureShortcuts(DesktopShortcuts shortcuts)
     {
-        var execute = new AsyncRelayCommand(ExecuteShortcutAsync, () => model?.ExecuteCommand.CanExecute(null) == true);
+        var execute = new AsyncRelayCommand(ExecuteSelectedAsync,
+            () => WindowActionsAvailable && model?.ExecuteCommand.CanExecute(null) == true);
+        actionCommands.Add(execute);
+        actionCommands.Add(exportLogCommand);
+        ExecuteButton.Command = ExecuteMenuItem.Command = execute;
+        ExecuteMenuItem.InputGesture = shortcuts.Execute;
         AddShortcut(shortcuts.Execute, () => execute);
-        AddFocusShortcut(shortcuts.FocusCommand, CommandPicker);
-        AddFocusShortcut(shortcuts.FocusPatron, PatronField);
-        AddFocusShortcut(shortcuts.FocusItem, ItemField);
-        AddFocusShortcut(shortcuts.FocusServer, ServerField);
+        AddFocusShortcut(shortcuts.FocusCommand, CommandPicker, FocusCommandMenuItem);
+        AddFocusShortcut(shortcuts.FocusPatron, PatronField, FocusPatronMenuItem);
+        AddFocusShortcut(shortcuts.FocusItem, ItemField, FocusItemMenuItem);
+        AddFocusShortcut(shortcuts.FocusServer, ServerField, FocusServerMenuItem);
         AddShortcut(shortcuts.ToggleTheme, () => model?.ToggleThemeCommand);
         AddShortcut(shortcuts.ExportLog, () => exportLogCommand);
 
-        FocusMessagesMenuItem.Command = new RelayCommand(LogInspection.FocusMessages);
+        var focusMessages = new RelayCommand(() =>
+        {
+            if (WindowActionsAvailable && CanFocusInput(MessageLog)) { LogInspection.FocusMessages(); }
+        }, () => WindowActionsAvailable && CanFocusInput(MessageLog));
+        actionCommands.Add(focusMessages);
+        FocusMessagesMenuItem.Command = focusMessages;
         AddShortcut(shortcuts.FocusMessages, () => FocusMessagesMenuItem.Command);
         FocusMessagesMenuItem.InputGesture = shortcuts.FocusMessages;
         DarkModeMenuItem.InputGesture = shortcuts.ToggleTheme;
         ExportLogButton.Command = ExportLogMenuItem.Command = exportLogCommand;
         ExportLogMenuItem.InputGesture = shortcuts.ExportLog;
         FocusMessagesHint.Text = DesktopShortcuts.Label(shortcuts.FocusMessages) + " to focus";
+        FocusCommandHint.Text = DesktopShortcuts.Label(shortcuts.FocusCommand);
+        ExecuteButton.Bind(ContentControl.ContentProperty, new Binding(nameof(MainWindowViewModel.ExecuteLabel))
+        {
+            StringFormat = "{0} (" + DesktopShortcuts.Label(shortcuts.Execute) + ")"
+        });
 
-        ToolTip.SetTip(ExecuteButton, "Execute selected command (" + DesktopShortcuts.Label(shortcuts.Execute) + ")");
-        ToolTip.SetTip(CommandPicker, "Focus SIP command (" + DesktopShortcuts.Label(shortcuts.FocusCommand) + ")");
-        ToolTip.SetTip(PatronField, "Replace patron barcode (" + DesktopShortcuts.Label(shortcuts.FocusPatron) + ")");
-        ToolTip.SetTip(ItemField, "Replace item barcode (" + DesktopShortcuts.Label(shortcuts.FocusItem) + ")");
-        ToolTip.SetTip(ServerField, "Edit server address (" + DesktopShortcuts.Label(shortcuts.FocusServer) + ")");
+        ToolTip.SetTip(ExecuteButton, "Execute selected SIP command (" + DesktopShortcuts.Label(shortcuts.Execute) + ")");
+        ToolTip.SetTip(CommandPicker, "Focus SIP command dropdown (" + DesktopShortcuts.Label(shortcuts.FocusCommand) + ")");
+        SetFieldTip(PatronField, PatronLabel, "patron barcode", shortcuts.FocusPatron);
+        SetFieldTip(ItemField, ItemLabel, "item barcode", shortcuts.FocusItem);
+        SetFieldTip(ServerField, ServerLabel, "server address", shortcuts.FocusServer);
         ToolTip.SetTip(ExportLogButton, "Export message log (" + DesktopShortcuts.Label(shortcuts.ExportLog) + ")");
+        // Effective enabled state propagates to each input. Visibility also depends on
+        // its ancestors, so refresh availability when any of those are shown or hidden.
+        foreach (var visual in new Control[] { CommandPicker, ServerField, PatronField, ItemField, MessageLog }
+            .SelectMany(control => control.GetVisualAncestors().Prepend(control)).Distinct())
+        {
+            visual.PropertyChanged += (_, args) =>
+            {
+                if (args.Property == IsEffectivelyEnabledProperty || args.Property == IsVisibleProperty)
+                {
+                    RefreshActionCommands();
+                    // Visibility and modal ownership finish propagating after the property event.
+                    Avalonia.Threading.Dispatcher.UIThread.Post(RefreshActionCommands);
+                }
+            };
+        }
     }
 
-    private void AddFocusShortcut(KeyGesture gesture, Control control)
+    private static void SetFieldTip(Control field, Control label, string name, KeyGesture gesture)
     {
-        var command = new RelayCommand(() => FocusInput(control));
+        var tip = "Focus and select " + name + " (" + DesktopShortcuts.Label(gesture) + ")";
+        ToolTip.SetTip(field, tip);
+        ToolTip.SetTip(label, tip);
+    }
+
+    private void AddFocusShortcut(KeyGesture gesture, Control control, MenuItem menu)
+    {
+        var command = new RelayCommand(() => FocusInput(control), () => WindowActionsAvailable && CanFocusInput(control));
+        actionCommands.Add(command);
+        menu.Command = command;
+        menu.InputGesture = gesture;
         AddShortcut(gesture, () => command);
     }
 
@@ -144,10 +206,10 @@ public partial class MainWindow : Window
         });
     }
 
-    private async Task ExecuteShortcutAsync()
+    private async Task ExecuteSelectedAsync()
     {
         var current = model;
-        if (current?.ExecuteCommand.CanExecute(null) != true) { return; }
+        if (!WindowActionsAvailable || current?.ExecuteCommand.CanExecute(null) != true) { return; }
         var focused = FocusManager.GetFocusedElement() as Control;
         await current.ExecuteCommand.ExecuteAsync(null);
         // Busy state disables inputs and clears their focus. Restore it only if neither
@@ -159,9 +221,11 @@ public partial class MainWindow : Window
         }
     }
 
-    private static void FocusInput(Control control)
+    private static bool CanFocusInput(Control control) => control.IsEffectivelyEnabled && control.IsEffectivelyVisible;
+
+    private void FocusInput(Control control)
     {
-        if (!control.IsEffectivelyEnabled || !control.IsEffectivelyVisible || !control.Focus()) { return; }
+        if (!WindowActionsAvailable || !CanFocusInput(control) || !control.Focus()) { return; }
         if (control is TextBox text) { text.SelectAll(); }
     }
 
@@ -246,7 +310,7 @@ public partial class MainWindow : Window
     private async void ImportSettings_Click(object? sender, RoutedEventArgs args)
     {
         if (!WindowActionsAvailable) { return; }
-        filePickerOpen = true;
+        SetFilePickerOpen(true);
         try
         {
             var files = await StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
@@ -264,13 +328,13 @@ public partial class MainWindow : Window
             Model.Fields = await SettingsStore.ImportAsync(stream);
         }
         catch (Exception ex) { Model.ErrorMessage = "Could not import settings: " + ex.Message; }
-        finally { filePickerOpen = false; }
+        finally { SetFilePickerOpen(false); }
     }
 
     private async void ExportSettings_Click(object? sender, RoutedEventArgs args)
     {
         if (!WindowActionsAvailable) { return; }
-        filePickerOpen = true;
+        SetFilePickerOpen(true);
         try
         {
             var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
@@ -290,13 +354,13 @@ public partial class MainWindow : Window
             await SettingsStore.ExportAsync(stream, Model.Fields.Copy());
         }
         catch (Exception ex) { Model.ErrorMessage = "Could not export settings: " + ex.Message; }
-        finally { filePickerOpen = false; }
+        finally { SetFilePickerOpen(false); }
     }
 
     private async Task ExportLogAsync()
     {
         if (!WindowActionsAvailable) { return; }
-        filePickerOpen = true;
+        SetFilePickerOpen(true);
         try
         {
             var file = await StorageProvider.SaveFilePickerAsync(new FilePickerSaveOptions
@@ -317,7 +381,7 @@ public partial class MainWindow : Window
             await writer.WriteAsync(Model.LogDocument.Text.Replace("\n", Environment.NewLine));
         }
         catch (Exception ex) { Model.ErrorMessage = "Could not export the log: " + ex.Message; }
-        finally { filePickerOpen = false; }
+        finally { SetFilePickerOpen(false); }
     }
 
     private void CopyLog_Click(object? sender, RoutedEventArgs args) => MessageLog.Copy();
