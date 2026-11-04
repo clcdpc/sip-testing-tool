@@ -1,3 +1,4 @@
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Headless;
 using Avalonia.Input;
@@ -177,22 +178,28 @@ public sealed partial class DesktopParityTests
     }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
 
     [TestMethod]
-    [DataRow(false)]
-    [DataRow(true)]
-    public Task StandardEditingKeysWorkInFieldsAndSearchWithoutApplicationActions(bool search) => ui.Dispatch(async () =>
+    [DataRow(false, false)]
+    [DataRow(false, true)]
+    [DataRow(true, false)]
+    [DataRow(true, true)]
+    public Task StandardEditingKeysWorkInFieldsAndSearchWithoutApplicationActions(bool isMacOS, bool search) => ui.Dispatch(async () =>
     {
-        using var model = new MainWindowViewModel { Fields = SampleFields() };
-        model.LogDocument.Text = SearchTranscript;
-        var window = new MainWindow { DataContext = model };
-        window.Show();
+        var originalIsMacOS = Application.Current!.PlatformSettings!.HotkeyConfiguration.CommandModifiers == KeyModifiers.Meta;
+        MainWindow? window = null;
         try
         {
+            TestAppBuilder.ConfigurePlatformHotkeys(isMacOS);
+            var primary = isMacOS ? RawInputModifiers.Meta : RawInputModifiers.Control;
+            using var model = new MainWindowViewModel { Fields = SampleFields() };
+            model.LogDocument.Text = SearchTranscript;
+            window = new MainWindow(new DesktopShortcuts(isMacOS)) { DataContext = model };
+            window.Show();
             Layout(window);
             var log = window.FindControl<TextEditor>("MessageLog")!;
             TextBox input;
             if (search)
             {
-                Press(window, Key.F, ShortcutModifier);
+                Press(window, Key.F, primary);
                 Layout(window);
                 input = SearchInput(log);
             }
@@ -200,31 +207,35 @@ public sealed partial class DesktopParityTests
             input.Text = "editable value";
             input.CaretIndex = 0;
             var clipboard = window.Clipboard!;
-            Press(window, Key.A, ShortcutModifier);
+            Press(window, Key.A, primary);
             Assert.AreEqual("editable value", input.SelectedText);
-            Press(window, Key.C, ShortcutModifier);
+            Press(window, Key.C, primary);
             await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
             Assert.AreEqual("editable value", await clipboard.TryGetTextAsync());
-            Press(window, Key.X, ShortcutModifier);
+            Press(window, Key.X, primary);
             await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
             Assert.AreEqual("", input.Text);
             Assert.AreEqual("editable value", await clipboard.TryGetTextAsync());
             Assert.AreEqual(SearchTranscript, model.LogDocument.Text, "Cut must never clear the message log.");
             Assert.HasCount(0, window.OwnedWindows);
-            Press(window, Key.V, ShortcutModifier);
+            Press(window, Key.V, primary);
             await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
             Assert.AreEqual("editable value", input.Text);
-            Press(window, Key.A, ShortcutModifier);
+            Press(window, Key.A, primary);
             window.KeyTextInput("replacement");
             Assert.AreEqual("replacement", input.Text);
-            Press(window, Key.Z, ShortcutModifier);
+            Press(window, Key.Z, primary);
             Assert.AreEqual("editable value", input.Text);
             Assert.IsNull(model.ConnectCommand.ExecutionTask);
             Assert.IsNull(model.LoginCommand.ExecutionTask);
             Assert.IsNull(model.ExecuteCommand.ExecutionTask);
             Assert.IsFalse(model.HasError);
+            return true;
         }
-        finally { window.Close(); }
-        return true;
+        finally
+        {
+            try { window?.Close(); }
+            finally { TestAppBuilder.ConfigurePlatformHotkeys(originalIsMacOS); }
+        }
     }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
 }
