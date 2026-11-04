@@ -9,11 +9,11 @@
         Topmost="{Binding AlwaysOnTop}" WindowStartupLocation="CenterScreen">
   <Grid RowDefinitions="Auto,Auto,Auto,*,Auto">
     <Menu x:Name="MainMenu" Grid.Row="0" Background="{DynamicResource RibbonBrush}">
-      <MenuItem Header="_Settings">
+      <MenuItem x:Name="SettingsMenuItem" Header="_Settings">
         <MenuItem Header="_Import settings…" Click="ImportSettings_Click" />
         <MenuItem Header="_Export settings…" Click="ExportSettings_Click" />
         <Separator />
-        <MenuItem Header="_Change default settings…" Click="Settings_Click" />
+        <MenuItem x:Name="DefaultSettingsMenuItem" Header="_Change default settings…" Click="Settings_Click" />
         <MenuItem Header="_Reload default values" Click="ReloadDefaults_Click" />
       </MenuItem>
       <MenuItem x:Name="ActionsMenu" Header="_Actions">
@@ -78,13 +78,13 @@
               <StackPanel Classes="field" Margin="0,0,8,0"><TextBlock Classes="fieldLabel" Text="Location code (CP)" /><TextBox x:Name="LocationCodeField" Text="{Binding Fields.LocationCode}" AutomationProperties.Name="Location Code" /></StackPanel>
               <StackPanel Grid.Column="1" Classes="field">
                 <TextBlock Classes="fieldLabel" Text="Vendor profile (VP)" />
-                <AutoCompleteBox x:Name="VendorProfileField" MinimumPrefixLength="0" FilterMode="None" Text="{Binding Fields.VendorProfile}" ItemsSource="{Binding VendorProfiles}" AutomationProperties.Name="Vendor Profile">
+                <views:AccessibleAutoCompleteBox x:Name="VendorProfileField" MinimumPrefixLength="0" FilterMode="None" Text="{Binding Fields.VendorProfile}" ItemsSource="{Binding VendorProfiles}" AutomationProperties.Name="Vendor Profile">
                   <AutoCompleteBox.InnerRightContent>
                     <Button x:Name="VendorProfileDropDownButton" Width="24" Padding="0" BorderThickness="0" Background="Transparent" MinWidth="0" MinHeight="24" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Focusable="False" Click="VendorProfiles_Click" AutomationProperties.Name="Choose vendor profile">
-                      <PathIcon Width="10" Height="6" Data="{StaticResource DropDownChevron}" />
+                      <PathIcon Width="10" Height="6" Data="{StaticResource DropDownChevron}" AutomationProperties.AccessibilityView="Raw" />
                     </Button>
                   </AutoCompleteBox.InnerRightContent>
-                </AutoCompleteBox>
+                </views:AccessibleAutoCompleteBox>
               </StackPanel>
             </Grid>
             <Button x:Name="LoginButton" Grid.Row="3" Content="Login" Margin="0,8,0,0" MinWidth="88" />
@@ -108,8 +108,8 @@
 
     <Border Grid.Row="2" IsVisible="{Binding HasError}" Background="{DynamicResource ErrorBrush}" Padding="14,7">
       <DockPanel>
-        <Button DockPanel.Dock="Right" Content="Dismiss" Command="{Binding DismissErrorCommand}" Margin="10,0,0,0" />
-        <TextBlock Text="{Binding ErrorMessage}" TextWrapping="Wrap" Foreground="{DynamicResource ErrorTextBrush}" VerticalAlignment="Center" />
+        <Button x:Name="DismissErrorButton" DockPanel.Dock="Right" Content="Dismiss" AutomationProperties.Name="Dismiss error" Command="{Binding DismissErrorCommand}" Margin="10,0,0,0" />
+        <TextBlock x:Name="ErrorMessageText" Text="{Binding ErrorMessage}" AutomationProperties.LiveSetting="Assertive" TextWrapping="Wrap" Foreground="{DynamicResource ErrorTextBrush}" VerticalAlignment="Center" />
       </DockPanel>
     </Border>
 

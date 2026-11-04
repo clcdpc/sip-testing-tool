@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Metadata;
@@ -21,19 +22,40 @@ public sealed class OptionalFieldRow : Panel
         set
         {
             if (input == value) { return; }
-            if (input != null) { Children.Remove(input); }
+            if (input != null)
+            {
+                if (AutomationProperties.GetLabeledBy(input) == caption) { input.ClearValue(AutomationProperties.LabeledByProperty); }
+                Children.Remove(input);
+            }
             input = value;
-            if (input != null) { Children.Add(input); }
+            if (input != null) { Children.Add(input); LabelInput(); }
             InvalidateMeasure();
         }
     }
 
-    public OptionalFieldRow() => Children.Add(caption);
+    public OptionalFieldRow()
+    {
+        // This is layout, not a group. Raw keeps the input and label descendants available.
+        AutomationProperties.SetAccessibilityView(this, AccessibilityView.Raw);
+        Children.Add(caption);
+    }
 
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
-        if (change.Property == LabelProperty) { caption.Text = Label; }
+        if (change.Property == LabelProperty) { caption.Text = Label; LabelInput(); }
+    }
+
+    private void LabelInput()
+    {
+        if (input == null) { return; }
+        // Name takes precedence over LabeledBy in Avalonia. Keep explicit names and
+        // existing label relationships, including those supplied by bindings.
+        if (!input.IsSet(AutomationProperties.LabeledByProperty))
+        {
+            AutomationProperties.SetLabeledBy(input, caption);
+        }
+        if (input is OptionalDateTimeInput date) { date.UpdateAccessibleNames(); }
     }
 
     private double MinimumFieldWidth => minimumFieldWidth;

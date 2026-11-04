@@ -1,7 +1,10 @@
+using System.ComponentModel;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
 using Avalonia;
+using Avalonia.Automation;
+using Avalonia.Automation.Peers;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
@@ -25,6 +28,7 @@ public partial class MainWindow : Window
     private readonly List<IRelayCommand> actionCommands = [];
     private readonly AsyncRelayCommand exportLogCommand;
     private bool filePickerOpen;
+    private readonly FieldValidationAccessibility fieldValidation;
     public SipLogInspector LogInspection { get; }
     private MainWindowViewModel Model => (MainWindowViewModel)DataContext!;
 
@@ -33,6 +37,11 @@ public partial class MainWindow : Window
     internal MainWindow(DesktopShortcuts shortcuts)
     {
         InitializeComponent();
+        fieldValidation = new FieldValidationAccessibility(() => { if (model != null) { model.ErrorMessage = null; } });
+        // Create the peer before the first error so its Text/Name change notifications
+        // are available even when the banner was initially hidden.
+        ControlAutomationPeer.CreatePeerForElement(ErrorMessageText);
+        MessageLog.TextArea.Bind(AutomationProperties.NameProperty, MessageLog.GetObservable(AutomationProperties.NameProperty));
         NoticeStatusField.ItemTemplate = NoticeMediumField.ItemTemplate = NoticeTypeField.ItemTemplate =
             new FuncDataTemplate<Enum>((value, _) => new TextBlock { Text = Regex.Replace(value.ToString(), "(?<!^)([A-Z][a-z])", " $1") });
         AddHandler(KeyDownEvent, SessionKeyDown, RoutingStrategies.Tunnel);
@@ -70,8 +79,10 @@ public partial class MainWindow : Window
         MessageLog.TextArea.TextView.LineTransformers.Add(colorizer);
         DataContextChanged += (_, _) =>
         {
+            fieldValidation.Clear();
             if (model != null)
             {
+                model.PropertyChanged -= ModelAccessibilityChanged;
                 model.TransactionAppended -= ScrollLog;
                 model.ThemeChanged -= ApplyTheme;
                 model.ValidationFailed -= FocusInvalidField;
@@ -84,6 +95,7 @@ public partial class MainWindow : Window
             model = DataContext as MainWindowViewModel;
             if (model != null)
             {
+                model.PropertyChanged += ModelAccessibilityChanged;
                 model.TransactionAppended += ScrollLog;
                 model.ThemeChanged += ApplyTheme;
                 model.ValidationFailed += FocusInvalidField;
@@ -98,9 +110,11 @@ public partial class MainWindow : Window
         };
         Closed += (_, _) =>
         {
+            fieldValidation.Clear();
             LogInspection.Dispose();
             if (model != null)
             {
+                model.PropertyChanged -= ModelAccessibilityChanged;
                 model.TransactionAppended -= ScrollLog;
                 model.ThemeChanged -= ApplyTheme;
                 model.ValidationFailed -= FocusInvalidField;
@@ -308,6 +322,7 @@ public partial class MainWindow : Window
                 _ => control
             };
         }
+        if (control != null && !string.IsNullOrEmpty(Model.ErrorMessage)) { fieldValidation.Show(control, Model.ErrorMessage); }
         control?.BringIntoView();
         if (control is OptionalDateTimeInput date) { date.FocusEditor(); }
         else if (control != null)
@@ -315,6 +330,11 @@ public partial class MainWindow : Window
             control.Focus();
             if (control is TextBox text) { text.SelectAll(); }
         }
+    }
+
+    private void ModelAccessibilityChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName == nameof(MainWindowViewModel.ErrorMessage)) { fieldValidation.Clear(); }
     }
 
     private void ApplyTheme()
@@ -340,8 +360,16 @@ public partial class MainWindow : Window
             return;
         }
 
+        // The submenu item is hidden once its menu closes. Return keyboard users
+        // to the visible Settings menu that opened the dialog.
+        var focused = sender is MenuItem ? SettingsMenuItem : FocusManager.GetFocusedElement() as Control;
         var dialog = new SettingsWindow(Model.Preferences);
         var preferences = await dialog.ShowDialog<Models.AppPreferences?>(this);
+        // Modal teardown and owner activation finish after the dialog task completes.
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (WindowActionsAvailable && focused != null && CanFocusInput(focused)) { focused.Focus(NavigationMethod.Tab); }
+        }, Avalonia.Threading.DispatcherPriority.Input);
         if (preferences == null)
         {
             return;

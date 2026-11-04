@@ -19,6 +19,8 @@ public sealed class OptionalDateTimeInput : UserControl
     public string DateText { get => GetValue(DateTextProperty); set => SetValue(DateTextProperty, value); }
     public bool IsIncluded { get => GetValue(IsIncludedProperty); set => SetValue(IsIncludedProperty, value); }
     private readonly TextBox editor;
+    private readonly CheckBox include;
+    internal TextBox Editor => editor;
     private readonly Avalonia.Controls.Calendar calendar = new();
     private readonly Flyout popup;
     private readonly Button calendarButton;
@@ -27,7 +29,7 @@ public sealed class OptionalDateTimeInput : UserControl
     public OptionalDateTimeInput()
     {
         var layout = new Grid { ColumnDefinitions = new ColumnDefinitions("24,*,26") };
-        var include = new CheckBox { Name = "IncludeDate", VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Padding = new Thickness(0) };
+        include = new CheckBox { Name = "IncludeDate", VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Padding = new Thickness(0) };
         AutomationProperties.SetName(include, "Include date/time");
         include.Bind(CheckBox.IsCheckedProperty, new Binding(nameof(IsIncluded)) { Source = this, Mode = BindingMode.TwoWay });
         ToolTip.SetTip(include, "Include this date/time in the request.");
@@ -40,8 +42,9 @@ public sealed class OptionalDateTimeInput : UserControl
         };
         editor.AddHandler(InputElement.KeyDownEvent, EditorKeyDown, RoutingStrategies.Tunnel);
         var chevron = new PathIcon { Width = 10, Height = 6 };
+        AutomationProperties.SetAccessibilityView(chevron, AccessibilityView.Raw);
         chevron.Bind(PathIcon.DataProperty, new DynamicResourceExtension("DropDownChevron"));
-        calendarButton = new Button { Content = chevron, Padding = new Thickness(0), BorderThickness = new Thickness(0), Background = Brushes.Transparent, MinWidth = 0, MinHeight = 24, HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
+        calendarButton = new Button { Name = "CalendarButton", Content = chevron, Padding = new Thickness(0), BorderThickness = new Thickness(0), Background = Brushes.Transparent, MinWidth = 0, MinHeight = 24, HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
         AutomationProperties.SetName(calendarButton, "Choose calendar date");
         popup = new Flyout { Content = calendar };
         calendarButton.Click += (_, _) => ShowCalendar();
@@ -62,6 +65,7 @@ public sealed class OptionalDateTimeInput : UserControl
         border.Bind(Border.BorderBrushProperty, new DynamicResourceExtension("LineBrush"));
         border.Bind(Border.BackgroundProperty, new DynamicResourceExtension("InputBrush"));
         Content = border;
+        AutomationProperties.SetAccessibilityView(this, AccessibilityView.Raw);
     }
 
     public void FocusEditor() { editor.Focus(); editor.SelectAll(); }
@@ -69,8 +73,20 @@ public sealed class OptionalDateTimeInput : UserControl
     protected override void OnPropertyChanged(AvaloniaPropertyChangedEventArgs change)
     {
         base.OnPropertyChanged(change);
+        if (change.Property == AutomationProperties.NameProperty || change.Property == AutomationProperties.LabeledByProperty) { UpdateAccessibleNames(); }
         if (change.Property == DateTextProperty && DateTime.TryParseExact(DateText, CommandOptions.DateFormat,
             CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)) { lastValid = date; }
+    }
+
+    internal void UpdateAccessibleNames()
+    {
+        if (editor == null) { return; }
+        var label = AutomationProperties.GetName(this);
+        if (string.IsNullOrWhiteSpace(label) && AutomationProperties.GetLabeledBy(this) is TextBlock caption) { label = caption.Text; }
+        if (string.IsNullOrWhiteSpace(label)) { label = "Date and time"; }
+        AutomationProperties.SetName(editor, label + " (" + CommandOptions.DateFormat + ")");
+        AutomationProperties.SetName(include, "Include " + label);
+        AutomationProperties.SetName(calendarButton, "Choose " + label + " in calendar");
     }
 
     private bool TryRead(out DateTime date) => DateTime.TryParseExact(editor.Text, CommandOptions.DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out date);

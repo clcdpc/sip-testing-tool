@@ -123,8 +123,7 @@ public sealed partial class DesktopParityTests
                 Layout(window);
                 var date = Field<OptionalDateTimeInput>(window, "DateTextField");
                 var editor = Field<TextBox>(date, "DateTimeEditor");
-                var button = date.GetVisualDescendants().OfType<Button>()
-                    .Single(control => Avalonia.Automation.AutomationProperties.GetName(control) == "Choose calendar date");
+                var button = Field<Button>(date, "CalendarButton");
                 Assert.IsTrue(TextWidth(editor.Text!, editor.FontFamily, editor.FontSize) <= editor.Bounds.Width - editor.Padding.Left - editor.Padding.Right);
                 var right = button.TranslatePoint(new Point(button.Bounds.Width, 0), date)!.Value.X;
                 Assert.AreEqual(date.Bounds.Width - 1, right, 0.5, "The calendar button should fill the right edge of the editor.");

@@ -142,6 +142,7 @@ public partial class MainWindow
         var panel = MessageLog.SearchPanel;
         if (panel == null || ReferenceEquals(panel, configuredSearchPanel)) { return; }
         configuredSearchPanel = panel;
+        LogSearchAccessibility.Attach(panel);
         // The window owns the application Find gesture. Remove the editor's Ctrl+F/H
         // aliases while retaining its search engine, buttons, and scoped navigation.
         foreach (var handler in MessageLog.TextArea.DefaultInputHandler.NestedInputHandlers.OfType<TextAreaInputHandler>())
