@@ -18,6 +18,80 @@ env:
   AVALONIA_TELEMETRY_OPTOUT: '1'
 
 jobs:
+  packages:
+    name: Verify package (${{ matrix.rid }})
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: windows-2025
+            rid: win-x64
+            profile: Windows-Zip
+          - runner: ubuntu-22.04
+            rid: linux-x64
+            profile: Linux-AppImage
+          - runner: macos-15
+            rid: osx-arm64
+            profile: macOS-arm64
+          - runner: macos-15-intel
+            rid: osx-x64
+            profile: macOS-x64
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      RELEASE_RID: ${{ matrix.rid }}
+      PUBLISH_PROFILE: ${{ matrix.profile }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install .NET 10
+        id: dotnet
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: ga
+
+      - name: Select the installed SDK
+        env:
+          SDK_VERSION: ${{ steps.dotnet.outputs.dotnet-version }}
+        run: |
+          @{ sdk = @{ version = $env:SDK_VERSION; rollForward = 'latestPatch'; allowPrerelease = $false } } |
+            ConvertTo-Json | Set-Content -LiteralPath global.json
+
+      - name: Install Linux packaging dependencies
+        if: runner.os == 'Linux'
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes squashfs-tools
+
+      - name: Verify release versions, packages and mocked publication
+        run: ./build/TestReleaseVersion.ps1
+
+      - name: Verify publish profiles
+        run: dotnet msbuild build/VerifyPublishPaths.proj
+
+      - name: Verify standalone Mac packaging
+        if: runner.os == 'macOS'
+        shell: bash
+        run: bash build/TestMacBuild.sh
+
+      - name: Publish a development package without a release tag
+        run: dotnet publish src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj --configuration Release -p:PublishProfile=$env:PUBLISH_PROFILE
+
+      - name: Package macOS download
+        if: runner.os == 'macOS'
+        run: ./build/PackageDesktop.ps1 -PublishDirectory "artifacts/avalonia/publish/$env:RELEASE_RID" -OutputDirectory "artifacts/avalonia/releases/$env:RELEASE_RID" -RuntimeIdentifier $env:RELEASE_RID -Version '0.0.0-dev'
+
+      - name: Verify the single package and embedded version
+        run: ./build/VerifyDesktopRelease.ps1 -Directory "artifacts/avalonia/releases/$env:RELEASE_RID" -RuntimeIdentifier $env:RELEASE_RID -Version '0.0.0-dev'
+
   desktop:
     name: Avalonia tests (${{ matrix.platform }})
     runs-on: ${{ matrix.os }}

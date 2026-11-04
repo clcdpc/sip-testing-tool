@@ -78,6 +78,4 @@ if ($RuntimeIdentifier -eq 'win-x64') {
         [IO.File]::Move($temporaryAsset, $asset, $true)
     } finally { [IO.File]::Delete($temporaryAsset) }
 }
-$hash = (Get-FileHash -LiteralPath $asset -Algorithm SHA256).Hash.ToLowerInvariant()
-[IO.File]::WriteAllText("$asset.sha256", "$hash  $([IO.Path]::GetFileName($asset))`n", [Text.UTF8Encoding]::new($false))
 Write-Host "Created $asset ($((Get-Item -LiteralPath $asset).Length) bytes)"
