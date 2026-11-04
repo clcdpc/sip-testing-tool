@@ -72,12 +72,64 @@ public sealed class UpdateServiceTests
     [TestMethod]
     public async Task InvalidOrMissingChecksumsNeverEnableRestart()
     {
-        foreach (var digest in new string?[] { new string('0', 64), null })
+        foreach (var digest in new string?[] { new string('0', 64), null, "invalid", new string('a', 63), new string('g', 64) })
         {
             using var fixture = new UpdateFixture(digest);
             using var updates = fixture.CreateService();
             await Assert.ThrowsAsync<InvalidDataException>(() => updates.CheckAndDownloadAsync(UpdateService.DefaultRepositoryUrl));
             Assert.IsFalse(updates.IsReady);
+            await Assert.ThrowsAsync<InvalidOperationException>(() => updates.PrepareRestartAsync(UpdateService.DefaultRepositoryUrl));
+        }
+    }
+
+    [TestMethod]
+    public async Task HistoricalSidecarIsVerifiedWhenGitHubDigestIsUnavailable()
+    {
+        using var fixture = new UpdateFixture(digest: null, sidecar: "valid");
+        using var updates = fixture.CreateService();
+        await updates.CheckAndDownloadAsync(UpdateService.DefaultRepositoryUrl);
+        Assert.IsTrue(updates.IsReady);
+        Assert.IsTrue(fixture.Download!.IsChecksumVerified);
+        Assert.AreEqual(1, fixture.SidecarDownloadCount);
+        await File.AppendAllTextAsync(fixture.Download.FilePath, "tampered historical update");
+        await Assert.ThrowsAsync<InvalidDataException>(() => updates.PrepareRestartAsync(UpdateService.DefaultRepositoryUrl));
+        Assert.IsFalse(updates.IsReady);
+        Assert.IsFalse(fixture.Download.FileExists);
+    }
+
+    [TestMethod]
+    [DataRow("invalid")]
+    [DataRow("mismatch")]
+    public async Task InvalidHistoricalSidecarNeverEnablesInstallation(string sidecar)
+    {
+        using var fixture = new UpdateFixture(digest: null, sidecar: sidecar);
+        using var updates = fixture.CreateService();
+        await Assert.ThrowsAsync<InvalidDataException>(() => updates.CheckAndDownloadAsync(UpdateService.DefaultRepositoryUrl));
+        Assert.IsFalse(updates.IsReady);
+        Assert.AreEqual(1, fixture.SidecarDownloadCount);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => updates.PrepareRestartAsync(UpdateService.DefaultRepositoryUrl));
+    }
+
+    [TestMethod]
+    public async Task NativeDigestTakesPrecedenceOverHistoricalSidecar()
+    {
+        using var fixture = new UpdateFixture(sidecar: "invalid");
+        using var updates = fixture.CreateService();
+        await updates.CheckAndDownloadAsync(UpdateService.DefaultRepositoryUrl);
+        Assert.IsTrue(updates.IsReady);
+        Assert.AreEqual(0, fixture.SidecarDownloadCount);
+    }
+
+    [TestMethod]
+    public async Task NativeDigestFailureCannotBeBypassedWithAValidHistoricalSidecar()
+    {
+        foreach (var digest in new[] { new string('0', 64), "malformed" })
+        {
+            using var fixture = new UpdateFixture(digest: digest, sidecar: "valid");
+            using var updates = fixture.CreateService();
+            await Assert.ThrowsAsync<InvalidDataException>(() => updates.CheckAndDownloadAsync(UpdateService.DefaultRepositoryUrl));
+            Assert.IsFalse(updates.IsReady);
+            Assert.AreEqual(0, fixture.SidecarDownloadCount);
             await Assert.ThrowsAsync<InvalidOperationException>(() => updates.PrepareRestartAsync(UpdateService.DefaultRepositoryUrl));
         }
     }
@@ -226,19 +278,22 @@ public sealed class UpdateServiceTests
     {
         private readonly byte[] payload = "local verified update fixture"u8.ToArray();
         private readonly string? digest;
+        private readonly string? sidecar;
         private readonly ReleaseSpec[] releases;
         private readonly string currentVersion;
         private readonly bool blockDownload;
         private readonly HttpClient http;
         public int DownloadCount { get; private set; }
+        public int SidecarDownloadCount { get; private set; }
         public UpdatumManager? Manager { get; private set; }
         public UpdatumDownloadedAsset? Download { get; private set; }
         public TaskCompletionSource DownloadStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
 
         public UpdateFixture(string? digest = "valid", bool onlyIneligible = false, bool blockDownload = false,
-            string currentVersion = "2.1.1", ReleaseSpec[]? releases = null)
+            string currentVersion = "2.1.1", ReleaseSpec[]? releases = null, string? sidecar = null)
         {
             this.digest = digest == "valid" ? Convert.ToHexString(SHA256.HashData(payload)) : digest;
+            this.sidecar = sidecar;
             this.releases = releases ?? (onlyIneligible
                 ? [new("99.0.0", Draft: true), new("99.0.0", Prerelease: true), new("99.0.0", Rid: "unsupported-rid")]
                 : [new("99.0.0")]);
@@ -267,6 +322,8 @@ public sealed class UpdateServiceTests
             var name = "SIP-Testing-Tool_" + (release.Rid ?? UpdateService.RuntimeFolder) + "_v" + (release.AssetVersion ?? release.Version)
                 + (OperatingSystem.IsWindows() ? ".zip" : ".AppImage");
             var tag = release.Tag ?? "v" + release.Version;
+            var assets = new List<object> { Asset(name, id, payload.Length) };
+            if (sidecar != null) { assets.Add(Asset(name + ".sha256", id + 1000, 80)); }
             return new
             {
                 url = $"https://api.github.com/repos/local/fixture/releases/{id}",
@@ -276,15 +333,17 @@ public sealed class UpdateServiceTests
                 id, node_id = "fixture", tag_name = tag, target_commitish = "master", name = "Fixture", body = "",
                 draft = release.Draft, prerelease = release.Prerelease, created_at = DateTimeOffset.UtcNow,
                 published_at = release.Published ? (DateTimeOffset?)DateTimeOffset.UtcNow : null,
-                assets = new[] { new
-                {
-                    url = $"https://api.github.com/repos/local/fixture/releases/assets/{id}", id, node_id = "asset",
-                    name, label = "", state = "uploaded", content_type = "application/octet-stream", size = payload.Length,
-                    download_count = 0, created_at = DateTimeOffset.UtcNow, updated_at = DateTimeOffset.UtcNow,
-                    browser_download_url = "https://update-fixture.invalid/" + name
-                }}
+                assets
             };
         }
+
+        private static object Asset(string name, int id, int size) => new
+        {
+            url = $"https://api.github.com/repos/local/fixture/releases/assets/{id}", id, node_id = "asset",
+            name, label = "", state = "uploaded", content_type = "application/octet-stream", size,
+            download_count = 0, created_at = DateTimeOffset.UtcNow, updated_at = DateTimeOffset.UtcNow,
+            browser_download_url = "https://update-fixture.invalid/" + name
+        };
 
         public void Dispose() => http.Dispose();
 
@@ -293,6 +352,20 @@ public sealed class UpdateServiceTests
             protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
             {
                 Assert.AreEqual("update-fixture.invalid", request.RequestUri!.Host);
+                if (request.RequestUri.AbsolutePath.EndsWith(".sha256", StringComparison.Ordinal))
+                {
+                    fixture.SidecarDownloadCount++;
+                    var checksum = fixture.sidecar switch
+                    {
+                        "valid" => Convert.ToHexString(SHA256.HashData(fixture.payload)),
+                        "mismatch" => new string('0', 64),
+                        _ => "invalid checksum"
+                    };
+                    return new HttpResponseMessage(HttpStatusCode.OK)
+                    {
+                        Content = new StringContent(checksum + "  " + Path.GetFileName(request.RequestUri.AbsolutePath)[..^7] + "\n")
+                    };
+                }
                 fixture.DownloadCount++;
                 fixture.DownloadStarted.TrySetResult();
                 if (fixture.blockDownload) { await Task.Delay(Timeout.Infinite, cancellationToken); }

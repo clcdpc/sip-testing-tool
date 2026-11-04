@@ -28,15 +28,12 @@ function Assert-ArchiveApplicationVersion {
 
 $extension = if ($RuntimeIdentifier -eq 'linux-x64') { 'AppImage' } else { 'zip' }
 $name = "SIP-Testing-Tool_${RuntimeIdentifier}_v$Version.$extension"
-$files = @(Get-ChildItem -LiteralPath $Directory -Recurse -File)
-if ($files.Count -ne 2 -or $name -cnotin $files.Name -or "$name.sha256" -cnotin $files.Name) {
-    throw "Expected only $name and its SHA-256 sidecar."
+$files = @(Get-ChildItem -LiteralPath $Directory -Recurse -File -Force)
+if ($files.Count -ne 1 -or $files[0].Name -cne $name) {
+    throw "Expected only $name."
 }
 $asset = [IO.Path]::GetFullPath((Join-Path $Directory $name))
 if ((Get-Item -LiteralPath $asset).Length -eq 0) { throw 'The release download is empty.' }
-$actualHash = (Get-FileHash -LiteralPath $asset -Algorithm SHA256).Hash.ToLowerInvariant()
-$checksum = (Get-Content -LiteralPath "$asset.sha256" -Raw).TrimEnd()
-if ($checksum -cne "$actualHash  $name") { throw "SHA-256 mismatch: $name" }
 if ($RuntimeIdentifier -eq 'win-x64') {
     $zip = [IO.Compression.ZipFile]::OpenRead($asset)
     try {
@@ -44,7 +41,7 @@ if ($RuntimeIdentifier -eq 'win-x64') {
             throw 'The Windows ZIP must contain exactly one application EXE at its root.'
         }
         # Native PE version resources require Windows. The Windows build job checks
-        # these bytes before upload; the final Linux job rechecks the ZIP's checksum.
+        # these bytes before upload; publication checks the ZIP's GitHub-native digest.
         if ($IsWindows) { Assert-ArchiveApplicationVersion -Entry $zip.Entries[0] }
     } finally { $zip.Dispose() }
 } elseif ($RuntimeIdentifier.StartsWith('osx-', [StringComparison]::Ordinal)) {
