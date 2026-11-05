@@ -120,6 +120,28 @@ if ($RuntimeIdentifier -eq 'win-x64') {
                 if ($LASTEXITCODE -ne 0) { throw 'Could not extract the AppImage for version verification.' }
             } finally { Pop-Location }
             $appDir = Join-Path $scratch.FullName 'squashfs-root'
+            & (Join-Path $PSScriptRoot 'VerifyLinuxPublish.ps1') -Directory (Join-Path $appDir 'usr/bin')
+            foreach ($executable in @('AppRun', 'usr/bin/sip-testing-tool')) {
+                $mode = [IO.File]::GetUnixFileMode((Join-Path $appDir $executable))
+                if (($mode -band [IO.UnixFileMode]::UserExecute) -eq 0) {
+                    throw "The AppImage executable permission is missing: $executable"
+                }
+            }
+            $launcher = Get-Content -LiteralPath (Join-Path $appDir 'AppRun') -Raw
+            $expectedLauncher = @('#!/bin/sh', 'app_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)',
+                'exec "$app_dir/usr/bin/sip-testing-tool" "$@"') -join "`n"
+            if ($launcher.TrimEnd("`n") -cne $expectedLauncher) {
+                throw 'AppRun must launch the bundled native application directly.'
+            }
+            $icon = Get-Item -LiteralPath (Join-Path $appDir 'sip-testing-tool.png')
+            if ($icon.Length -eq 0) { throw 'The AppImage icon is empty.' }
+            $desktop = Get-Content -LiteralPath (Join-Path $appDir 'sip-testing-tool.desktop')
+            foreach ($entry in @('Type=Application', 'Name=SIP Testing Tool', 'Exec=sip-testing-tool',
+                'Icon=sip-testing-tool', 'Categories=Utility;Development;', 'Terminal=false')) {
+                if (@($desktop | Where-Object { $_ -ceq $entry }).Count -ne 1) {
+                    throw "Missing AppImage desktop metadata: $entry"
+                }
+            }
             Assert-DesktopApplicationVersion -ApplicationPath (Join-Path $appDir 'usr/bin/sip-testing-tool.dll') -Version $Version
             $metadata = @(Get-Content -LiteralPath (Join-Path $appDir 'sip-testing-tool.desktop') | Where-Object { $_.StartsWith('X-AppImage-Version=', [StringComparison]::Ordinal) })
             if ($metadata.Count -ne 1 -or $metadata[0] -cne "X-AppImage-Version=$Version") {

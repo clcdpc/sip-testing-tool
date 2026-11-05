@@ -19,7 +19,9 @@
   <!-- Visual Studio displays the finished release folder. Only .NET publishes to staging. -->
   <Target Name="StageDesktopPublish" BeforeTargets="PrepareForPublish" DependsOnTargets="ResolveReleasePublishPaths" Condition="'$(CreateDesktopPackage)' == 'true'">
     <Error Condition="'$(ReleaseOutputDir)' == '$(ReleaseStagingDir)'" Text="The release destination must be different from the application staging folder." />
-    <Error Condition="'$(Configuration)' != 'Release' or '$(SelfContained)' != 'false'" Text="Desktop releases must use Release and exclude the .NET runtime (SelfContained=false)." />
+    <Error Condition="'$(Configuration)' != 'Release'" Text="Desktop releases must use Release configuration." />
+    <Error Condition="'$(RuntimeIdentifier)' == 'win-x64' and '$(SelfContained)' != 'false'" Text="Windows releases must exclude the .NET runtime (SelfContained=false)." />
+    <Error Condition="'$(RuntimeIdentifier)' == 'linux-x64' and ('$(SelfContained)' != 'true' or '$(UseAppHost)' != 'true' or '$(PublishSingleFile)' != 'false' or '$(PublishTrimmed)' != 'false' or '$(PublishReadyToRun)' != 'false' or '$(PublishAot)' == 'true')" Text="Linux releases must include the .NET runtime and native apphost, without single-file publishing, trimming, ReadyToRun or Native AOT." />
     <Error Condition="'$(RuntimeIdentifier)' != 'win-x64' and '$(RuntimeIdentifier)' != 'linux-x64'" Text="Choose Windows-Zip or Linux-AppImage." />
     <PropertyGroup>
       <PublishDir>$(ReleaseStagingDir)</PublishDir>

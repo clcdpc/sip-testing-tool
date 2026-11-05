@@ -14,7 +14,7 @@ $outputPath = [IO.Path]::GetFullPath($OutputDirectory)
 if ($outputPath.TrimEnd([IO.Path]::DirectorySeparatorChar) -eq $publishPath.TrimEnd([IO.Path]::DirectorySeparatorChar)) {
     throw 'Keep the package destination separate from the publish directory.'
 }
-if (-not $RuntimeIdentifier.StartsWith('osx-', [StringComparison]::Ordinal)) {
+if ($RuntimeIdentifier -eq 'win-x64') {
     foreach ($runtimeFile in @('System.Private.CoreLib.dll', 'coreclr.dll', 'libcoreclr.so', 'hostfxr.dll', 'libhostfxr.so')) {
         if (Test-Path -LiteralPath (Join-Path $publishPath $runtimeFile)) { throw "Bundled .NET runtime: $runtimeFile" }
     }
@@ -65,11 +65,8 @@ if ($RuntimeIdentifier -eq 'win-x64') {
         $scratch.Delete($true)
     }
 } else {
+    & (Join-Path $PSScriptRoot 'VerifyLinuxPublish.ps1') -Directory $publishPath
     if (-not $IsLinux) { throw 'AppImage packaging requires Linux.' }
-    $config = Get-Content -LiteralPath (Join-Path $publishPath 'sip-testing-tool.runtimeconfig.json') -Raw | ConvertFrom-Json
-    if ($config.runtimeOptions.framework.name -cne 'Microsoft.NETCore.App' -or $config.runtimeOptions.includedFrameworks) {
-        throw 'The AppImage must require an installed .NET runtime.'
-    }
     $asset = Join-Path $outputPath "$baseName.AppImage"
     $temporaryAsset = Join-Path $outputPath (".package-" + [Guid]::NewGuid().ToString('N') + '.AppImage')
     try {

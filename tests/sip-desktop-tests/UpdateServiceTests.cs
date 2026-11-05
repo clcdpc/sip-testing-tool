@@ -64,6 +64,9 @@ public sealed class UpdateServiceTests
         Assert.AreEqual("Update downloaded. Restart when you are ready.", await updates.CheckAndDownloadAsync(UpdateService.DefaultRepositoryUrl));
         Assert.AreEqual(1, fixture.DownloadCount);
         Assert.IsTrue(fixture.Manager!.RequireAssetChecksum);
+        var extension = OperatingSystem.IsWindows() ? ".zip" : ".AppImage";
+        Assert.AreEqual(extension, fixture.Manager.AssetExtensionFilter);
+        Assert.AreEqual($"/SIP-Testing-Tool_{UpdateService.RuntimeFolder}_v99.0.0{extension}", fixture.DownloadUri!.AbsolutePath);
         Assert.IsFalse(fixture.Manager.AllowPreReleases);
         Assert.AreEqual(UpdatumWindowsExeType.SingleFileApp, fixture.Manager.InstallUpdateWindowsExeType);
         Assert.AreEqual(UpdatumSingleFileExecutableNameStrategy.CustomName, fixture.Manager.InstallUpdateSingleFileExecutableNameStrategy);
@@ -285,6 +288,7 @@ public sealed class UpdateServiceTests
         private readonly HttpClient http;
         public int DownloadCount { get; private set; }
         public int SidecarDownloadCount { get; private set; }
+        public Uri? DownloadUri { get; private set; }
         public UpdatumManager? Manager { get; private set; }
         public UpdatumDownloadedAsset? Download { get; private set; }
         public TaskCompletionSource DownloadStarted { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -367,6 +371,7 @@ public sealed class UpdateServiceTests
                     };
                 }
                 fixture.DownloadCount++;
+                fixture.DownloadUri = request.RequestUri;
                 fixture.DownloadStarted.TrySetResult();
                 if (fixture.blockDownload) { await Task.Delay(Timeout.Infinite, cancellationToken); }
                 return new HttpResponseMessage(HttpStatusCode.OK) { Content = new ByteArrayContent(fixture.payload) };
