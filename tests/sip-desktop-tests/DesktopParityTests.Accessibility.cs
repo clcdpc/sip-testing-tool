@@ -24,6 +24,19 @@ public sealed partial class DesktopParityTests
 {
     private static AutomationPeer Peer(Control control) => ControlAutomationPeer.CreatePeerForElement(control);
 
+    private static List<string> RecordAnnouncements(Window window)
+    {
+        var messages = new List<string>();
+        Peer(window.FindControl<TextBlock>("AccessibilityAnnouncement")!).PropertyChanged += (_, args) =>
+        {
+            if (args.Property == AutomationElementIdentifiers.NameProperty && args.NewValue is string { Length: > 0 } message)
+            {
+                messages.Add(message);
+            }
+        };
+        return messages;
+    }
+
     private static void AssertNamed(Control control, string? expected = null)
     {
         var name = Peer(control).GetName();
@@ -277,6 +290,8 @@ public sealed partial class DesktopParityTests
             Layout(window);
             var server = window.FindControl<TextBox>("ServerField")!;
             var port = window.FindControl<TextBox>("PortField")!;
+            window.FindControl<TextBox>("UsernameField")!.Focus();
+            var announcements = RecordAnnouncements(window);
             var originalHelp = Peer(server).GetHelpText();
             var descriptions = new List<string>();
             Peer(server).PropertyChanged += (_, args) =>
@@ -299,7 +314,10 @@ public sealed partial class DesktopParityTests
                 AssertNamed(server, "SIP Server");
                 Assert.AreEqual("Server is required.", Peer(server).GetHelpText());
                 Assert.AreEqual("Server is required.", banner.GetName());
+                Assert.HasCount(OperatingSystem.IsWindows() ? failure : 0, announcements,
+                    "Only an already focused invalid editor needs the live-region fallback.");
             }
+            if (OperatingSystem.IsWindows()) { CollectionAssert.AreEqual(new[] { "Server is required." }, announcements); }
             Assert.AreEqual(2, descriptions.Count(message => message == "Server is required."));
             Assert.AreEqual(2, changes.Count(message => message == "Server is required."));
             server.Text = "localhost";
@@ -354,6 +372,8 @@ public sealed partial class DesktopParityTests
         try
         {
             Layout(window);
+            window.FindControl<ComboBox>("CommandPicker")!.Focus();
+            var announcements = RecordAnnouncements(window);
             await model.ExecuteCommand.ExecuteAsync(null);
             Layout(window);
             var control = Field<Control>(window, fieldName);
@@ -363,6 +383,15 @@ public sealed partial class DesktopParityTests
             Assert.AreEqual(model.ErrorMessage, Peer(editor).GetHelpText());
             Assert.IsTrue(model.HasError);
             var error = model.ErrorMessage;
+            Assert.IsEmpty(announcements, "Initial focus supplies the error without a second live announcement.");
+            for (var attempt = 0; attempt < 2; attempt++)
+            {
+                await model.ExecuteCommand.ExecuteAsync(null);
+                Layout(window);
+                Assert.IsTrue(editor.IsFocused);
+                Assert.AreEqual(error, Peer(editor).GetHelpText());
+            }
+            CollectionAssert.AreEqual(OperatingSystem.IsWindows() ? new[] { error!, error! } : Array.Empty<string>(), announcements);
             if (control is OptionalDateTimeInput dateInput)
             {
                 Peer(dateInput.GetVisualDescendants().OfType<CheckBox>().Single()).GetProvider<IToggleProvider>()!.Toggle();
@@ -390,6 +419,8 @@ public sealed partial class DesktopParityTests
             editing.UpdateFeedUrl = repository ? "not a repository URL" : "";
             var input = repository ? window.FindControl<TextBox>("UpdateRepositoryField")! : window.FindControl<AccessibleAutoCompleteBox>("EncodingField")!.Editor!;
             var banner = window.FindControl<TextBlock>("SettingsError")!;
+            window.FindControl<Button>("CancelDefaultsButton")!.Focus();
+            var announcements = RecordAnnouncements(window);
             Assert.AreEqual(AutomationLiveSetting.Assertive, Peer(banner).GetLiveSetting());
             var notifications = new List<string?>();
             Peer(banner).PropertyChanged += (_, args) =>
@@ -403,7 +434,9 @@ public sealed partial class DesktopParityTests
                 Assert.IsTrue(input.IsFocused);
                 Assert.IsFalse(string.IsNullOrEmpty(banner.Text));
                 Assert.AreEqual(banner.Text, Peer(input).GetHelpText());
+                Assert.HasCount(OperatingSystem.IsWindows() ? attempt : 0, announcements);
             }
+            if (OperatingSystem.IsWindows()) { CollectionAssert.AreEqual(new[] { banner.Text! }, announcements); }
             Assert.AreEqual(2, notifications.Count(message => message == banner.Text));
             var error = banner.Text;
             input.Text = repository ? "https://github.com/clcdpc/sip-testing-tool" : "UTF-8";

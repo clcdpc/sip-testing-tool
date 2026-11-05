@@ -176,7 +176,8 @@
               </editor:TextEditor.ContextMenu>
             </editor:TextEditor>
           </Border>
-          <GridSplitter x:Name="InspectorDivider" Grid.Row="1" ResizeDirection="Rows" HorizontalAlignment="Stretch" Background="{DynamicResource LineBrush}" IsVisible="False" />
+          <GridSplitter x:Name="InspectorDivider" Grid.Row="1" ResizeDirection="Rows" HorizontalAlignment="Stretch" Background="{DynamicResource LineBrush}" IsVisible="False"
+                        AutomationProperties.Name="Resize message log and details" AutomationProperties.HelpText="Use Up and Down Arrow keys to adjust panel heights." />
           <views:MessageFieldsPanel x:Name="MessageFields" Grid.Row="2" IsVisible="False" />
         </Grid>
       </Grid>

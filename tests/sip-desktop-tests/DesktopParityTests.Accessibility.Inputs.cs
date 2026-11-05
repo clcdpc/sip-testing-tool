@@ -84,6 +84,42 @@ public sealed partial class DesktopParityTests
     }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
 
     [TestMethod]
+    [DataRow(false)]
+    [DataRow(true)]
+    public Task AccessibilityFocusedValidationAnnouncesIdenticalAndChangedMessagesOnce(bool settings) => ui.Dispatch(() =>
+    {
+        using var model = new MainWindowViewModel { Fields = SampleFields() };
+        Window window = settings ? new SettingsWindow() : new MainWindow { DataContext = model };
+        window.Show();
+        try
+        {
+            Layout(window);
+            Control control = settings ? window.FindControl<AccessibleAutoCompleteBox>("EncodingField")! : window.FindControl<TextBox>("ServerField")!;
+            var editor = control is AccessibleAutoCompleteBox autocomplete ? autocomplete.Editor! : control;
+            var originalHelp = Peer(editor).GetHelpText();
+            var announcements = RecordAnnouncements(window);
+            var validation = new FieldValidationAccessibility(() => { });
+            Assert.IsTrue(editor.Focus());
+            foreach (var message in new[] { "First error.", "First error.", "Changed error.", "Changed error." })
+            {
+                var before = announcements.Count;
+                validation.Show(control, message);
+                Assert.IsTrue(editor.IsFocused);
+                Assert.AreEqual(message, Peer(editor).GetHelpText());
+                Assert.HasCount(before + (OperatingSystem.IsWindows() ? 1 : 0), announcements,
+                    "Each attempt supplies exactly one nonempty live-region update.");
+            }
+            CollectionAssert.AreEqual(OperatingSystem.IsWindows()
+                ? new[] { "First error.", "First error.", "Changed error.", "Changed error." }
+                : Array.Empty<string>(), announcements);
+            validation.Clear();
+            Assert.AreEqual(originalHelp, Peer(editor).GetHelpText());
+            Assert.HasCount(1, window.GetVisualDescendants().OfType<TextBlock>().Where(t => t.Name == "AccessibilityAnnouncement"));
+        }
+        finally { window.Close(); }
+    }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
+
+    [TestMethod]
     public Task AccessibilityAnnouncementsReuseOneRegionAndRepeatIdenticalMessages() => ui.Dispatch(() =>
     {
         using var model = new MainWindowViewModel { Fields = SampleFields() };
@@ -264,6 +300,9 @@ public sealed partial class DesktopParityTests
                 Press(window, Key.H, ShortcutModifier | RawInputModifiers.Shift);
                 var eye = field.GetVisualDescendants().OfType<ToggleButton>().Single();
                 AssertNamed(eye, field.IsPin ? "Show PIN" : "Show password");
+                Assert.IsFalse(eye.Focusable, "Keep Fluent's minimal keyboard navigation.");
+                Assert.IsFalse(Peer(eye).IsKeyboardFocusable());
+                StringAssert.Contains(Peer(eye).GetHelpText(), "Shift+H to show or hide");
                 var toggle = Peer(eye).GetProvider<IToggleProvider>()!;
                 Assert.AreEqual(ToggleState.On, toggle.ToggleState);
                 toggle.Toggle();
@@ -272,13 +311,12 @@ public sealed partial class DesktopParityTests
                 window.MouseDown(point, MouseButton.Left);
                 window.MouseUp(point, MouseButton.Left);
                 Assert.IsTrue(field.RevealPassword, "Fluent eye must still work with the pointer.");
-                eye.Focusable = true;
-                eye.Focus();
                 Layout(window);
-                Assert.IsTrue(field.RevealPassword, "Focus within the composite must retain reveal.");
+                Assert.IsTrue(field.IsFocused, "Pointer operation must retain focus in the password editor.");
+                Assert.IsFalse(eye.Focus(), "The shortcut does not require a focusable eye.");
+                Assert.IsTrue(field.RevealPassword);
                 Press(window, Key.H, ShortcutModifier | RawInputModifiers.Shift);
-                Assert.IsFalse(field.RevealPassword, "Shortcut works from the eye, too.");
-                field.Focus();
+                Assert.IsFalse(field.RevealPassword, "Shortcut operates from the focused editor after a pointer reveal.");
                 Press(window, Key.H, ShortcutModifier | RawInputModifiers.Shift);
                 window.FindControl<TextBox>("ServerField")!.Focus();
                 Layout(window);
@@ -421,6 +459,41 @@ public sealed partial class DesktopParityTests
         }
         finally { owner.Close(); }
         return true;
+    }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
+
+    [TestMethod]
+    public Task AccessibilityExpandedInspectorSplitterNamesAndResizesBothPanels() => ui.Dispatch(() =>
+    {
+        using var model = new MainWindowViewModel { Fields = SampleFields() };
+        var window = new MainWindow { DataContext = model };
+        window.Show();
+        try
+        {
+            Layout(window);
+            var splitter = window.FindControl<GridSplitter>("InspectorDivider")!;
+            Assert.IsFalse(splitter.IsVisible);
+            model.AppendTransaction(new() { Message = "9300CNtest-user|COtest-password|", Response = response });
+            Layout(window);
+            window.LogInspection.ExpandMessageAtOffset(model.LogDocument.GetLineByNumber(2).Offset);
+            Layout(window);
+            Assert.IsTrue(splitter.IsEffectivelyVisible);
+            AssertNamed(splitter, "Resize message log and details");
+            Assert.AreEqual("Use Up and Down Arrow keys to adjust panel heights.", Peer(splitter).GetHelpText());
+            Assert.IsTrue(splitter.Focus());
+            var grid = (Grid)splitter.Parent!;
+            var logHeight = grid.RowDefinitions[0].ActualHeight;
+            var detailsHeight = grid.RowDefinitions[2].ActualHeight;
+            Press(window, Key.Up);
+            Layout(window);
+            Assert.IsTrue(grid.RowDefinitions[0].ActualHeight < logHeight);
+            Assert.IsTrue(grid.RowDefinitions[2].ActualHeight > detailsHeight);
+            Press(window, Key.Down);
+            Layout(window);
+            Assert.AreEqual(logHeight, grid.RowDefinitions[0].ActualHeight, 1);
+            Assert.AreEqual(detailsHeight, grid.RowDefinitions[2].ActualHeight, 1);
+            Assert.IsTrue(splitter.IsFocused);
+        }
+        finally { window.Close(); }
     }, CancellationToken.None).WaitAsync(TimeSpan.FromSeconds(30));
 
     [TestMethod]

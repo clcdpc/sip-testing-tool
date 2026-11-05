@@ -29,6 +29,7 @@ public partial class MainWindow : Window
     private readonly AsyncRelayCommand exportLogCommand;
     private bool filePickerOpen;
     private readonly FieldValidationAccessibility fieldValidation;
+    private Control? focusBeforeValidation;
     public SipLogInspector LogInspection { get; }
     private MainWindowViewModel Model => (MainWindowViewModel)DataContext!;
 
@@ -82,8 +83,10 @@ public partial class MainWindow : Window
         DataContextChanged += (_, _) =>
         {
             fieldValidation.Clear();
+            focusBeforeValidation = null;
             if (model != null)
             {
+                model.PropertyChanging -= ModelAccessibilityChanging;
                 model.PropertyChanged -= ModelAccessibilityChanged;
                 model.TransactionAppended -= ScrollLog;
                 model.ThemeChanged -= ApplyTheme;
@@ -97,6 +100,7 @@ public partial class MainWindow : Window
             model = DataContext as MainWindowViewModel;
             if (model != null)
             {
+                model.PropertyChanging += ModelAccessibilityChanging;
                 model.PropertyChanged += ModelAccessibilityChanged;
                 model.TransactionAppended += ScrollLog;
                 model.ThemeChanged += ApplyTheme;
@@ -113,9 +117,11 @@ public partial class MainWindow : Window
         Closed += (_, _) =>
         {
             fieldValidation.Clear();
+            focusBeforeValidation = null;
             LogInspection.Dispose();
             if (model != null)
             {
+                model.PropertyChanging -= ModelAccessibilityChanging;
                 model.PropertyChanged -= ModelAccessibilityChanged;
                 model.TransactionAppended -= ScrollLog;
                 model.ThemeChanged -= ApplyTheme;
@@ -325,13 +331,25 @@ public partial class MainWindow : Window
                 _ => control
             };
         }
-        if (control != null && !string.IsNullOrEmpty(Model.ErrorMessage)) { fieldValidation.Show(control, Model.ErrorMessage); }
+        if (control != null && !string.IsNullOrEmpty(Model.ErrorMessage)) { fieldValidation.Show(control, Model.ErrorMessage, focusBeforeValidation); }
+        focusBeforeValidation = null;
         control?.BringIntoView();
         if (control is OptionalDateTimeInput date) { date.FocusEditor(); }
         else if (control != null)
         {
             control.Focus();
             if (control is TextBox text) { text.SelectAll(); }
+        }
+    }
+
+    private void ModelAccessibilityChanging(object? sender, PropertyChangingEventArgs args)
+    {
+        // Busy bindings briefly disable inputs before validation restores focus.
+        // Remember the user's editor before that transient loss so an identical
+        // error still announces when native focus remains on the same element.
+        if (args.PropertyName == nameof(MainWindowViewModel.IsBusy) && model?.IsBusy == false)
+        {
+            focusBeforeValidation = FocusManager.GetFocusedElement() as Control;
         }
     }
 

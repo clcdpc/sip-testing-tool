@@ -14,7 +14,7 @@ internal sealed class FieldValidationAccessibility(Action dismissError)
     private Control? source;
     private string? previousHelp;
 
-    public void Show(Control control, string message)
+    public void Show(Control control, string message, Control? previousFocus = null)
     {
         Clear();
         source = control;
@@ -29,6 +29,14 @@ internal sealed class FieldValidationAccessibility(Action dismissError)
         field.PropertyChanged += FieldChanged;
         field.DetachedFromVisualTree += FieldDetached;
         if (source != field) { source.PropertyChanged += FieldChanged; }
+        // Moving focus reads the new HelpText. If the editor already has focus,
+        // NVDA does not read description/banner changes, including identical
+        // failures. Reuse the window's live region only in that case so a single
+        // validation attempt does not also repeat the focus announcement.
+        if (OperatingSystem.IsWindows() && (field.IsFocused || field == previousFocus))
+        {
+            AccessibilityAnnouncements.Announce(field, message);
+        }
     }
 
     public void Clear()
