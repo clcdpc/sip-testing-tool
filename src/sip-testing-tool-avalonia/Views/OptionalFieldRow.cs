@@ -59,11 +59,7 @@ public sealed class OptionalFieldRow : Panel
     }
 
     private double MinimumFieldWidth => minimumFieldWidth;
-    private bool IsInline(double width)
-    {
-        var captionWidth = input is ComboBox ? Math.Max(labelWidth, Math.Min(140, width - 8 - 140)) : labelWidth;
-        return captionWidth + 8 + MinimumFieldWidth <= width;
-    }
+    private bool IsInline(double width) => labelWidth + 8 + MinimumFieldWidth <= width;
     private double LabelColumnWidth(double width) => Math.Max(labelWidth, Math.Min(140, width - 8 - MinimumFieldWidth));
 
     protected override Size MeasureOverride(Size availableSize)
@@ -71,10 +67,8 @@ public sealed class OptionalFieldRow : Panel
         caption.Measure(Size.Infinity);
         labelWidth = caption.DesiredSize.Width;
         if (input == null) { return caption.DesiredSize; }
-        // Reserve enough space for the selected choice before deciding whether
-        // its label can stay beside it. A constrained measure can hide truncation.
-        if (input is ComboBox) { input.Measure(Size.Infinity); }
-        minimumFieldWidth = input is OptionalDateTimeInput ? 230 : input is ComboBox ? Math.Max(140, input.DesiredSize.Width) : 120;
+        // Selection changes must not change the inline/stacked decision.
+        minimumFieldWidth = input is OptionalDateTimeInput ? 230 : input is AccessibleComboBox choice ? Math.Max(140, choice.RequiredWidth) : input is ComboBox ? 140 : 120;
         var width = double.IsInfinity(availableSize.Width) ? labelWidth + 8 + MinimumFieldWidth : availableSize.Width;
         if (IsInline(width))
         {
