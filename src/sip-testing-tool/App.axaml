@@ -4,6 +4,7 @@
   <Application.Resources>
     <ResourceDictionary>
       <StreamGeometry x:Key="DropDownChevron">M 0,0 L 4,4 L 8,0 L 9,1 L 4,6 L -1,1 Z</StreamGeometry>
+      <StreamGeometry x:Key="ClockIcon">F0 M 8,0 A 8,8 0 1 1 8,16 A 8,8 0 1 1 8,0 Z M 8,1.5 A 6.5,6.5 0 1 0 8,14.5 A 6.5,6.5 0 1 0 8,1.5 Z M 7.25,3.5 L 8.75,3.5 L 8.75,7.5 L 11.5,9.1 L 10.75,10.4 L 7.25,8.4 Z</StreamGeometry>
       <ResourceDictionary.ThemeDictionaries>
         <ResourceDictionary x:Key="Light">
           <SolidColorBrush x:Key="RibbonBrush" Color="#F0F0F0" />
@@ -44,6 +45,11 @@
     <Style Selector="AutoCompleteBox"><Setter Property="MinHeight" Value="26" /><Setter Property="Padding" Value="6,2" /><Setter Property="Background" Value="{DynamicResource InputBrush}" /><Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" /></Style>
     <Style Selector="CheckBox"><Setter Property="MinHeight" Value="20" /><Setter Property="Padding" Value="6,0,0,0" /></Style>
     <Style Selector="Button"><Setter Property="MinHeight" Value="29" /><Setter Property="Padding" Value="10,3" /><Setter Property="HorizontalContentAlignment" Value="Center" /><Setter Property="VerticalContentAlignment" Value="Center" /></Style>
+    <Style Selector="TimePickerPresenter /template/ DateTimePickerPanel[PanelType=Hour]"><Setter Property="AutomationProperties.Name" Value="Hours" /></Style>
+    <Style Selector="TimePickerPresenter /template/ DateTimePickerPanel[PanelType=Minute]"><Setter Property="AutomationProperties.Name" Value="Minutes" /></Style>
+    <Style Selector="TimePickerPresenter /template/ DateTimePickerPanel[PanelType=Second]"><Setter Property="AutomationProperties.Name" Value="Seconds" /></Style>
+    <Style Selector="TimePickerPresenter /template/ Button#PART_AcceptButton"><Setter Property="AutomationProperties.Name" Value="Apply time" /></Style>
+    <Style Selector="TimePickerPresenter /template/ Button#PART_DismissButton"><Setter Property="AutomationProperties.Name" Value="Cancel time" /></Style>
     <Style Selector="TextBlock.groupTitle"><Setter Property="FontWeight" Value="SemiBold" /><Setter Property="Margin" Value="0,0,0,6" /></Style>
     <Style Selector="TextBlock.fieldLabel"><Setter Property="FontSize" Value="12" /><Setter Property="Margin" Value="0,0,0,4" /></Style>
     <Style Selector="StackPanel.field"><Setter Property="Spacing" Value="0" /></Style>
