@@ -123,10 +123,14 @@ public sealed partial class DesktopParityTests
                 Layout(window);
                 var date = Field<OptionalDateTimeInput>(window, "DateTextField");
                 var editor = Field<TextBox>(date, "DateTimeEditor");
-                var button = Field<Button>(date, "CalendarButton");
+                var calendar = Field<Button>(date, "CalendarButton");
+                var button = Field<Button>(date, "TimeButton");
                 Assert.IsTrue(TextWidth(editor.Text!, editor.FontFamily, editor.FontSize) <= editor.Bounds.Width - editor.Padding.Left - editor.Padding.Right);
                 var right = button.TranslatePoint(new Point(button.Bounds.Width, 0), date)!.Value.X;
-                Assert.AreEqual(date.Bounds.Width - 1, right, 0.5, "The calendar button should fill the right edge of the editor.");
+                Assert.AreEqual(date.Bounds.Width - 1, right, 0.5, "The time button should fill the right edge of the editor.");
+                Assert.AreEqual(calendar.Bounds.Size, button.Bounds.Size);
+                Assert.AreEqual(calendar.TranslatePoint(new Point(calendar.Bounds.Width, 0), date)!.Value.X,
+                    button.TranslatePoint(default, date)!.Value.X, 0.5);
                 Assert.AreEqual(editor.Bounds.Height, button.Bounds.Height, 0.5);
             }
         }
@@ -166,8 +170,10 @@ public sealed partial class DesktopParityTests
                 AssertCentered(text, button);
             }
             var date = Field<OptionalDateTimeInput>(window, "DateTextField");
-            var calendar = date.GetVisualDescendants().OfType<Button>().Single(button => button.Content is PathIcon);
-            AssertCentered((PathIcon)calendar.Content!, calendar);
+            foreach (var button in date.GetVisualDescendants().OfType<Button>().Where(button => button.Content is PathIcon))
+            {
+                AssertCentered((PathIcon)button.Content!, button);
+            }
             Save(window, "centered-controls-" + (dark ? "dark" : "light"));
         }
         finally { window.Close(); }

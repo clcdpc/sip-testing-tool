@@ -207,9 +207,14 @@ public sealed partial class DesktopParityTests
         Assert.IsTrue(date.Editor.IsFocused);
         AssertNamed(date.Editor, label + " (" + CommandOptions.DateFormat + ")");
         var include = date.GetVisualDescendants().OfType<CheckBox>().Single();
-        var calendar = date.GetVisualDescendants().OfType<Button>().Single(button => button is not ToggleButton);
+        var calendar = Field<Button>(date, "CalendarButton");
+        var time = Field<Button>(date, "TimeButton");
         AssertNamed(include, "Include " + label);
         AssertNamed(calendar, "Choose " + label + " in calendar");
+        AssertNamed(time, "Choose " + label + " time");
+        Assert.AreEqual(AutomationControlType.Button, Peer(time).GetAutomationControlType());
+        Assert.IsTrue(AutomationDescendants(Peer(date)).Contains(Peer(time)));
+        Assert.IsFalse(Peer((PathIcon)time.Content!).IsControlElement());
         var toggle = Peer(include).GetProvider<IToggleProvider>()!;
         var previous = date.IsIncluded;
         toggle.Toggle();

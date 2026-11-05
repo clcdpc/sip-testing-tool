@@ -24,11 +24,13 @@ public sealed class OptionalDateTimeInput : UserControl
     private readonly Avalonia.Controls.Calendar calendar = new();
     private readonly Flyout popup;
     private readonly Button calendarButton;
+    private readonly Flyout timePopup;
+    private readonly Button timeButton;
     private DateTime lastValid = DateTime.Now;
 
     public OptionalDateTimeInput()
     {
-        var layout = new Grid { ColumnDefinitions = new ColumnDefinitions("24,*,26") };
+        var layout = new Grid { ColumnDefinitions = new ColumnDefinitions("24,*,26,26") };
         include = new CheckBox { Name = "IncludeDate", VerticalAlignment = VerticalAlignment.Center, HorizontalAlignment = HorizontalAlignment.Center, Padding = new Thickness(0) };
         AutomationProperties.SetName(include, "Include date/time");
         include.Bind(CheckBox.IsCheckedProperty, new Binding(nameof(IsIncluded)) { Source = this, Mode = BindingMode.TwoWay });
@@ -48,6 +50,14 @@ public sealed class OptionalDateTimeInput : UserControl
         AutomationProperties.SetName(calendarButton, "Choose calendar date");
         popup = new Flyout { Content = calendar };
         calendarButton.Click += (_, _) => ShowCalendar();
+        var clock = new PathIcon { Width = 12, Height = 12 };
+        AutomationProperties.SetAccessibilityView(clock, AccessibilityView.Raw);
+        clock.Bind(PathIcon.DataProperty, new DynamicResourceExtension("ClockIcon"));
+        timePopup = new Flyout();
+        timeButton = new Button { Name = "TimeButton", Content = clock, Flyout = timePopup, Padding = new Thickness(0), BorderThickness = new Thickness(0), Background = Brushes.Transparent, MinWidth = 0, MinHeight = 24, HorizontalAlignment = HorizontalAlignment.Stretch, VerticalAlignment = VerticalAlignment.Stretch };
+        ToolTip.SetTip(timeButton, "Choose time");
+        timePopup.Opening += (_, _) => PrepareTimePicker();
+        timePopup.Closed += (_, _) => timeButton.Focus();
         calendar.SelectedDatesChanged += (_, _) =>
         {
             if (calendar.SelectedDate is not { } date) { return; }
@@ -58,14 +68,17 @@ public sealed class OptionalDateTimeInput : UserControl
         };
         Grid.SetColumn(editor, 1);
         Grid.SetColumn(calendarButton, 2);
+        Grid.SetColumn(timeButton, 3);
         layout.Children.Add(include);
         layout.Children.Add(editor);
         layout.Children.Add(calendarButton);
+        layout.Children.Add(timeButton);
         var border = new Border { Child = layout, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(3) };
         border.Bind(Border.BorderBrushProperty, new DynamicResourceExtension("LineBrush"));
         border.Bind(Border.BackgroundProperty, new DynamicResourceExtension("InputBrush"));
         Content = border;
         AutomationProperties.SetAccessibilityView(this, AccessibilityView.Raw);
+        UpdateAccessibleNames();
     }
 
     public void FocusEditor() { editor.Focus(); editor.SelectAll(); }
@@ -87,6 +100,7 @@ public sealed class OptionalDateTimeInput : UserControl
         AutomationProperties.SetName(editor, label + " (" + CommandOptions.DateFormat + ")");
         AutomationProperties.SetName(include, "Include " + label);
         AutomationProperties.SetName(calendarButton, "Choose " + label + " in calendar");
+        AutomationProperties.SetName(timeButton, "Choose " + label + " time");
     }
 
     private bool TryRead(out DateTime date) => DateTime.TryParseExact(editor.Text, CommandOptions.DateFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out date);
@@ -95,6 +109,28 @@ public sealed class OptionalDateTimeInput : UserControl
     {
         calendar.DisplayDate = lastValid.Date;
         popup.ShowAt(calendarButton);
+    }
+
+    private void PrepareTimePicker()
+    {
+        // A fresh presenter also resets unconfirmed selector changes when reopened.
+        var picker = new TimePickerPresenter
+        {
+            ClockIdentifier = "24HourClock",
+            UseSeconds = true,
+            MinuteIncrement = 1,
+            SecondIncrement = 1,
+            Time = lastValid.TimeOfDay
+        };
+        AutomationProperties.SetName(picker, AutomationProperties.GetName(timeButton));
+        picker.Confirmed += (_, _) =>
+        {
+            SetCurrentValue(DateTextProperty, lastValid.Date.Add(picker.Time).ToString(CommandOptions.DateFormat, CultureInfo.InvariantCulture));
+            SetCurrentValue(IsIncludedProperty, true);
+            timePopup.Hide();
+        };
+        picker.Dismissed += (_, _) => timePopup.Hide();
+        timePopup.Content = picker;
     }
 
     private void EditorKeyDown(object? sender, KeyEventArgs e)
