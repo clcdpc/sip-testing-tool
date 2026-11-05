@@ -1,20 +1,14 @@
-using System.Drawing;
 using Clc.Sip.Helpers;
-using Clc.Sip.Tests.TestSupport;
-using static Clc.Sip.Tests.TestSupport.WinFormsTestEnvironment;
 
 namespace Clc.Sip.Tests;
 
-[STATestClass]
+[TestClass]
 [TestCategory("Regression")]
 public sealed class PolarisLogFieldTests
 {
     private const string patronHeader = "64              00120261022    083815000100000000000600000000";
     private const string checkinHeader = "101YNN20261022    083815";
     private const string statusHeader = "24              00120261022    083815";
-
-    [ClassInitialize]
-    public static void Initialize(TestContext _) => WinFormsTestEnvironment.Initialize();
 
     [TestMethod(DisplayName = "Documented Polaris fields have names and retain their exact values")]
     [DataRow("64", "U1", "", "User1")]
@@ -341,71 +335,6 @@ public sealed class PolarisLogFieldTests
         Assert.IsFalse(help.Description.Contains("\n\n", StringComparison.Ordinal));
         var blankCount = SipLogFields.DescribeMessage("661        20261022    083815").Fields[2];
         Assert.AreEqual("Count unavailable.", blankCount.Meaning);
-    }
-
-    [TestMethod(DisplayName = "Expanded vendor rows show component values, clear counts and library-defined user fields in both themes")]
-    [DataRow(false)]
-    [DataRow(true)]
-    public void ExpandedVendorComponentsRemainReadableAndCopyable(bool darkMode)
-    {
-        var previousTheme = AppTheme.IsDarkMode;
-        try
-        {
-            AppTheme.SetDarkMode(darkMode);
-            using var form = new MainForm { ClientSize = new Size(1280, 1000) };
-            ShowOffscreen(form);
-            form.LogOutput(new SipTransaction
-            {
-                Message = "6300120261022    083815   Y      AO123|AA12345678901234|BP1|BQ5|",
-                Response = patronHeader + "U1|U2NONE or UNUSED|U3NONE or UNUSED|U4YES Computer Access|U5|" +
-                    "AV25116288 $5.00|AV123 $15.89 \"Charge Overdue fine\" ITEM123 Example item title|AV5.00 Charge Fee description and title|AY1AZ81AC"
-            });
-            Application.DoEvents();
-            var log = form.GetRichTextBox("logRichTextBox");
-            log.Select(4, 3);
-            var text = log.Text;
-            var rtf = log.Rtf;
-            var responseOffset = text.IndexOf("<--", StringComparison.Ordinal);
-            form.GetButton($"expandMessage{responseOffset}Button").PerformClick();
-            Application.DoEvents();
-            var grid = form.GetDataGridView("messageFieldsGrid");
-            var amount = Rows("Outstanding amount").First();
-            Assert.AreEqual("$5.00", amount.Cells[2].Value);
-            Assert.AreEqual("Overdue fine", Rows("Fee description").Single().Cells[2].Value);
-            Assert.AreEqual("Example item title", Rows("Related item title").Single().Cells[2].Value);
-            Assert.AreEqual("Fee description and title", Rows("Fee description / title").Single().Cells[2].Value);
-            Assert.AreEqual("(empty)", Rows("U1 · User1 (Polaris)").Single().Cells[2].Value);
-            Assert.AreEqual("YES Computer Access", Rows("U4 · User4 (Polaris)").Single().Cells[2].Value);
-            Assert.AreEqual("", Rows("Hold items count").Single().Cells[1].Value);
-            Assert.AreEqual("Not set (space)", Rows("Flag 4 (position 3)").Single().Cells[2].Value);
-            Assert.AreEqual(rtf, log.Rtf);
-            var firstFine = Rows("AV · Fine item details").First();
-            grid.FirstDisplayedScrollingRowIndex = Rows("Hold items count").Single().Index;
-            SavePreview(darkMode ? "polaris-patron-fields-dark.png" : "polaris-patron-fields-light.png");
-            grid.FirstDisplayedScrollingRowIndex = firstFine.Index;
-            SavePreview(darkMode ? "polaris-fields-dark.png" : "polaris-fields-light.png");
-            amount.Cells[2].Selected = true;
-            StringAssert.Contains(grid.GetClipboardContent().GetText(), "$5.00");
-            grid.ClearSelection();
-            AppTheme.SetDarkMode(!darkMode);
-            Application.DoEvents();
-            Assert.AreEqual("$5.00", amount.Cells[2].Value);
-            Assert.AreEqual(AppTheme.Surface, firstFine.DefaultCellStyle.BackColor);
-            Assert.AreEqual(text, log.Text);
-            Assert.AreEqual(4, log.SelectionStart);
-            Assert.AreEqual(3, log.SelectionLength);
-
-            IEnumerable<DataGridViewRow> Rows(string name) => grid.Rows.Cast<DataGridViewRow>().Where(row => ((SipLogDetail)row.Tag).Name == name);
-
-            void SavePreview(string filename)
-            {
-                Application.DoEvents();
-                using var bitmap = new Bitmap(form.Width, form.Height);
-                form.DrawToBitmap(bitmap, new Rectangle(Point.Empty, bitmap.Size));
-                bitmap.Save(Path.Combine(AppContext.BaseDirectory, filename));
-            }
-        }
-        finally { AppTheme.SetDarkMode(previousTheme); }
     }
 
     private static void AssertPartOffsets(string message, SipLogDetail entry)

@@ -21,7 +21,7 @@ foreach ($invalidTag in @('2.1.2-beta.1', 'V2.1.2-beta.1', 'release-2.1.2-beta.1
     if (-not $rejected) { throw "Invalid release tag accepted: $invalidTag" }
 }
 
-$project = Join-Path $repository 'src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj'
+$project = Join-Path $repository 'src/sip-testing-tool/sip-testing-tool.csproj'
 function Get-ProjectVersionProperties {
     param([string[]]$Properties = @())
     $result = & dotnet msbuild $project -nologo -target:GetAssemblyVersion -getProperty:Version,InformationalVersion @Properties
@@ -93,7 +93,7 @@ try {
     }
     $publish = [IO.Directory]::CreateDirectory((Join-Path $scratch.FullName 'publish')).FullName
     foreach ($version in $versions) {
-        [IO.File]::Copy($assemblies[$version], (Join-Path $publish 'sip-testing-tool-avalonia.exe'), $true)
+        [IO.File]::Copy($assemblies[$version], (Join-Path $publish 'sip-testing-tool.exe'), $true)
         $output = Join-Path $scratch.FullName $version
         & (Join-Path $PSScriptRoot 'PackageDesktop.ps1') -RuntimeIdentifier win-x64 -PublishDirectory $publish -OutputDirectory $output -Version $version
         & (Join-Path $PSScriptRoot 'VerifyDesktopRelease.ps1') -Directory $output -RuntimeIdentifier win-x64 -Version $version
@@ -104,7 +104,7 @@ try {
         $asset = Join-Path $output 'SIP-Testing-Tool_win-x64_v3.0.0.zip'
         $zip = [IO.Compression.ZipFile]::Open($asset, [IO.Compression.ZipArchiveMode]::Create)
         try {
-            [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $assemblies['3.0.0-beta.5'], 'sip-testing-tool-avalonia.exe') | Out-Null
+            [IO.Compression.ZipFileExtensions]::CreateEntryFromFile($zip, $assemblies['3.0.0-beta.5'], 'sip-testing-tool.exe') | Out-Null
         } finally { $zip.Dispose() }
         $rejected = $false
         try {
@@ -119,10 +119,10 @@ try {
         # A normal dotnet publish creates the packager's scratch parent first.
         $null = [IO.Directory]::CreateDirectory((Join-Path $repository 'artifacts/avalonia'))
         $linuxPublish = [IO.Directory]::CreateDirectory((Join-Path $scratch.FullName 'linux-publish')).FullName
-        [IO.File]::WriteAllText((Join-Path $linuxPublish 'sip-testing-tool-avalonia'), "#!/bin/sh`nexit 0`n")
-        [IO.File]::WriteAllText((Join-Path $linuxPublish 'sip-testing-tool-avalonia.runtimeconfig.json'), '{"runtimeOptions":{"framework":{"name":"Microsoft.NETCore.App","version":"10.0.0"}}}')
+        [IO.File]::WriteAllText((Join-Path $linuxPublish 'sip-testing-tool'), "#!/bin/sh`nexit 0`n")
+        [IO.File]::WriteAllText((Join-Path $linuxPublish 'sip-testing-tool.runtimeconfig.json'), '{"runtimeOptions":{"framework":{"name":"Microsoft.NETCore.App","version":"10.0.0"}}}')
         foreach ($version in @('0.0.0-dev', '3.0.0-beta.10+build.001')) {
-            [IO.File]::Copy($assemblies[$version], (Join-Path $linuxPublish 'sip-testing-tool-avalonia.dll'), $true)
+            [IO.File]::Copy($assemblies[$version], (Join-Path $linuxPublish 'sip-testing-tool.dll'), $true)
             $output = Join-Path $scratch.FullName "linux-$version"
             & (Join-Path $PSScriptRoot 'PackageDesktop.ps1') -RuntimeIdentifier linux-x64 -PublishDirectory $linuxPublish -OutputDirectory $output -Version $version
             & (Join-Path $PSScriptRoot 'VerifyDesktopRelease.ps1') -Directory $output -RuntimeIdentifier linux-x64 -Version $version
@@ -133,7 +133,7 @@ try {
             $version = '3.0.0-beta.10+build.001'
             $payloadVersion = if ($scenario -eq 'wrong-application-version') { '0.0.0-dev' } else { $version }
             $metadataVersion = if ($scenario -eq 'wrong-metadata-version') { '9.9.9' } else { $version }
-            [IO.File]::Copy($assemblies[$payloadVersion], (Join-Path $linuxPublish 'sip-testing-tool-avalonia.dll'), $true)
+            [IO.File]::Copy($assemblies[$payloadVersion], (Join-Path $linuxPublish 'sip-testing-tool.dll'), $true)
             $output = [IO.Directory]::CreateDirectory((Join-Path $scratch.FullName $scenario)).FullName
             & bash (Join-Path $PSScriptRoot 'PackageAppImage.sh') $linuxPublish (Join-Path $output "SIP-Testing-Tool_linux-x64_v$version.AppImage") $metadataVersion
             if ($LASTEXITCODE -ne 0) { throw 'Could not build the invalid AppImage fixture.' }
@@ -149,8 +149,8 @@ try {
     }
     # Every platform must reject a packaging version different from the compiled payload,
     # before invoking platform-specific packaging tools or writing a download.
-    [IO.File]::Copy($assemblies['3.0.0-beta.5'], (Join-Path $publish 'sip-testing-tool-avalonia.exe'), $true)
-    [IO.File]::Copy($assemblies['3.0.0-beta.5'], (Join-Path $publish 'sip-testing-tool-avalonia.dll'), $true)
+    [IO.File]::Copy($assemblies['3.0.0-beta.5'], (Join-Path $publish 'sip-testing-tool.exe'), $true)
+    [IO.File]::Copy($assemblies['3.0.0-beta.5'], (Join-Path $publish 'sip-testing-tool.dll'), $true)
     foreach ($rid in @('win-x64', 'linux-x64', 'osx-arm64', 'osx-x64')) {
         $rejected = $false
         try {
@@ -179,12 +179,12 @@ try {
                     $cpu = if (($rid -eq 'osx-arm64') -xor ($scenario -eq 'wrong-cpu')) { 0x0c } else { 0x07 }
                     $bundleVersion = if ($scenario -eq 'wrong-bundle-version') { '9.9.9' } else { ($version -split '[-+]', 2)[0] }
                     $files = @{
-                        'Info.plist' = (Get-Content -LiteralPath (Join-Path $repository 'src/sip-testing-tool-avalonia/Properties/macOS/Info.plist') -Raw).Replace('__APP_VERSION__', $bundleVersion)
-                        'MacOS/sip-testing-tool-avalonia' = [byte[]]@(0xcf, 0xfa, 0xed, 0xfe, $cpu, 0, 0, 1)
+                        'Info.plist' = (Get-Content -LiteralPath (Join-Path $repository 'src/sip-testing-tool/Properties/macOS/Info.plist') -Raw).Replace('__APP_VERSION__', $bundleVersion)
+                        'MacOS/sip-testing-tool' = [byte[]]@(0xcf, 0xfa, 0xed, 0xfe, $cpu, 0, 0, 1)
                         'Resources/app.icns' = 'icon fixture'
-                        'Resources/sip-testing-tool-avalonia.dll' = [IO.File]::ReadAllBytes($assemblies[$version])
+                        'Resources/sip-testing-tool.dll' = [IO.File]::ReadAllBytes($assemblies[$version])
                         'Resources/System.Private.CoreLib.dll' = 'runtime fixture'
-                        'Resources/sip-testing-tool-avalonia.runtimeconfig.json' = '{"runtimeOptions":{"includedFrameworks":[{"name":"Microsoft.NETCore.App","version":"10.0.0"}]}}'
+                        'Resources/sip-testing-tool.runtimeconfig.json' = '{"runtimeOptions":{"includedFrameworks":[{"name":"Microsoft.NETCore.App","version":"10.0.0"}]}}'
                         'Frameworks/libcoreclr.dylib' = 'runtime fixture'
                         'Frameworks/libhostfxr.dylib' = 'runtime fixture'
                         'Frameworks/libhostpolicy.dylib' = 'runtime fixture'
@@ -193,7 +193,7 @@ try {
                     if ($scenario -eq 'missing-runtime') { $files.Remove('Resources/System.Private.CoreLib.dll') }
                     if ($scenario -eq 'wrong-application-version') {
                         $different = if ($version -eq '0.0.0-dev') { '3.0.0' } else { '0.0.0-dev' }
-                        $files['Resources/sip-testing-tool-avalonia.dll'] = [IO.File]::ReadAllBytes($assemblies[$different])
+                        $files['Resources/sip-testing-tool.dll'] = [IO.File]::ReadAllBytes($assemblies[$different])
                     }
                     $zip = [IO.Compression.ZipFile]::Open($asset, [IO.Compression.ZipArchiveMode]::Create)
                     try {

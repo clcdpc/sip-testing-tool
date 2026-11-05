@@ -37,7 +37,7 @@ if ((Get-Item -LiteralPath $asset).Length -eq 0) { throw 'The release download i
 if ($RuntimeIdentifier -eq 'win-x64') {
     $zip = [IO.Compression.ZipFile]::OpenRead($asset)
     try {
-        if ($zip.Entries.Count -ne 1 -or $zip.Entries[0].FullName -cne 'sip-testing-tool-avalonia.exe' -or $zip.Entries[0].Length -eq 0) {
+        if ($zip.Entries.Count -ne 1 -or $zip.Entries[0].FullName -cne 'sip-testing-tool.exe' -or $zip.Entries[0].Length -eq 0) {
             throw 'The Windows ZIP must contain exactly one application EXE at its root.'
         }
         # Native PE version resources require Windows. The Windows build job checks
@@ -48,9 +48,9 @@ if ($RuntimeIdentifier -eq 'win-x64') {
     $zip = [IO.Compression.ZipFile]::OpenRead($asset)
     try {
         $root = 'SIP Testing Tool.app/Contents/'
-        foreach ($path in @('Info.plist', 'MacOS/sip-testing-tool-avalonia', 'Resources/app.icns',
-            'Resources/sip-testing-tool-avalonia.dll', 'Resources/System.Private.CoreLib.dll',
-            'Resources/sip-testing-tool-avalonia.runtimeconfig.json', 'Frameworks/libcoreclr.dylib',
+        foreach ($path in @('Info.plist', 'MacOS/sip-testing-tool', 'Resources/app.icns',
+            'Resources/sip-testing-tool.dll', 'Resources/System.Private.CoreLib.dll',
+            'Resources/sip-testing-tool.runtimeconfig.json', 'Frameworks/libcoreclr.dylib',
             'Frameworks/libhostfxr.dylib', 'Frameworks/libhostpolicy.dylib', '_CodeSignature/CodeResources')) {
             $entry = $zip.GetEntry($root + $path)
             if ($null -eq $entry -or $entry.Length -eq 0) { throw "Missing macOS bundle file: $path" }
@@ -61,8 +61,8 @@ if ($RuntimeIdentifier -eq 'win-x64') {
                 throw "Unexpected macOS ZIP entry: $($entry.FullName)"
             }
         }
-        Assert-ArchiveApplicationVersion -Entry $zip.GetEntry($root + 'Resources/sip-testing-tool-avalonia.dll')
-        $stream = $zip.GetEntry($root + 'MacOS/sip-testing-tool-avalonia').Open()
+        Assert-ArchiveApplicationVersion -Entry $zip.GetEntry($root + 'Resources/sip-testing-tool.dll')
+        $stream = $zip.GetEntry($root + 'MacOS/sip-testing-tool').Open()
         try {
             $header = [byte[]]::new(8)
             $stream.ReadExactly($header)
@@ -78,7 +78,7 @@ if ($RuntimeIdentifier -eq 'win-x64') {
             $value = $plist.SelectSingleNode("/plist/dict/key[.='$key']/following-sibling::*[1]")
             if ($null -eq $value -or $value.InnerText -cne $bundleVersion) { throw "Incorrect macOS $key." }
         }
-        $reader = [IO.StreamReader]::new($zip.GetEntry($root + 'Resources/sip-testing-tool-avalonia.runtimeconfig.json').Open())
+        $reader = [IO.StreamReader]::new($zip.GetEntry($root + 'Resources/sip-testing-tool.runtimeconfig.json').Open())
         try { $config = $reader.ReadToEnd() | ConvertFrom-Json } finally { $reader.Dispose() }
         if (-not $config.runtimeOptions.includedFrameworks -or $config.runtimeOptions.framework -or $config.runtimeOptions.frameworks) {
             throw 'The macOS download must include its .NET runtime.'
@@ -120,7 +120,7 @@ if ($RuntimeIdentifier -eq 'win-x64') {
                 if ($LASTEXITCODE -ne 0) { throw 'Could not extract the AppImage for version verification.' }
             } finally { Pop-Location }
             $appDir = Join-Path $scratch.FullName 'squashfs-root'
-            Assert-DesktopApplicationVersion -ApplicationPath (Join-Path $appDir 'usr/bin/sip-testing-tool-avalonia.dll') -Version $Version
+            Assert-DesktopApplicationVersion -ApplicationPath (Join-Path $appDir 'usr/bin/sip-testing-tool.dll') -Version $Version
             $metadata = @(Get-Content -LiteralPath (Join-Path $appDir 'sip-testing-tool.desktop') | Where-Object { $_.StartsWith('X-AppImage-Version=', [StringComparison]::Ordinal) })
             if ($metadata.Count -ne 1 -or $metadata[0] -cne "X-AppImage-Version=$Version") {
                 throw 'The AppImage version metadata does not match the release version.'

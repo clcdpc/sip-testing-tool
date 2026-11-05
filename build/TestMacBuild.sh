@@ -17,17 +17,17 @@ test_root="$(mktemp -d "$repo_root/artifacts/mac build tests-XXXXXX")"
 trap 'printf "Mac bootstrap check failed on line %s. Diagnostics: %s\n" "$LINENO" "$test_root" >&2' ERR
 mock_bin="$test_root/bin"
 fixture="$test_root/fixture/repository"
-mkdir -p "$mock_bin" "$fixture/build" "$fixture/src/sip-testing-tool-avalonia/Properties/PublishProfiles" \
-    "$fixture/src/sip-testing-tool-avalonia/Assets"
+mkdir -p "$mock_bin" "$fixture/build" "$fixture/src/sip-testing-tool/Properties/PublishProfiles" \
+    "$fixture/src/sip-testing-tool/Assets"
 cp "$repo_root/build/PackageMacOS.sh" "$fixture/build/"
-cp "$repo_root/src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj" \
-    "$fixture/src/sip-testing-tool-avalonia/"
-cp "$repo_root"/src/sip-testing-tool-avalonia/Properties/PublishProfiles/macOS-*.pubxml \
-    "$fixture/src/sip-testing-tool-avalonia/Properties/PublishProfiles/"
-cp -R "$repo_root/src/sip-testing-tool-avalonia/Properties/macOS" \
-    "$fixture/src/sip-testing-tool-avalonia/Properties/"
-cp "$repo_root/src/sip-testing-tool-avalonia/Assets/app.png" \
-    "$fixture/src/sip-testing-tool-avalonia/Assets/"
+cp "$repo_root/src/sip-testing-tool/sip-testing-tool.csproj" \
+    "$fixture/src/sip-testing-tool/"
+cp "$repo_root"/src/sip-testing-tool/Properties/PublishProfiles/macOS-*.pubxml \
+    "$fixture/src/sip-testing-tool/Properties/PublishProfiles/"
+cp -R "$repo_root/src/sip-testing-tool/Properties/macOS" \
+    "$fixture/src/sip-testing-tool/Properties/"
+cp "$repo_root/src/sip-testing-tool/Assets/app.png" \
+    "$fixture/src/sip-testing-tool/Assets/"
 tar -czf "$test_root/source.tar.gz" -C "$test_root/fixture" repository
 export MOCK_SOURCE_ARCHIVE="$test_root/source.tar.gz"
 
@@ -77,17 +77,17 @@ case "$tool" in
                 source_root="${project%/src/*}"
                 output="$source_root/artifacts/avalonia/publish/osx-$MOCK_ARCH"
                 mkdir -p "$output/zh-Hans"
-                printf '#!/bin/bash\nexit 0\n' > "$output/sip-testing-tool-avalonia"
+                printf '#!/bin/bash\nexit 0\n' > "$output/sip-testing-tool"
                 printf '#!/bin/bash\nexit 0\n' > "$output/createdump"
                 chmod +x "$output/createdump"
                 printf 'native\n' > "$output/libcoreclr.dylib"
                 printf 'native\n' > "$output/libhostfxr.dylib"
                 printf 'native\n' > "$output/libhostpolicy.dylib"
-                printf 'managed\n' > "$output/sip-testing-tool-avalonia.dll"
+                printf 'managed\n' > "$output/sip-testing-tool.dll"
                 printf 'framework\n' > "$output/System.Xml.Linq.dll"
                 printf 'core library\n' > "$output/System.Private.CoreLib.dll"
-                printf '{}\n' > "$output/sip-testing-tool-avalonia.runtimeconfig.json"
-                printf '{}\n' > "$output/sip-testing-tool-avalonia.deps.json"
+                printf '{}\n' > "$output/sip-testing-tool.runtimeconfig.json"
+                printf '{}\n' > "$output/sip-testing-tool.deps.json"
                 printf 'satellite\n' > "$output/zh-Hans/Avalonia.resources.dll"
                 printf 'hidden resource\n' > "$output/.app-data" ;;
             msbuild) printf '%s\n' "${MOCK_VERSION:-0.0.0-dev}" ;;
@@ -108,7 +108,7 @@ case "$tool" in
         ! grep -q '__APP_VERSION__' "$2" ;;
     file)
         case "$2" in
-            */sip-testing-tool-avalonia|*/createdump|*.dylib) printf 'Mach-O executable\n' ;;
+            */sip-testing-tool|*/createdump|*.dylib) printf 'Mach-O executable\n' ;;
             *) printf 'data\n' ;;
         esac ;;
     codesign)
@@ -164,14 +164,14 @@ assert_app() {
     local folder="$1" app
     app="$(cat "$folder/sip-testing-tool-macos/latest-app.txt")"
     [[ "$app" == "$folder/sip-testing-tool-macos/build-"*"/SIP Testing Tool.app" ]]
-    [ -x "$app/Contents/MacOS/sip-testing-tool-avalonia" ]
+    [ -x "$app/Contents/MacOS/sip-testing-tool" ]
     [ -x "$app/Contents/MacOS/createdump" ]
     [ -f "$app/Contents/Frameworks/libcoreclr.dylib" ]
-    [ -f "$app/Contents/Resources/sip-testing-tool-avalonia.dll" ]
+    [ -f "$app/Contents/Resources/sip-testing-tool.dll" ]
     [ -f "$app/Contents/Resources/System.Xml.Linq.dll" ]
     [ -f "$app/Contents/Resources/zh-Hans/Avalonia.resources.dll" ]
     [ -f "$app/Contents/Resources/.app-data" ]
-    for name in sip-testing-tool-avalonia.dll System.Xml.Linq.dll sip-testing-tool-avalonia.runtimeconfig.json sip-testing-tool-avalonia.deps.json zh-Hans .app-data; do
+    for name in sip-testing-tool.dll System.Xml.Linq.dll sip-testing-tool.runtimeconfig.json sip-testing-tool.deps.json zh-Hans .app-data; do
         [ -L "$app/Contents/MacOS/$name" ]
         [ "$(readlink "$app/Contents/MacOS/$name")" = "../Resources/$name" ]
         [ -e "$app/Contents/MacOS/$name" ]
@@ -198,8 +198,8 @@ run_build "$test_root/Apple Silicon"
 assert_app "$test_root/Apple Silicon"
 first_app="$(cat "$test_root/Apple Silicon/sip-testing-tool-macos/latest-app.txt")"
 cp -R "$first_app" "$test_root/Relocated.app"
-[ -L "$test_root/Relocated.app/Contents/MacOS/sip-testing-tool-avalonia.dll" ]
-[ -f "$test_root/Relocated.app/Contents/MacOS/sip-testing-tool-avalonia.dll" ]
+[ -L "$test_root/Relocated.app/Contents/MacOS/sip-testing-tool.dll" ]
+[ -f "$test_root/Relocated.app/Contents/MacOS/sip-testing-tool.dll" ]
 [ -f "$test_root/Relocated.app/Contents/MacOS/libcoreclr.dylib" ]
 [ -f "$test_root/Relocated.app/Contents/MacOS/zh-Hans/Avalonia.resources.dll" ]
 [ -f "$test_root/Relocated.app/Contents/Resources/libhostfxr.dylib" ]

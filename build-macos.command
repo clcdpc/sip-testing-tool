@@ -57,8 +57,8 @@ curl --fail --location --retry 3 --connect-timeout 30 \
 mkdir "$source_root"
 tar -xzf "$archive" -C "$source_root" --strip-components 1
 
-project="$source_root/src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj"
-if [ ! -f "$project" ] || [ ! -f "$source_root/src/sip-testing-tool-avalonia/Properties/PublishProfiles/$profile.pubxml" ] \
+project="$source_root/src/sip-testing-tool/sip-testing-tool.csproj"
+if [ ! -f "$project" ] || [ ! -f "$source_root/src/sip-testing-tool/Properties/PublishProfiles/$profile.pubxml" ] \
     || [ ! -f "$source_root/build/PackageMacOS.sh" ]; then
     fail "The downloaded source does not contain the macOS build yet. Ask the maintainer to publish the current version, then run this script again."
 fi

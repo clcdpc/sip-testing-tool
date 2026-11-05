@@ -1,19 +1,11 @@
-using System.ComponentModel;
-using System.Drawing;
-using System.Reflection;
 using Clc.Sip.Helpers;
-using Clc.Sip.Tests.TestSupport;
-using static Clc.Sip.Tests.TestSupport.WinFormsTestEnvironment;
 
 namespace Clc.Sip.Tests;
 
-[STATestClass]
+[TestClass]
 [TestCategory("Regression")]
 public sealed class MessageLogTests
 {
-    [ClassInitialize]
-    public static void Initialize(TestContext _) => WinFormsTestEnvironment.Initialize();
-
     [TestMethod(DisplayName = "First field after request and response headers")]
     [DataRow("9300CNoperator|COpassword|", "CN", "Login user ID")]
     [DataRow("1720261021    153000AOlibrary|ABitem|", "AO", "Institution ID")]
@@ -128,84 +120,5 @@ public sealed class MessageLogTests
         StringAssert.Contains(patron.Description, "Patron identifier");
         Assert.IsNull(SipLogFields.Find(transcript, transcript.IndexOf("AOshort", StringComparison.Ordinal)));
         Assert.IsNull(SipLogFields.Find(transcript, transcript.LastIndexOf("AAvalue", StringComparison.Ordinal)));
-    }
-
-    [TestMethod(DisplayName = "Hover help keeps log formatting and selection intact")]
-    public void MainFormWiresHoverHelpWithoutChangingTheTranscript()
-    {
-        using var form = new MainForm();
-        ShowOffscreen(form);
-        form.LogOutput(new SipTransaction
-        {
-            Message = "9300CNoperator|COpassword|VPprofile|AY0AZABCD\r",
-            Response = "941AY0AZABCD\r"
-        });
-        var log = form.GetRichTextBox("logRichTextBox");
-        var components = (IContainer)typeof(MainForm).GetField("components", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(form);
-        var help = components.Components.OfType<MessageLogToolTips>().Single();
-        log.Select(8, 8);
-        var originalRtf = log.Rtf;
-        var originalText = log.Text;
-        foreach (var token in new[] { "CN", "CO", "VP", "AY", "AZ" })
-        {
-            var offset = log.Text.IndexOf(token, StringComparison.Ordinal);
-            for (var index = offset; index < offset + 2; index++)
-            {
-                var point = log.GetPositionFromCharIndex(index);
-                point.Offset(1, 2);
-                var field = help.GetFieldAt(point);
-                Assert.IsNotNull(field, token);
-                Assert.AreEqual(token, field.Identifier);
-            }
-        }
-        Assert.IsNull(help.GetFieldAt(new Point(log.ClientSize.Width - 5, log.ClientSize.Height - 5)), "Empty log space must not use the nearest character's help.");
-        Assert.AreEqual(originalRtf, log.Rtf);
-        Assert.AreEqual(originalText, log.Text);
-        Assert.AreEqual(8, log.SelectionStart);
-        Assert.AreEqual(8, log.SelectionLength);
-
-        form.GetButton("clearLogButton").PerformClick();
-        Assert.IsNull(help.GetFieldAt(new Point(3, 3)));
-        form.LogOutput(new SipTransaction { Message = "9300COreplacement|\r", Response = "941\r" });
-        var replacementPoint = log.GetPositionFromCharIndex(log.Text.IndexOf("CO", StringComparison.Ordinal));
-        replacementPoint.Offset(1, 2);
-        Assert.AreEqual("CO", help.GetFieldAt(replacementPoint)?.Identifier, "Clearing and appending must invalidate cached message text.");
-    }
-
-    [TestMethod(DisplayName = "Wrapped and scrolled field identifiers retain help")]
-    public void HitTestingFollowsWrappedAndScrolledText()
-    {
-        using var form = new Form { ClientSize = new Size(260, 180) };
-        using var components = new Container();
-        using var log = new RichTextBox { Dock = DockStyle.Fill, Font = new Font("Consolas", 10), WordWrap = true };
-        form.Controls.Add(log);
-        using var help = new MessageLogToolTips(log, components);
-        ShowOffscreen(form);
-        var splitIdentifier = -1;
-        // Find a natural wrap between the two letters instead of assuming a DPI.
-        for (var padding = 1; padding < 80; padding++)
-        {
-            log.Text = "--> 9300CN" + new string('x', padding) + "|AOlibrary|";
-            var offset = log.Text.IndexOf("AO", StringComparison.Ordinal);
-            if (log.GetPositionFromCharIndex(offset).Y != log.GetPositionFromCharIndex(offset + 1).Y)
-            {
-                splitIdentifier = offset;
-                break;
-            }
-        }
-        Assert.IsTrue(splitIdentifier >= 0, "Test setup did not produce a wrapped identifier.");
-        foreach (var index in new[] { splitIdentifier, splitIdentifier + 1 })
-        {
-            var point = log.GetPositionFromCharIndex(index);
-            point.Offset(1, 2);
-            Assert.AreEqual("AO", help.GetFieldAt(point)?.Identifier);
-        }
-
-        log.Text = string.Concat(Enumerable.Repeat("--> 9300CNuser|COpassword|\n", 40)) + "<-- 941AY0AZABCD";
-        log.SelectionStart = log.TextLength;
-        log.ScrollToCaret();
-        var checksumPoint = log.GetPositionFromCharIndex(log.Text.LastIndexOf("AZ", StringComparison.Ordinal));
-        checksumPoint.Offset(1, 2);
-        Assert.AreEqual("AZ", help.GetFieldAt(checksumPoint)?.Identifier);
     }
 }

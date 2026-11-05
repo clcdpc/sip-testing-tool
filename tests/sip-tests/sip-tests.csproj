@@ -1,9 +1,7 @@
 <Project Sdk="MSTest.Sdk/4.5.1">
   <PropertyGroup>
     <UseVSTest>true</UseVSTest>
-    <TargetFramework>net10.0-windows</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
-    <AppConfig>..\..\src\sip-testing-tool\App.config</AppConfig>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>disable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <Deterministic>true</Deterministic>
@@ -11,6 +9,5 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\sip-core\sip-core.csproj" />
     <ProjectReference Include="..\..\src\sip-console\sip-console.csproj" />
-    <ProjectReference Include="..\..\src\sip-testing-tool\sip-testing-tool.csproj" />
   </ItemGroup>
 </Project>

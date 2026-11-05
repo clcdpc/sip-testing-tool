@@ -120,14 +120,13 @@ jobs:
         run: dotnet test tests/sip-desktop-tests/sip-desktop-tests.csproj --configuration Release -p:Version=$env:RELEASE_VERSION
 
       - name: Verify the compiled application version
-        run: ./build/VerifyDesktopRelease.ps1 -ApplicationPath src/sip-testing-tool-avalonia/bin/Release/net10.0/sip-testing-tool-avalonia.dll -Version $env:RELEASE_VERSION
+        run: ./build/VerifyDesktopRelease.ps1 -ApplicationPath src/sip-testing-tool/bin/Release/net10.0/sip-testing-tool.dll -Version $env:RELEASE_VERSION
 
-      - name: Run shared protocol and Windows Forms tests
-        if: runner.os == 'Windows'
+      - name: Run shared protocol and console tests
         run: dotnet test tests/sip-tests/sip-tests.csproj --configuration Release -p:Version=$env:RELEASE_VERSION
 
       - name: Publish and package
-        run: dotnet publish src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj --configuration Release -p:PublishProfile=$env:PUBLISH_PROFILE -p:Version=$env:RELEASE_VERSION
+        run: dotnet publish src/sip-testing-tool/sip-testing-tool.csproj --configuration Release -p:PublishProfile=$env:PUBLISH_PROFILE -p:Version=$env:RELEASE_VERSION
 
       - name: Package macOS release
         if: runner.os == 'macOS'
