@@ -75,6 +75,7 @@
   </Target>
 
   <Target Name="VerifyProfile" DependsOnTargets="ResolveReleasePublishPaths">
+    <Error Condition="'$(RuntimeIdentifier)' == 'linux-x64' and ('$(TargetFramework)' != 'net10.0' or '$(SelfContained)' != 'true' or '$(UseAppHost)' != 'true' or '$(PublishSingleFile)' != 'false' or '$(PublishTrimmed)' != 'false' or '$(PublishReadyToRun)' != 'false' or '$(PublishAot)' == 'true')" Text="$(ProfileFile): Linux AppImage publishing must remain self-contained on .NET 10 with a native apphost and separate, untrimmed runtime files." />
     <PropertyGroup>
       <ApplicationProjectDirectory>$(RepositoryDirectory)src/$(ApplicationProject)/</ApplicationProjectDirectory>
       <ExpectedPublishPath>$([System.IO.Path]::GetFullPath('$(RepositoryDirectory)artifacts/$(ExpectedSubdirectory)/'))</ExpectedPublishPath>

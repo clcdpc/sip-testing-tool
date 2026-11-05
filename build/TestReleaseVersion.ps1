@@ -115,12 +115,56 @@ try {
         }
         if (-not $rejected) { throw 'Windows ZIP verification ignored its embedded version.' }
     }
+    # Exercise the Linux runtime guard on every host, without publishing the app.
+    $linuxPublish = [IO.Directory]::CreateDirectory((Join-Path $scratch.FullName 'linux-publish')).FullName
+    $apphost = [byte[]]::new(20)
+    [Text.Encoding]::ASCII.GetBytes("`u{007f}ELF").CopyTo($apphost, 0)
+    $apphost[4] = 2
+    $apphost[5] = 1
+    $apphost[18] = 62
+    $linuxConfig = '{"runtimeOptions":{"tfm":"net10.0","includedFrameworks":[{"name":"Microsoft.NETCore.App","version":"10.0.0"}]}}'
+    $frameworkDependentConfig = '{"runtimeOptions":{"tfm":"net10.0","framework":{"name":"Microsoft.NETCore.App","version":"10.0.0"}}}'
+    $linuxFiles = @{
+        'sip-testing-tool' = $apphost
+        'sip-testing-tool.dll' = [IO.File]::ReadAllBytes($assemblies['0.0.0-dev'])
+        'sip-testing-tool.deps.json' = '{}'
+        'sip-testing-tool.runtimeconfig.json' = $linuxConfig
+        'System.Private.CoreLib.dll' = 'runtime fixture'
+        'libcoreclr.so' = 'runtime fixture'
+        'libhostfxr.so' = 'runtime fixture'
+        'libhostpolicy.so' = 'runtime fixture'
+    }
+    function Restore-LinuxPublishFixture {
+        foreach ($file in $linuxFiles.GetEnumerator()) {
+            $bytes = if ($file.Value -is [byte[]]) { $file.Value } else { [Text.Encoding]::UTF8.GetBytes($file.Value) }
+            [IO.File]::WriteAllBytes((Join-Path $linuxPublish $file.Key), $bytes)
+        }
+    }
+    foreach ($scenario in @('valid', 'framework-dependent', 'frameworks', 'wrong-runtime', 'non-native-apphost') + @($linuxFiles.Keys)) {
+        Restore-LinuxPublishFixture
+        $configPath = Join-Path $linuxPublish 'sip-testing-tool.runtimeconfig.json'
+        switch ($scenario) {
+            'framework-dependent' { [IO.File]::WriteAllText($configPath, $frameworkDependentConfig) }
+            'frameworks' { [IO.File]::WriteAllText($configPath, $linuxConfig.Replace('includedFrameworks', 'frameworks')) }
+            'wrong-runtime' { [IO.File]::WriteAllText($configPath, $linuxConfig.Replace('10.0', '9.0')) }
+            'non-native-apphost' { [IO.File]::WriteAllText((Join-Path $linuxPublish 'sip-testing-tool'), "#!/bin/sh`nexit 0 # not a native apphost`n") }
+            default {
+                if ($scenario -ne 'valid') { [IO.File]::Delete((Join-Path $linuxPublish $scenario)) }
+            }
+        }
+        $rejected = $false
+        try {
+            & (Join-Path $PSScriptRoot 'VerifyLinuxPublish.ps1') -Directory $linuxPublish
+        } catch {
+            if ($scenario -eq 'valid') { throw }
+            $rejected = $true
+        }
+        if (-not $rejected -and $scenario -ne 'valid') { throw "Accepted invalid Linux publish output: $scenario" }
+    }
+    Restore-LinuxPublishFixture
     if ($IsLinux) {
         # A normal dotnet publish creates the packager's scratch parent first.
         $null = [IO.Directory]::CreateDirectory((Join-Path $repository 'artifacts/avalonia'))
-        $linuxPublish = [IO.Directory]::CreateDirectory((Join-Path $scratch.FullName 'linux-publish')).FullName
-        [IO.File]::WriteAllText((Join-Path $linuxPublish 'sip-testing-tool'), "#!/bin/sh`nexit 0`n")
-        [IO.File]::WriteAllText((Join-Path $linuxPublish 'sip-testing-tool.runtimeconfig.json'), '{"runtimeOptions":{"framework":{"name":"Microsoft.NETCore.App","version":"10.0.0"}}}')
         foreach ($version in @('0.0.0-dev', '3.0.0-beta.10+build.001')) {
             [IO.File]::Copy($assemblies[$version], (Join-Path $linuxPublish 'sip-testing-tool.dll'), $true)
             $output = Join-Path $scratch.FullName "linux-$version"
@@ -128,20 +172,56 @@ try {
             & (Join-Path $PSScriptRoot 'VerifyDesktopRelease.ps1') -Directory $output -RuntimeIdentifier linux-x64 -Version $version
             Assert-InvalidPackageFiles -ValidDirectory $output -RuntimeIdentifier linux-x64 -Version $version
         }
-        # Bypass the packager's version guard to test both checks inside the verifier.
-        foreach ($scenario in @('wrong-application-version', 'wrong-metadata-version')) {
+        # Bypass the PowerShell packager's guards to exercise the packaged-byte checks.
+        foreach ($scenario in @('wrong-application-version', 'wrong-metadata-version', 'missing-runtime', 'framework-dependent', 'dotnet-launcher')) {
+            Restore-LinuxPublishFixture
             $version = '3.0.0-beta.10+build.001'
             $payloadVersion = if ($scenario -eq 'wrong-application-version') { '0.0.0-dev' } else { $version }
             $metadataVersion = if ($scenario -eq 'wrong-metadata-version') { '9.9.9' } else { $version }
             [IO.File]::Copy($assemblies[$payloadVersion], (Join-Path $linuxPublish 'sip-testing-tool.dll'), $true)
+            if ($scenario -eq 'missing-runtime') { [IO.File]::Delete((Join-Path $linuxPublish 'libcoreclr.so')) }
+            if ($scenario -eq 'framework-dependent') {
+                [IO.File]::WriteAllText((Join-Path $linuxPublish 'sip-testing-tool.runtimeconfig.json'), $frameworkDependentConfig)
+            }
             $output = [IO.Directory]::CreateDirectory((Join-Path $scratch.FullName $scenario)).FullName
-            & bash (Join-Path $PSScriptRoot 'PackageAppImage.sh') $linuxPublish (Join-Path $output "SIP-Testing-Tool_linux-x64_v$version.AppImage") $metadataVersion
+            $asset = Join-Path $output "SIP-Testing-Tool_linux-x64_v$version.AppImage"
+            & bash (Join-Path $PSScriptRoot 'PackageAppImage.sh') $linuxPublish $asset $metadataVersion
             if ($LASTEXITCODE -ne 0) { throw 'Could not build the invalid AppImage fixture.' }
+            if ($scenario -eq 'dotnet-launcher') {
+                $fixture = [IO.Directory]::CreateDirectory((Join-Path $scratch.FullName 'launcher-fixture')).FullName
+                Push-Location -LiteralPath $fixture
+                try {
+                    & $asset --appimage-extract > $null
+                    if ($LASTEXITCODE -ne 0) { throw 'Could not extract the launcher fixture.' }
+                } finally { Pop-Location }
+                $appDir = Join-Path $fixture 'squashfs-root'
+                $launcherPath = Join-Path $appDir 'AppRun'
+                $launcher = (Get-Content -LiteralPath $launcherPath -Raw).Replace('exec "$app_dir/usr/bin/sip-testing-tool" "$@"', 'exec dotnet "$app_dir/usr/bin/sip-testing-tool.dll" "$@"')
+                [IO.File]::WriteAllText($launcherPath, $launcher)
+                $tools = Join-Path $repository 'artifacts/tools/appimage'
+                $previousArch = $env:ARCH
+                $previousExtractAndRun = $env:APPIMAGE_EXTRACT_AND_RUN
+                $env:ARCH = 'x86_64'
+                $env:APPIMAGE_EXTRACT_AND_RUN = '1'
+                try {
+                    & (Join-Path $tools 'appimagetool-1.9.1-x86_64.AppImage') --runtime-file (Join-Path $tools 'runtime-20251108-x86_64') --no-appstream $appDir $asset
+                    if ($LASTEXITCODE -ne 0) { throw 'Could not repackage the launcher fixture.' }
+                } finally {
+                    $env:ARCH = $previousArch
+                    $env:APPIMAGE_EXTRACT_AND_RUN = $previousExtractAndRun
+                }
+            }
             $rejected = $false
             try {
                 & (Join-Path $PSScriptRoot 'VerifyDesktopRelease.ps1') -Directory $output -RuntimeIdentifier linux-x64 -Version $version
             } catch {
-                if ($_.Exception.Message -notlike '*version*') { throw }
+                $expectedError = switch ($scenario) {
+                    'missing-runtime' { '*libcoreclr.so*' }
+                    'framework-dependent' { '*self-contained runtime configuration*' }
+                    'dotnet-launcher' { '*AppRun*' }
+                    default { '*version*' }
+                }
+                if ($_.Exception.Message -notlike $expectedError) { throw }
                 $rejected = $true
             }
             if (-not $rejected) { throw "Accepted an invalid Linux package: $scenario" }

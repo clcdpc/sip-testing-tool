@@ -7,7 +7,7 @@ repo_dir=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 tool_dir="$repo_dir/artifacts/tools/appimage"
 mkdir -p "$tool_dir"
 
-# Pin both the packager and native AppImage launcher; neither contains the .NET runtime.
+# Pin both AppImage tools; the published application supplies the separate .NET runtime.
 download_verified() {
     local url=$1 file=$2 expected=$3
     if [[ ! -f "$file" ]]; then
@@ -25,6 +25,7 @@ workspace=$(mktemp -d "$repo_dir/artifacts/avalonia/appimage.XXXXXXXX")
 trap 'rm -rf -- "$workspace"' EXIT
 app_dir="$workspace/SipTestingTool.AppDir"
 mkdir -p "$app_dir/usr/bin"
+# Copy the complete self-contained publish output, retaining modes and relative links.
 cp -a -- "$publish_dir/." "$app_dir/usr/bin/"
 cp -- "$repo_dir/src/sip-testing-tool/Assets/app.png" "$app_dir/sip-testing-tool.png"
 cat > "$app_dir/AppRun" <<'APPRUN'
