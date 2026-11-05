@@ -26,18 +26,18 @@ trap 'rm -rf -- "$workspace"' EXIT
 app_dir="$workspace/SipTestingTool.AppDir"
 mkdir -p "$app_dir/usr/bin"
 cp -a -- "$publish_dir/." "$app_dir/usr/bin/"
-cp -- "$repo_dir/src/sip-testing-tool-avalonia/Assets/app.png" "$app_dir/sip-testing-tool.png"
+cp -- "$repo_dir/src/sip-testing-tool/Assets/app.png" "$app_dir/sip-testing-tool.png"
 cat > "$app_dir/AppRun" <<'APPRUN'
 #!/bin/sh
 app_dir=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-exec "$app_dir/usr/bin/sip-testing-tool-avalonia" "$@"
+exec "$app_dir/usr/bin/sip-testing-tool" "$@"
 APPRUN
-chmod +x "$app_dir/AppRun" "$app_dir/usr/bin/sip-testing-tool-avalonia"
+chmod +x "$app_dir/AppRun" "$app_dir/usr/bin/sip-testing-tool"
 cat > "$app_dir/sip-testing-tool.desktop" <<DESKTOP
 [Desktop Entry]
 Type=Application
 Name=SIP Testing Tool
-Exec=sip-testing-tool-avalonia
+Exec=sip-testing-tool
 Icon=sip-testing-tool
 Categories=Utility;Development;
 Terminal=false

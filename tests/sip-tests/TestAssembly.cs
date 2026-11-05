@@ -1,6 +1,6 @@
 using System.Text;
 
-// These tests share WinForms theme state, Console redirection and process culture.
+// These tests share Console redirection and process culture.
 [assembly: DoNotParallelize]
 
 namespace Clc.Sip.Tests;

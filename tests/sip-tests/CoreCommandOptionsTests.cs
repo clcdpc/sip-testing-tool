@@ -173,4 +173,18 @@ public sealed class CoreCommandOptionsTests
 
         Assert.AreEqual("9920801.00", SipRequest.Payload(message));
     }
+
+    [TestMethod(DisplayName = "Status and login field widths are validated")]
+    public void StatusAndLoginRejectInvalidFixedWidthFields()
+    {
+        using var client = new sip2();
+        foreach (var action in new Action[]
+        {
+            () => client.AcsStatus("3"), () => client.AcsStatus(maxPrintWidth: -1), () => client.AcsStatus(maxPrintWidth: 1000),
+            () => client.AcsStatus(protocolVersion: "2.0"), () => client.Login("", "", uidAlgorithm: ""), () => client.Login("", "", pwdAlgorithm: "|"),
+        })
+        {
+            Assert.Throws<ArgumentException>(action, "An invalid fixed field was accepted.");
+        }
+    }
 }

@@ -1,4 +1,3 @@
-using System.Globalization;
 using System.Net.Sockets;
 using System.Text;
 
@@ -8,18 +7,10 @@ internal static class SipRequest
 {
     // AY + sequence digit + AZ + four checksum digits + CR.
     private const int TrailerLength = 10;
-    private const int DateFieldLength = 18;
 
     public static string Payload(string message) => message[..^TrailerLength];
 
     public static string VariableFields(string message, int fixedLength) => message.Substring(fixedLength, message.Length - fixedLength - TrailerLength);
-
-    public static void AssertTimestamp(string message, int offset, DateTime before, DateTime after)
-    {
-        var field = message.Substring(offset, DateFieldLength);
-        Assert.IsTrue(DateTime.TryParseExact(field, "yyyyMMdd    HHmmss", CultureInfo.InvariantCulture, DateTimeStyles.None, out var value), "The timestamp is not a SIP date/time.");
-        Assert.IsTrue(value >= before.AddSeconds(-1) && value <= after.AddSeconds(1), "The timestamp must come from this submission.");
-    }
 
     public static string ReadFrom(TcpClient client, Encoding encoding = null)
     {

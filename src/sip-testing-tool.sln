@@ -2,9 +2,7 @@
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sip-testing-tool-avalonia", "sip-testing-tool-avalonia\sip-testing-tool-avalonia.csproj", "{F4ACF142-DDEF-4446-8A53-4393F1E16152}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sip-testing-tool", "sip-testing-tool\sip-testing-tool.csproj", "{92AA7377-CC97-46D5-885B-CBCC2DD39C40}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sip-testing-tool", "sip-testing-tool\sip-testing-tool.csproj", "{F4ACF142-DDEF-4446-8A53-4393F1E16152}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sip-core", "sip-core\sip-core.csproj", "{2D8CF4FC-0260-41AE-833B-ECFBADC70717}"
 EndProject
@@ -26,18 +24,6 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{92AA7377-CC97-46D5-885B-CBCC2DD39C40}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{92AA7377-CC97-46D5-885B-CBCC2DD39C40}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{92AA7377-CC97-46D5-885B-CBCC2DD39C40}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{92AA7377-CC97-46D5-885B-CBCC2DD39C40}.Debug|x64.Build.0 = Debug|Any CPU
-		{92AA7377-CC97-46D5-885B-CBCC2DD39C40}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{92AA7377-CC97-46D5-885B-CBCC2DD39C40}.Debug|x86.Build.0 = Debug|Any CPU
-		{92AA7377-CC97-46D5-885B-CBCC2DD39C40}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{92AA7377-CC97-46D5-885B-CBCC2DD39C40}.Release|Any CPU.Build.0 = Release|Any CPU
-		{92AA7377-CC97-46D5-885B-CBCC2DD39C40}.Release|x64.ActiveCfg = Release|Any CPU
-		{92AA7377-CC97-46D5-885B-CBCC2DD39C40}.Release|x64.Build.0 = Release|Any CPU
-		{92AA7377-CC97-46D5-885B-CBCC2DD39C40}.Release|x86.ActiveCfg = Release|Any CPU
-		{92AA7377-CC97-46D5-885B-CBCC2DD39C40}.Release|x86.Build.0 = Release|Any CPU
 		{2D8CF4FC-0260-41AE-833B-ECFBADC70717}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2D8CF4FC-0260-41AE-833B-ECFBADC70717}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2D8CF4FC-0260-41AE-833B-ECFBADC70717}.Debug|x64.ActiveCfg = Debug|Any CPU

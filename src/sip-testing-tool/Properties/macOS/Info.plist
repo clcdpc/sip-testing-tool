@@ -3,7 +3,7 @@
 <plist version="1.0">
   <dict>
     <key>CFBundleExecutable</key>
-    <string>sip-testing-tool-avalonia</string>
+    <string>sip-testing-tool</string>
     <key>CFBundleIdentifier</key>
     <string>org.clcohio.siptestingtool</string>
     <key>CFBundleName</key>

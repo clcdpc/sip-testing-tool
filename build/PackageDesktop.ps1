@@ -8,7 +8,7 @@ $ErrorActionPreference = 'Stop'
 . (Join-Path $PSScriptRoot 'ReleaseVersion.ps1')
 $null = Get-DesktopReleaseVersion -Version $Version
 $publishPath = (Resolve-Path -LiteralPath $PublishDirectory).Path
-$application = if ($RuntimeIdentifier -eq 'win-x64') { 'sip-testing-tool-avalonia.exe' } else { 'sip-testing-tool-avalonia.dll' }
+$application = if ($RuntimeIdentifier -eq 'win-x64') { 'sip-testing-tool.exe' } else { 'sip-testing-tool.dll' }
 Assert-DesktopApplicationVersion -ApplicationPath (Join-Path $publishPath $application) -Version $Version
 $outputPath = [IO.Path]::GetFullPath($OutputDirectory)
 if ($outputPath.TrimEnd([IO.Path]::DirectorySeparatorChar) -eq $publishPath.TrimEnd([IO.Path]::DirectorySeparatorChar)) {
@@ -23,8 +23,8 @@ if (-not $RuntimeIdentifier.StartsWith('osx-', [StringComparison]::Ordinal)) {
 $baseName = "SIP-Testing-Tool_${RuntimeIdentifier}_v$Version"
 if ($RuntimeIdentifier -eq 'win-x64') {
     $files = @(Get-ChildItem -LiteralPath $publishPath -Recurse -File)
-    if ($files.Count -ne 1 -or $files[0].Name -cne 'sip-testing-tool-avalonia.exe') {
-        throw 'The Windows publish directory must contain exactly the single-file sip-testing-tool-avalonia.exe.'
+    if ($files.Count -ne 1 -or $files[0].Name -cne 'sip-testing-tool.exe') {
+        throw 'The Windows publish directory must contain exactly the single-file sip-testing-tool.exe.'
     }
     $asset = Join-Path $outputPath "$baseName.zip"
     $temporaryAsset = Join-Path $outputPath (".package-" + [Guid]::NewGuid().ToString('N') + '.zip')
@@ -40,7 +40,7 @@ if ($RuntimeIdentifier -eq 'win-x64') {
     } finally { [IO.File]::Delete($temporaryAsset) }
 } elseif ($RuntimeIdentifier.StartsWith('osx-', [StringComparison]::Ordinal)) {
     if (-not $IsMacOS) { throw 'App bundle packaging requires macOS.' }
-    $config = Get-Content -LiteralPath (Join-Path $publishPath 'sip-testing-tool-avalonia.runtimeconfig.json') -Raw | ConvertFrom-Json
+    $config = Get-Content -LiteralPath (Join-Path $publishPath 'sip-testing-tool.runtimeconfig.json') -Raw | ConvertFrom-Json
     if (-not $config.runtimeOptions.includedFrameworks -or $config.runtimeOptions.framework -or $config.runtimeOptions.frameworks) {
         throw 'The macOS app must include its .NET runtime.'
     }
@@ -66,7 +66,7 @@ if ($RuntimeIdentifier -eq 'win-x64') {
     }
 } else {
     if (-not $IsLinux) { throw 'AppImage packaging requires Linux.' }
-    $config = Get-Content -LiteralPath (Join-Path $publishPath 'sip-testing-tool-avalonia.runtimeconfig.json') -Raw | ConvertFrom-Json
+    $config = Get-Content -LiteralPath (Join-Path $publishPath 'sip-testing-tool.runtimeconfig.json') -Raw | ConvertFrom-Json
     if ($config.runtimeOptions.framework.name -cne 'Microsoft.NETCore.App' -or $config.runtimeOptions.includedFrameworks) {
         throw 'The AppImage must require an installed .NET runtime.'
     }

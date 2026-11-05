@@ -83,7 +83,7 @@ jobs:
         run: bash build/TestMacBuild.sh
 
       - name: Publish a development package without a release tag
-        run: dotnet publish src/sip-testing-tool-avalonia/sip-testing-tool-avalonia.csproj --configuration Release -p:PublishProfile=$env:PUBLISH_PROFILE
+        run: dotnet publish src/sip-testing-tool/sip-testing-tool.csproj --configuration Release -p:PublishProfile=$env:PUBLISH_PROFILE
 
       - name: Package macOS download
         if: runner.os == 'macOS'
@@ -151,8 +151,7 @@ jobs:
               --results-directory artifacts/test-results
           done
 
-      - name: Run shared protocol and Windows Forms suite
-        if: runner.os == 'Windows'
+      - name: Run shared protocol and console suite
         run: >-
           dotnet test tests/sip-tests/sip-tests.csproj
           --configuration Release

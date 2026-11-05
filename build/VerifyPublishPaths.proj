@@ -5,7 +5,7 @@
   </PropertyGroup>
   <!-- Let each profile load its own path properties, as an independent publishing helper would. -->
   <Import Project="$(ProfileFile)" Condition="'$(ProfileFile)' != ''" />
-  <Import Project="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/Release.targets" Condition="'$(ProfileFile)' != ''" />
+  <Import Project="$(RepositoryDirectory)src/sip-testing-tool/Properties/Release.targets" Condition="'$(ProfileFile)' != ''" />
 
   <UsingTask TaskName="VerifyPublishProfileStream" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
     <ParameterGroup>
@@ -33,7 +33,9 @@
           {
             var globals = new Dictionary<string, string>();
             if (!String.IsNullOrEmpty(PublishDirectoryOverride))
+            {
               globals["PublishDir"] = PublishDirectoryOverride;
+            }
             var profile = Activator.CreateInstance(projectType, new object[] { reader, globals, null, collection });
             var getPropertyValue = projectType.GetMethod("GetPropertyValue", new[] { typeof(string) });
             foreach (var property in new[] { "PublishDir", "PublishUrl" })
@@ -59,14 +61,11 @@
 
   <Target Name="VerifyPublishPaths">
     <ItemGroup>
-      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool/Properties/PublishProfiles/FolderProfile.pubxml" ApplicationProject="sip-testing-tool" Subdirectory="app" />
-      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool/Properties/PublishProfiles/Windows-SingleFile.pubxml" ApplicationProject="sip-testing-tool" Subdirectory="app-single-file" />
-      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool/Properties/PublishProfiles/ClickOnceProfile.pubxml" ApplicationProject="sip-testing-tool" Subdirectory="clickonce" />
-      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/Windows-Zip.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/releases/win-x64" />
-      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/Linux-AppImage.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/releases/linux-x64" />
-      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/Windows-SingleFile.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/publish/win-x64-single-file" />
-      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/macOS-arm64.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/publish/osx-arm64" />
-      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool-avalonia/Properties/PublishProfiles/macOS-x64.pubxml" ApplicationProject="sip-testing-tool-avalonia" Subdirectory="avalonia/publish/osx-x64" />
+      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool/Properties/PublishProfiles/Windows-Zip.pubxml" ApplicationProject="sip-testing-tool" Subdirectory="avalonia/releases/win-x64" />
+      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool/Properties/PublishProfiles/Linux-AppImage.pubxml" ApplicationProject="sip-testing-tool" Subdirectory="avalonia/releases/linux-x64" />
+      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool/Properties/PublishProfiles/Windows-SingleFile.pubxml" ApplicationProject="sip-testing-tool" Subdirectory="avalonia/publish/win-x64-single-file" />
+      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool/Properties/PublishProfiles/macOS-arm64.pubxml" ApplicationProject="sip-testing-tool" Subdirectory="avalonia/publish/osx-arm64" />
+      <ProfileCheck Include="$(RepositoryDirectory)src/sip-testing-tool/Properties/PublishProfiles/macOS-x64.pubxml" ApplicationProject="sip-testing-tool" Subdirectory="avalonia/publish/osx-x64" />
       <ReleaseProfileCheck Include="@(ProfileCheck)" Condition="'%(ProfileCheck.Subdirectory)' == 'avalonia/releases/win-x64' or '%(ProfileCheck.Subdirectory)' == 'avalonia/releases/linux-x64'" />
     </ItemGroup>
     <MSBuild Projects="$(MSBuildProjectFullPath)" Targets="VerifyProfile;VerifyReleaseStaging" Properties="ProfileFile=%(ProfileCheck.Identity);ApplicationProject=%(ProfileCheck.ApplicationProject);ExpectedSubdirectory=%(ProfileCheck.Subdirectory)" />
