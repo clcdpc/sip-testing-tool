@@ -41,6 +41,8 @@ public partial class MainWindow : Window
         // Create the peer before the first error so its Text/Name change notifications
         // are available even when the banner was initially hidden.
         ControlAutomationPeer.CreatePeerForElement(ErrorMessageText);
+        AccessibilityAnnouncement.IsVisible = OperatingSystem.IsWindows();
+        ControlAutomationPeer.CreatePeerForElement(AccessibilityAnnouncement);
         MessageLog.TextArea.Bind(AutomationProperties.NameProperty, MessageLog.GetObservable(AutomationProperties.NameProperty));
         NoticeStatusField.ItemTemplate = NoticeMediumField.ItemTemplate = NoticeTypeField.ItemTemplate =
             new FuncDataTemplate<Enum>((value, _) => new TextBlock { Text = Regex.Replace(value.ToString(), "(?<!^)([A-Z][a-z])", " $1") });
@@ -194,12 +196,12 @@ public partial class MainWindow : Window
             StringFormat = "{0} (" + DesktopShortcuts.Label(shortcuts.Execute) + ")"
         });
 
-        ToolTip.SetTip(ExecuteButton, "Execute selected SIP command (" + DesktopShortcuts.Label(shortcuts.Execute) + ")");
-        ToolTip.SetTip(CommandPicker, "Focus SIP command dropdown (" + DesktopShortcuts.Label(shortcuts.FocusCommand) + ")");
+        SetActionTip(ExecuteButton, "Execute selected SIP command", shortcuts.Execute);
+        SetActionTip(CommandPicker, "Focus SIP command dropdown", shortcuts.FocusCommand);
         SetFieldTip(PatronField, PatronLabel, "patron barcode", shortcuts.FocusPatron);
         SetFieldTip(ItemField, ItemLabel, "item barcode", shortcuts.FocusItem);
         SetFieldTip(ServerField, ServerLabel, "server address", shortcuts.FocusServer);
-        ToolTip.SetTip(ExportLogButton, "Export message log (" + DesktopShortcuts.Label(shortcuts.ExportLog) + ")");
+        SetActionTip(ExportLogButton, "Export message log", shortcuts.ExportLog);
         // Effective enabled state propagates to each input. Visibility also depends on
         // its ancestors, so refresh availability when any of those are shown or hidden.
         foreach (var visual in new Control[] { CommandPicker, ServerField, UsernameField, PatronField, ItemField, MessageLog }
@@ -221,6 +223,7 @@ public partial class MainWindow : Window
     {
         var tip = "Focus and select " + name + " (" + DesktopShortcuts.Label(gesture) + ")";
         ToolTip.SetTip(field, tip);
+        AutomationProperties.SetHelpText(field, "Shortcut: " + DesktopShortcuts.Label(gesture));
         ToolTip.SetTip(label, tip);
     }
 

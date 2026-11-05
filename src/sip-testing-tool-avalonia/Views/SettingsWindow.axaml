@@ -11,6 +11,8 @@
     </Style>
   </Window.Styles>
   <Grid RowDefinitions="Auto,*,Auto" Margin="18">
+    <TextBlock x:Name="AccessibilityAnnouncement" Grid.RowSpan="3" Width="1" Height="1" HorizontalAlignment="Left" VerticalAlignment="Top"
+               Opacity="0" IsHitTestVisible="False" AutomationProperties.AccessibilityView="Content" AutomationProperties.LiveSetting="Polite" />
     <TextBlock Text="Default settings" FontSize="16" FontWeight="SemiBold" Margin="0,0,0,12" />
     <ScrollViewer Grid.Row="1" HorizontalScrollBarVisibility="Disabled">
       <Grid ColumnDefinitions="*,24,*">
@@ -21,7 +23,7 @@
           <views:OptionalFieldRow Label="Institution (AO)"><TextBox Text="{Binding Defaults.Ao}" /></views:OptionalFieldRow>
           <views:OptionalFieldRow Label="Terminal (AP)"><TextBox Text="{Binding Defaults.Ap}" /></views:OptionalFieldRow>
           <views:OptionalFieldRow Label="Username"><TextBox Text="{Binding Defaults.Username}" /></views:OptionalFieldRow>
-          <views:OptionalFieldRow Label="Password"><TextBox Text="{Binding Defaults.Password}" /></views:OptionalFieldRow>
+          <views:OptionalFieldRow Label="Password"><views:PasswordTextBox Text="{Binding Defaults.Password}" /></views:OptionalFieldRow>
           <views:OptionalFieldRow Label="Location code (CP)"><TextBox Text="{Binding Defaults.LocationCode}" /></views:OptionalFieldRow>
           <views:OptionalFieldRow Label="Vendor profile (VP)"><TextBox Text="{Binding Defaults.VendorProfile}" /></views:OptionalFieldRow>
           <CheckBox Content="Connect on startup" IsChecked="{Binding ConnectOnStartup}" />
@@ -39,7 +41,7 @@
         <StackPanel Grid.Column="2" Spacing="10">
           <TextBlock Classes="groupTitle" Text="Patron and item" />
           <views:OptionalFieldRow Label="Patron barcode"><TextBox Text="{Binding Defaults.PatronBarcode}" /></views:OptionalFieldRow>
-          <views:OptionalFieldRow Label="Patron PIN"><TextBox Text="{Binding Defaults.PatronPin}" /></views:OptionalFieldRow>
+          <views:OptionalFieldRow Label="Patron PIN"><views:PasswordTextBox IsPin="True" Text="{Binding Defaults.PatronPin}" /></views:OptionalFieldRow>
           <views:OptionalFieldRow Label="Item barcode"><TextBox Text="{Binding Defaults.ItemBarcode}" /></views:OptionalFieldRow>
           <Separator Margin="0,8" />
           <CheckBox Content="Dark theme" IsChecked="{Binding DarkTheme}" />

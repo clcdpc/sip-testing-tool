@@ -24,6 +24,8 @@ public partial class SettingsWindow : Window
         InitializeComponent();
         fieldValidation = new FieldValidationAccessibility(() => SettingsError.Text = "");
         ControlAutomationPeer.CreatePeerForElement(SettingsError);
+        AccessibilityAnnouncement.IsVisible = OperatingSystem.IsWindows();
+        ControlAutomationPeer.CreatePeerForElement(AccessibilityAnnouncement);
         EncodingField.ItemsSource = new[] { "UTF-8", "ISO-8859-1" };
         DataContextChanged += (_, _) =>
         {
