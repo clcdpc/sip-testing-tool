@@ -35,7 +35,8 @@ public sealed partial class DesktopParityTests
             (shortcuts.ExportLog, Key.S, false), (shortcuts.ToggleTheme, Key.D, false),
             (shortcuts.FocusMessages, Key.J, false), (shortcuts.Connect, Key.N, false), (shortcuts.Login, Key.U, false),
             (shortcuts.FindLog, Key.F, false), (shortcuts.ClearLog, Key.X, true), (shortcuts.ResetOptions, Key.R, false),
-            (shortcuts.FindNext, Key.G, false), (shortcuts.FindPrevious, Key.G, true), (shortcuts.InspectMessage, Key.Enter, false)
+            (shortcuts.FindNext, Key.G, false), (shortcuts.FindPrevious, Key.G, true), (shortcuts.InspectMessage, Key.Enter, false),
+            (shortcuts.RevealPassword, Key.H, true)
         })
         {
             Assert.AreEqual(key, gesture.Key);

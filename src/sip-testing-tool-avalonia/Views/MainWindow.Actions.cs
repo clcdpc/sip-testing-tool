@@ -1,4 +1,5 @@
 using Avalonia;
+using Avalonia.Automation;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Threading;
@@ -62,7 +63,7 @@ public partial class MainWindow
             canHandle: () => MessageLog.TextArea.IsFocused);
         InspectLogMenuItem.Command = inspect;
         InspectLogMenuItem.InputGesture = shortcuts.InspectMessage;
-        SetActionTip(MessageLog, "Inspect message at caret", shortcuts.InspectMessage);
+        SetActionTip(MessageLog, "Inspect message at caret", shortcuts.InspectMessage, includeDescription: true);
         SetActionTip(InspectLogMenuItem, "Inspect message at caret", shortcuts.InspectMessage);
         RegisterAction(NextPanelMenuItem, shortcuts.NextPanel, nextPanel, suppressRepeat: false);
         RegisterAction(PreviousPanelMenuItem, shortcuts.PreviousPanel, previousPanel, suppressRepeat: false);
@@ -76,6 +77,7 @@ public partial class MainWindow
         SetActionTip(FindLogButton, "Find in message log", shortcuts.FindLog);
         SetActionTip(ClearLogButton, "Clear message log", shortcuts.ClearLog);
         CommandOptionsHost.ResetToolTip = "Reset selected command options (" + DesktopShortcuts.Label(shortcuts.ResetOptions) + ")";
+        CommandOptionsHost.ResetDescription = "Shortcut: " + DesktopShortcuts.Label(shortcuts.ResetOptions);
         GotFocus += (_, _) =>
         {
             var index = CurrentPanel();
@@ -92,8 +94,11 @@ public partial class MainWindow
         AddShortcut(gesture, () => command, suppressRepeat, canHandle);
     }
 
-    private static void SetActionTip(Control control, string description, KeyGesture gesture) =>
+    private static void SetActionTip(Control control, string description, KeyGesture gesture, bool includeDescription = false)
+    {
         ToolTip.SetTip(control, description + " (" + DesktopShortcuts.Label(gesture) + ")");
+        AutomationProperties.SetHelpText(control, (includeDescription ? description + ". " : "") + "Shortcut: " + DesktopShortcuts.Label(gesture));
+    }
 
     private (Control Group, Control Target)[] Panels =>
     [
@@ -142,6 +147,7 @@ public partial class MainWindow
         var panel = MessageLog.SearchPanel;
         if (panel == null || ReferenceEquals(panel, configuredSearchPanel)) { return; }
         configuredSearchPanel = panel;
+        LogSearchAccessibility.Attach(panel);
         // The window owns the application Find gesture. Remove the editor's Ctrl+F/H
         // aliases while retaining its search engine, buttons, and scoped navigation.
         foreach (var handler in MessageLog.TextArea.DefaultInputHandler.NestedInputHandlers.OfType<TextAreaInputHandler>())

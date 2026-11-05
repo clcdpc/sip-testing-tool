@@ -24,6 +24,7 @@ internal sealed class DesktopShortcuts(bool isMacOS)
     public KeyGesture FindNextAlternative { get; } = new(Key.F3);
     public KeyGesture FindPreviousAlternative { get; } = new(Key.F3, KeyModifiers.Shift);
     public KeyGesture InspectMessage { get; } = Create(Key.Enter, isMacOS);
+    public KeyGesture RevealPassword { get; } = Create(Key.H, isMacOS, shift: true);
 
     private static KeyGesture Create(Key key, bool isMacOS, bool shift = false) => new(key,
         (isMacOS ? KeyModifiers.Meta : KeyModifiers.Control) | (shift ? KeyModifiers.Shift : KeyModifiers.None));

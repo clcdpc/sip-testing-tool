@@ -18,8 +18,11 @@ public sealed class CommandOptionsView : UserControl
         AvaloniaProperty.Register<CommandOptionsView, ICommand?>(nameof(ResetCommand));
     public static readonly StyledProperty<string?> ResetToolTipProperty =
         AvaloniaProperty.Register<CommandOptionsView, string?>(nameof(ResetToolTip));
+    public static readonly StyledProperty<string?> ResetDescriptionProperty =
+        AvaloniaProperty.Register<CommandOptionsView, string?>(nameof(ResetDescription));
     public ICommand? ResetCommand { get => GetValue(ResetCommandProperty); set => SetValue(ResetCommandProperty, value); }
     public string? ResetToolTip { get => GetValue(ResetToolTipProperty); set => SetValue(ResetToolTipProperty, value); }
+    public string? ResetDescription { get => GetValue(ResetDescriptionProperty); set => SetValue(ResetDescriptionProperty, value); }
     private MainWindowViewModel? model;
     private readonly StackPanel fields = new() { Spacing = 14 };
 
@@ -95,7 +98,7 @@ public sealed class CommandOptionsView : UserControl
             ],
             SipCommand.AcsStatus =>
             [
-                Choice("Self-check status", nameof(CommandOptions.AcsStatus), ["OK (0)", "Out of paper (1)", "About to shut down (2)"], ["0", "1", "2"]),
+                Choice("Self-check status", nameof(CommandOptions.AcsStatus), ["OK (0)", "Out of paper (1)", "About to shut down (2)"], ["0", "1", "2"], "Status reported by the self-check system."),
                 Text("Maximum print width", nameof(CommandOptions.PrintWidth), "Number of characters, from 0 through 999.", 3),
                 Text("Protocol version", nameof(CommandOptions.ProtocolVersion), "Four characters in x.xx format.", 4)
             ],
@@ -106,6 +109,7 @@ public sealed class CommandOptionsView : UserControl
         var reset = new Button { Name = "ResetOptionsButton", Content = "Reset " + caption + " options", HorizontalAlignment = HorizontalAlignment.Left };
         reset.Bind(Button.CommandProperty, new Binding(nameof(ResetCommand)) { Source = this });
         reset.Bind(ToolTip.TipProperty, new Binding(nameof(ResetToolTip)) { Source = this });
+        reset.Bind(AutomationProperties.HelpTextProperty, new Binding(nameof(ResetDescription)) { Source = this });
         fields.Children.Add(reset);
     }
 
@@ -126,8 +130,13 @@ public sealed class CommandOptionsView : UserControl
 
     private static Binding Option(string property) => new("Options." + property) { Mode = BindingMode.TwoWay };
 
-    private static Control TerminalPassword() => Text("Terminal password (AC)", nameof(CommandOptions.TerminalPassword),
-        "Separate from login credentials and the patron PIN. Blank preserves the command's existing AC behavior.");
+    private static Control TerminalPassword()
+    {
+        var field = new PasswordTextBox { Name = nameof(CommandOptions.TerminalPassword) + "Field" };
+        field.Bind(TextBox.TextProperty, Option(nameof(CommandOptions.TerminalPassword)));
+        return Row("Terminal password (AC)", field,
+            "Separate from login credentials and the patron PIN. Blank preserves the command's existing AC behavior.");
+    }
 
     private static Control Text(string label, string property, string hint = "Blank omits this optional field.", int maxLength = 32767)
     {
@@ -144,13 +153,13 @@ public sealed class CommandOptionsView : UserControl
         return field;
     }
 
-    private static Control Choice(string label, string property, string[]? labels = null, string[]? values = null)
+    private static Control Choice(string label, string property, string[]? labels = null, string[]? values = null, string? hint = null)
     {
-        var field = new ComboBox { Name = property + "Field", ItemsSource = labels ?? ["Omit field", "No (N)", "Yes (Y)"], HorizontalAlignment = HorizontalAlignment.Stretch };
+        var field = new AccessibleComboBox { Name = property + "Field", ItemsSource = labels ?? ["Omit field", "No (N)", "Yes (Y)"], HorizontalAlignment = HorizontalAlignment.Stretch };
         var binding = Option(property);
         binding.Converter = new ChoiceIndexConverter(values ?? ["", "N", "Y"]);
         field.Bind(ComboBox.SelectedIndexProperty, binding);
-        return Row(label, field, "Omission and explicit values are sent distinctly.");
+        return Row(label, field, hint ?? (labels == null ? "Choose Omit field to exclude this field from the SIP request." : ""));
     }
 
     private static Control Date(string label, string hint = "Unchecked sends a blank date; check to include the entered date/time.")

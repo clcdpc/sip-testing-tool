@@ -1,7 +1,10 @@
+using System.ComponentModel;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows.Input;
 using Avalonia;
+using Avalonia.Automation;
+using Avalonia.Automation.Peers;
 using Avalonia.Controls;
 using Avalonia.Controls.Templates;
 using Avalonia.Data;
@@ -25,6 +28,8 @@ public partial class MainWindow : Window
     private readonly List<IRelayCommand> actionCommands = [];
     private readonly AsyncRelayCommand exportLogCommand;
     private bool filePickerOpen;
+    private readonly FieldValidationAccessibility fieldValidation;
+    private Control? focusBeforeValidation;
     public SipLogInspector LogInspection { get; }
     private MainWindowViewModel Model => (MainWindowViewModel)DataContext!;
 
@@ -33,6 +38,13 @@ public partial class MainWindow : Window
     internal MainWindow(DesktopShortcuts shortcuts)
     {
         InitializeComponent();
+        fieldValidation = new FieldValidationAccessibility(() => { if (model != null) { model.ErrorMessage = null; } });
+        // Create the peer before the first error so its Text/Name change notifications
+        // are available even when the banner was initially hidden.
+        ControlAutomationPeer.CreatePeerForElement(ErrorMessageText);
+        AccessibilityAnnouncement.IsVisible = OperatingSystem.IsWindows();
+        ControlAutomationPeer.CreatePeerForElement(AccessibilityAnnouncement);
+        MessageLog.TextArea.Bind(AutomationProperties.NameProperty, MessageLog.GetObservable(AutomationProperties.NameProperty));
         NoticeStatusField.ItemTemplate = NoticeMediumField.ItemTemplate = NoticeTypeField.ItemTemplate =
             new FuncDataTemplate<Enum>((value, _) => new TextBlock { Text = Regex.Replace(value.ToString(), "(?<!^)([A-Z][a-z])", " $1") });
         AddHandler(KeyDownEvent, SessionKeyDown, RoutingStrategies.Tunnel);
@@ -70,8 +82,12 @@ public partial class MainWindow : Window
         MessageLog.TextArea.TextView.LineTransformers.Add(colorizer);
         DataContextChanged += (_, _) =>
         {
+            fieldValidation.Clear();
+            focusBeforeValidation = null;
             if (model != null)
             {
+                model.PropertyChanging -= ModelAccessibilityChanging;
+                model.PropertyChanged -= ModelAccessibilityChanged;
                 model.TransactionAppended -= ScrollLog;
                 model.ThemeChanged -= ApplyTheme;
                 model.ValidationFailed -= FocusInvalidField;
@@ -84,6 +100,8 @@ public partial class MainWindow : Window
             model = DataContext as MainWindowViewModel;
             if (model != null)
             {
+                model.PropertyChanging += ModelAccessibilityChanging;
+                model.PropertyChanged += ModelAccessibilityChanged;
                 model.TransactionAppended += ScrollLog;
                 model.ThemeChanged += ApplyTheme;
                 model.ValidationFailed += FocusInvalidField;
@@ -98,9 +116,13 @@ public partial class MainWindow : Window
         };
         Closed += (_, _) =>
         {
+            fieldValidation.Clear();
+            focusBeforeValidation = null;
             LogInspection.Dispose();
             if (model != null)
             {
+                model.PropertyChanging -= ModelAccessibilityChanging;
+                model.PropertyChanged -= ModelAccessibilityChanged;
                 model.TransactionAppended -= ScrollLog;
                 model.ThemeChanged -= ApplyTheme;
                 model.ValidationFailed -= FocusInvalidField;
@@ -180,12 +202,12 @@ public partial class MainWindow : Window
             StringFormat = "{0} (" + DesktopShortcuts.Label(shortcuts.Execute) + ")"
         });
 
-        ToolTip.SetTip(ExecuteButton, "Execute selected SIP command (" + DesktopShortcuts.Label(shortcuts.Execute) + ")");
-        ToolTip.SetTip(CommandPicker, "Focus SIP command dropdown (" + DesktopShortcuts.Label(shortcuts.FocusCommand) + ")");
+        SetActionTip(ExecuteButton, "Execute selected SIP command", shortcuts.Execute);
+        SetActionTip(CommandPicker, "Focus SIP command dropdown", shortcuts.FocusCommand);
         SetFieldTip(PatronField, PatronLabel, "patron barcode", shortcuts.FocusPatron);
         SetFieldTip(ItemField, ItemLabel, "item barcode", shortcuts.FocusItem);
         SetFieldTip(ServerField, ServerLabel, "server address", shortcuts.FocusServer);
-        ToolTip.SetTip(ExportLogButton, "Export message log (" + DesktopShortcuts.Label(shortcuts.ExportLog) + ")");
+        SetActionTip(ExportLogButton, "Export message log", shortcuts.ExportLog);
         // Effective enabled state propagates to each input. Visibility also depends on
         // its ancestors, so refresh availability when any of those are shown or hidden.
         foreach (var visual in new Control[] { CommandPicker, ServerField, UsernameField, PatronField, ItemField, MessageLog }
@@ -207,6 +229,7 @@ public partial class MainWindow : Window
     {
         var tip = "Focus and select " + name + " (" + DesktopShortcuts.Label(gesture) + ")";
         ToolTip.SetTip(field, tip);
+        AutomationProperties.SetHelpText(field, "Shortcut: " + DesktopShortcuts.Label(gesture));
         ToolTip.SetTip(label, tip);
     }
 
@@ -308,6 +331,8 @@ public partial class MainWindow : Window
                 _ => control
             };
         }
+        if (control != null && !string.IsNullOrEmpty(Model.ErrorMessage)) { fieldValidation.Show(control, Model.ErrorMessage, focusBeforeValidation); }
+        focusBeforeValidation = null;
         control?.BringIntoView();
         if (control is OptionalDateTimeInput date) { date.FocusEditor(); }
         else if (control != null)
@@ -315,6 +340,22 @@ public partial class MainWindow : Window
             control.Focus();
             if (control is TextBox text) { text.SelectAll(); }
         }
+    }
+
+    private void ModelAccessibilityChanging(object? sender, PropertyChangingEventArgs args)
+    {
+        // Busy bindings briefly disable inputs before validation restores focus.
+        // Remember the user's editor before that transient loss so an identical
+        // error still announces when native focus remains on the same element.
+        if (args.PropertyName == nameof(MainWindowViewModel.IsBusy) && model?.IsBusy == false)
+        {
+            focusBeforeValidation = FocusManager.GetFocusedElement() as Control;
+        }
+    }
+
+    private void ModelAccessibilityChanged(object? sender, PropertyChangedEventArgs args)
+    {
+        if (args.PropertyName == nameof(MainWindowViewModel.ErrorMessage)) { fieldValidation.Clear(); }
     }
 
     private void ApplyTheme()
@@ -340,8 +381,16 @@ public partial class MainWindow : Window
             return;
         }
 
+        // The submenu item is hidden once its menu closes. Return keyboard users
+        // to the visible Settings menu that opened the dialog.
+        var focused = sender is MenuItem ? SettingsMenuItem : FocusManager.GetFocusedElement() as Control;
         var dialog = new SettingsWindow(Model.Preferences);
         var preferences = await dialog.ShowDialog<Models.AppPreferences?>(this);
+        // Modal teardown and owner activation finish after the dialog task completes.
+        Avalonia.Threading.Dispatcher.UIThread.Post(() =>
+        {
+            if (WindowActionsAvailable && focused != null && CanFocusInput(focused)) { focused.Focus(NavigationMethod.Tab); }
+        }, Avalonia.Threading.DispatcherPriority.Input);
         if (preferences == null)
         {
             return;

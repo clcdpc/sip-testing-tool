@@ -374,7 +374,10 @@ public sealed partial class DesktopParityTests
             model.SelectedCommand = Choice(SipCommand.Login);
             Assert.AreEqual("0", Field<TextBox>(window, "UidAlgorithmField").Text);
             Assert.IsTrue(model.VendorProfiles.Contains("SIP") && model.VendorProfiles.Contains("ENVISIONWARE") && model.VendorProfiles.Contains("COMPRISE"));
-            foreach (var field in window.GetVisualDescendants().OfType<TextBox>()) { Assert.AreEqual('\0', field.PasswordChar); }
+            foreach (var field in window.GetVisualDescendants().OfType<TextBox>())
+            {
+                Assert.AreEqual(field is PasswordTextBox ? '●' : '\0', field.PasswordChar);
+            }
             Assert.AreEqual(dark ? ThemeVariant.Dark : ThemeVariant.Light, window.ActualThemeVariant);
             SaveFrame(window, dark ? "dark-options" : "light-options");
         }
@@ -659,7 +662,10 @@ public sealed partial class DesktopParityTests
             Assert.AreEqual(ThemeVariant.Dark, settings.ActualThemeVariant);
             editing.DarkTheme = false;
             Assert.AreEqual(ThemeVariant.Light, main.ActualThemeVariant);
-            foreach (var text in settings.GetVisualDescendants().OfType<TextBox>()) { Assert.AreEqual('\0', text.PasswordChar); }
+            foreach (var text in settings.GetVisualDescendants().OfType<TextBox>())
+            {
+                Assert.AreEqual(text is PasswordTextBox ? '●' : '\0', text.PasswordChar);
+            }
             editing.DarkTheme = true;
             settings.Close();
             Assert.AreEqual(ThemeVariant.Light, main.ActualThemeVariant, "Cancel should restore the original theme.");
